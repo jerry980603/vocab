@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a1d23">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>單字練習</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --text:#1a1d23; --sub:#6b7280; --line:#e5e7eb;
+  --accent:#2563eb; --accent-soft:#eff6ff;
+  --ok:#059669; --ok-soft:#ecfdf5; --bad:#dc2626; --bad-soft:#fef2f2;
+  --warn:#d97706;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14161a; --card:#1e2127; --text:#e8eaed; --sub:#9aa0a6; --line:#2e323a;
+    --accent:#60a5fa; --accent-soft:#1c2b45;
+    --ok:#34d399; --ok-soft:#13291f; --bad:#f87171; --bad-soft:#331a1a;
+    --warn:#fbbf24;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  font-size:16px; line-height:1.65;
+  padding-bottom:calc(64px + env(safe-area-inset-bottom));
+  -webkit-text-size-adjust:100%;
+}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:inherit;font-size:16px}
+
+/* ---------- 版面 ---------- */
+header{
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+header h1{margin:0;font-size:17px;font-weight:650;letter-spacing:.02em}
+.daily{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
+main{padding:16px;max-width:640px;margin:0 auto}
+.view{display:none}
+.view.on{display:block}
+
+/* ---------- 底部導覽 ---------- */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  display:grid;grid-template-columns:repeat(6,1fr);
+  background:var(--card);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav button{
+  padding:9px 1px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10px;color:var(--sub);white-space:nowrap;
+}
+nav button .ic{font-size:18px;line-height:1}
+nav button.on{color:var(--accent);font-weight:600}
+nav .badge{
+  position:absolute;transform:translate(16px,-4px);
+  background:var(--bad);color:#fff;font-size:10px;font-weight:700;
+  min-width:16px;padding:0 4px;border-radius:8px;line-height:16px;text-align:center;
+}
+
+/* ---------- 通用元件 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.btn{
+  display:block;width:100%;padding:14px;border-radius:11px;
+  background:var(--accent);color:#fff;font-weight:600;font-size:16px;text-align:center;
+}
+.btn:active{opacity:.82}
+.btn.ghost{background:transparent;color:var(--sub);border:1px solid var(--line);font-weight:500}
+.btn.ok{background:var(--ok)}
+.btn.bad{background:var(--bad)}
+.btn.sm{padding:9px 14px;font-size:14px;width:auto;display:inline-block}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.empty{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}
+.empty .big{font-size:42px;display:block;margin-bottom:14px;opacity:.55}
+.tag{
+  display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600;
+  background:var(--accent-soft);color:var(--accent);
+}
+.tag.gray{background:var(--line);color:var(--sub)}
+.lv{
+  display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;
+  vertical-align:2px;background:var(--line);color:var(--sub);
+}
+.lv.l1,.lv.l2{background:#dcfce7;color:#15803d}
+.lv.l3,.lv.l4{background:#dbeafe;color:#1d4ed8}
+.lv.l5,.lv.l6{background:#fef3c7;color:#b45309}
+.lv.out{background:#fee2e2;color:#b91c1c}
+@media (prefers-color-scheme:dark){
+  .lv.l1,.lv.l2{background:#14311f;color:#4ade80}
+  .lv.l3,.lv.l4{background:#16294a;color:#7dabf8}
+  .lv.l5,.lv.l6{background:#3a2a08;color:#fbbf24}
+  .lv.out{background:#3b1616;color:#fca5a5}
+}
+h2.sec{font-size:13px;color:var(--sub);font-weight:600;margin:26px 0 10px;letter-spacing:.04em}
+h2.sec:first-child{margin-top:0}
+
+/* ---------- 練習卡 ---------- */
+.qmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:13px;color:var(--sub)}
+.dots{display:flex;gap:4px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line);display:block}
+.dots i.f{background:var(--accent)}
+.zhline{font-size:17px;font-weight:500;margin:0 0 16px;line-height:1.75}
+.enline{
+  font-size:19px;line-height:2.1;margin:0 0 18px;
+  font-family:ui-rounded,"Segoe UI",-apple-system,sans-serif;
+}
+.enline .tk{border-radius:4px;padding:1px 1px;cursor:pointer}
+.enline .tk:active{background:var(--accent-soft)}
+.blank{
+  display:inline-block;min-width:96px;text-align:center;
+  border-bottom:2.5px solid var(--accent);color:var(--accent);font-weight:700;
+  letter-spacing:.14em;padding:0 6px;
+}
+.blank.rev{border-color:var(--ok);color:var(--ok)}
+.hintbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;font-size:14px;color:var(--sub)}
+.hintbar .zh{color:var(--text);font-weight:500}
+.inwrap{display:flex;align-items:stretch;gap:8px}
+.inwrap #ansIn{flex:1}
+.sfx{
+  display:flex;align-items:center;padding:0 15px;border-radius:11px;
+  background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:19px;
+  border:2px dashed var(--accent);white-space:nowrap;
+}
+#ansIn{
+  width:100%;padding:14px 16px;border-radius:11px;border:2px solid var(--line);
+  background:var(--bg);color:var(--text);font-size:18px;letter-spacing:.02em;
+  outline:none;text-align:center;font-weight:600;
+}
+#ansIn:focus{border-color:var(--accent)}
+#ansIn.ok{border-color:var(--ok);background:var(--ok-soft)}
+#ansIn.bad{border-color:var(--bad);background:var(--bad-soft)}
+.fb{margin-top:16px;padding:14px;border-radius:11px;font-size:15px}
+.fb.ok{background:var(--ok-soft);color:var(--ok)}
+.fb.bad{background:var(--bad-soft);color:var(--bad)}
+.fb b{font-size:19px;letter-spacing:.02em}
+.minilink{font-size:13px;color:var(--sub);text-decoration:underline;padding:6px 0}
+
+/* ---------- 查單字 ---------- */
+#searchIn{
+  width:100%;padding:13px 16px;border-radius:11px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);outline:none;
+}
+#searchIn:focus{border-color:var(--accent)}
+.hit{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer;
+}
+.hit .w{font-weight:650;font-size:17px}
+.hit .m{font-size:13px;color:var(--sub);margin-top:1px}
+.hit .arrow{color:var(--sub);font-size:15px}
+.sense{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:11px;background:var(--card)}
+.sense .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+.sense .zh{font-weight:600;font-size:16px}
+.sense .ex{font-size:14px;color:var(--sub);margin-top:8px;line-height:1.7}
+.sense .ex em{font-style:normal;font-weight:700;color:var(--text)}
+.addbtn{padding:7px 14px;border-radius:20px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;white-space:nowrap}
+.addbtn.done{background:var(--line);color:var(--sub)}
+
+/* ---------- 我的字 ---------- */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 8px;text-align:center}
+.stat .n{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;color:var(--sub);margin-top:2px}
+.li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.li .w{font-weight:600}
+.li .m{font-size:13px;color:var(--sub)}
+.li .del{color:var(--sub);font-size:19px;padding:4px 8px}
+
+/* ---------- 單字卡 ---------- */
+.flash{
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 20px;text-align:center;box-shadow:var(--shadow);cursor:pointer;
+}
+.flash .fw{font-size:32px;font-weight:700;letter-spacing:.01em}
+.flash .fp{color:var(--sub);font-size:14px;margin-top:6px}
+.flash .fz{font-size:20px;font-weight:600;margin:4px 0 14px}
+.flash .fe{font-size:14px;color:var(--sub);line-height:1.8}
+.flash .fe em{font-style:normal;font-weight:700;color:var(--text)}
+.flash .tip{color:var(--sub);font-size:12px;margin-top:18px}
+
+/* ---------- 底部彈出 ---------- */
+#sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:none}
+#sheetBg.on{display:block}
+#sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:41;
+  background:var(--card);border-radius:18px 18px 0 0;
+  padding:20px 18px calc(24px + env(safe-area-inset-bottom));
+  max-height:78vh;overflow-y:auto;transform:translateY(100%);transition:transform .22s ease;
+  max-width:640px;margin:0 auto;
+}
+#sheet.on{transform:translateY(0)}
+#sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 16px}
+#sheet h3{margin:0 0 4px;font-size:23px}
+#sheet .sub{color:var(--sub);font-size:13px;margin-bottom:16px}
+
+/* ---------- 課表 ---------- */
+.plan-head{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}
+.plan-head .big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.plan-head .cap{font-size:13px;color:var(--sub)}
+.bar{height:7px;border-radius:4px;background:var(--line);overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.day{
+  border:1px solid var(--line);border-radius:12px;background:var(--card);
+  padding:13px 15px;margin-bottom:9px;cursor:pointer;
+}
+.day .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.day .n{font-weight:650}
+.day .st{font-size:12px;color:var(--sub);white-space:nowrap}
+.day.done{border-color:var(--ok)}
+.day.done .n::after{content:" ✓";color:var(--ok)}
+.day .words{font-size:13px;color:var(--sub);margin-top:8px;line-height:1.8;display:none}
+.day.open .words{display:block}
+.day .words b{color:var(--text);font-weight:600}
+.seg{display:flex;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{
+  flex:1;padding:11px 6px;font-size:14px;color:var(--sub);background:var(--card);
+  border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.num{
+  width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);
+  background:var(--bg);color:var(--text);outline:none;text-align:center;font-size:17px;font-weight:600;
+}
+
+/* ---------- 設定 ---------- */
+.setrow{padding:15px 4px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.setrow .t{font-weight:500}
+.setrow .d{font-size:13px;color:var(--sub);margin-top:2px}
+textarea.io{
+  width:100%;height:130px;padding:12px;border-radius:10px;border:1px solid var(--line);
+  background:var(--bg);color:var(--text);font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;
+  outline:none;resize:vertical;
+}
+.toast{
+  position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:60;
+  background:var(--text);color:var(--bg);padding:11px 20px;border-radius:22px;
+  font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s;
+  max-width:88vw;text-align:center;
+}
+.toast.on{opacity:.95}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="title">練習</h1>
+  <div class="daily" id="daily"></div>
+</header>
+
+<main>
+  <section class="view on" id="v-drill"></section>
+  <section class="view" id="v-plan"></section>
+  <section class="view" id="v-find"></section>
+  <section class="view" id="v-mine"></section>
+  <section class="view" id="v-wrong"></section>
+  <section class="view" id="v-set"></section>
+</main>
+
+<nav id="nav">
+  <button data-v="drill" class="on"><span class="ic">✏️</span>練習</button>
+  <button data-v="plan"><span class="ic">📅</span>課表</button>
+  <button data-v="find"><span class="ic">🔍</span>查單字</button>
+  <button data-v="mine"><span class="ic">📚</span>我的字</button>
+  <button data-v="wrong"><span class="ic">🃏</span>錯題本</button>
+  <button data-v="set"><span class="ic">⚙️</span>設定</button>
+</nav>
+
+<div id="sheetBg"></div>
+<div id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="data/official.js"></script>
+<script src="data/bank.js"></script>
+<script src="data/w1.js"></script>
+<script src="data/w2.js"></script>
+<script src="data/w3.js"></script>
+<script src="data/w4.js"></script>
+<script src="data/w5.js"></script>
+<script src="data/w6.js"></script>
+<script src="data/w7.js"></script>
+<script src="data/p1.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1204 @@
+/* ============================================================
+   單字練習 App — 主程式
+   所有資料存在瀏覽器本機（localStorage），不需要網路、不需要帳號。
+   ============================================================ */
+
+/* ---------- 0. 小工具 ---------- */
+var $ = function (s) { return document.querySelector(s); };
+var esc = function (s) {
+  return String(s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+};
+var DAY = 86400000;
+var toastTimer = null;
+function toast(msg) {
+  var t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove("on"); }, 1900);
+}
+function today() {
+  var d = new Date();
+  return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+function shuffle(a) {
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* ---------- 1. 字典索引 ---------- */
+var BANK = window.WORD_BANK || [];
+var DICT = {};
+BANK.forEach(function (e) { DICT[e.w.toLowerCase()] = e; });
+
+/* 大考中心官方詞彙表索引：6114 個字的分級與詞性（沒有釋義與例句） */
+var OFFICIAL = {}, OFF_COUNT = 0;
+(function () {
+  var raw = window.OFFICIAL_RAW || {};
+  Object.keys(raw).forEach(function (lv) {
+    raw[lv].split(",").forEach(function (item) {
+      var sp = item.lastIndexOf(" ");
+      if (sp < 1) return;
+      OFFICIAL[item.slice(0, sp)] = { lv: +lv, pos: item.slice(sp + 1) };
+      OFF_COUNT++;
+    });
+  });
+})();
+/* 已經編好釋義與例句、真的能拿來練的字 */
+function writtenCount() { return BANK.filter(function (e) { return !e.ph; }).length; }
+
+/* 把 running / studies / bigger 之類的變化形，還原成字典裡的原形 */
+function lookup(raw) {
+  var w = String(raw).toLowerCase().replace(/[^a-z' -]/g, "").replace(/\s+/g, " ").trim();
+  if (!w) return null;
+  if (DICT[w]) return DICT[w];
+  if (w.indexOf(" ") > -1) return null;   // 片語只做完全比對，不做字尾還原
+  var c = [];
+  if (/ies$/.test(w)) c.push(w.slice(0, -3) + "y");
+  if (/ied$/.test(w)) c.push(w.slice(0, -3) + "y");
+  if (/ier$/.test(w)) c.push(w.slice(0, -3) + "y");
+  if (/iest$/.test(w)) c.push(w.slice(0, -4) + "y");
+  if (/es$/.test(w)) c.push(w.slice(0, -2));
+  if (/s$/.test(w)) c.push(w.slice(0, -1));
+  if (/ed$/.test(w)) { c.push(w.slice(0, -1), w.slice(0, -2)); if (/(.)\1ed$/.test(w)) c.push(w.slice(0, -3)); }
+  if (/ing$/.test(w)) { c.push(w.slice(0, -3), w.slice(0, -3) + "e"); if (/(.)\1ing$/.test(w)) c.push(w.slice(0, -4)); }
+  if (/est$/.test(w)) c.push(w.slice(0, -3), w.slice(0, -2));
+  if (/er$/.test(w)) c.push(w.slice(0, -2), w.slice(0, -1));
+  if (/ly$/.test(w)) c.push(w.slice(0, -2), w.slice(0, -2) + "e");
+  for (var i = 0; i < c.length; i++) if (DICT[c[i]]) return DICT[c[i]];
+  return null;
+}
+
+/* ---------- 2. 進度存檔 ---------- */
+var LS = "vocabApp_v1";
+var S = load();
+
+function load() {
+  try {
+    var o = JSON.parse(localStorage.getItem(LS));
+    if (o && o.items) {
+      o.todo = o.todo || []; o.bad = o.bad || []; o.log = o.log || {};
+      return o;
+    }
+  } catch (e) { }
+  return { v: 1, items: {}, todo: [], bad: [], log: {} };
+}
+function save() {
+  try { localStorage.setItem(LS, JSON.stringify(S)); }
+  catch (e) { toast("儲存失敗，可能是瀏覽器空間不足"); }
+}
+
+/* 間隔重複的階梯：10 分鐘 → 1 天 → 4 天 → 14 天 → 30 天 → 60 天 → 120 天
+
+   為什麼中段跳這麼開？依 Cepeda et al. (2008) 的大規模研究，
+   最佳複習間隔取決於「你要記住多久」：目標 70 天時最佳間隔約 21 天，
+   目標 350 天時也約 21 天。學測距今在這個區間內，
+   所以 1 天、2 天、4 天那種密集複習是落在效率曲線的低效區——
+   花很多時間，換到的長期保留卻不成比例。
+   模擬顯示改用這組階梯，每天題數比原本的加倍階梯少約 23%。
+
+   第一格仍然只隔 10 分鐘，確保同一次讀書時間內一定會再遇到一次。 */
+var INT = [0, 10 * 60000, 1 * DAY, 4 * DAY, 14 * DAY, 30 * DAY, 60 * DAY, 120 * DAY];
+var MAXBOX = INT.length - 1;
+
+function idOf(w, si) { return w + "::" + si; }
+function hasItem(w, si) { return !!S.items[idOf(w, si)]; }
+
+function addItem(w, si) {
+  var id = idOf(w, si);
+  if (S.items[id]) return false;
+  S.items[id] = { w: w, si: si, box: 0, due: Date.now(), seen: 0, right: 0, wrong: 0, st: 0, wb: false };
+  save();
+  return true;
+}
+function delItem(w, si) { delete S.items[idOf(w, si)]; save(); }
+
+function allItems() {
+  return Object.keys(S.items).map(function (k) { return S.items[k]; })
+    .filter(function (it) { return DICT[it.w.toLowerCase()]; });
+}
+function dueItems() {
+  var now = Date.now();
+  return allItems().filter(function (it) { return it.due <= now; });
+}
+function wrongItems() { return allItems().filter(function (it) { return it.wb; }); }
+
+function senseOf(it) {
+  var e = DICT[it.w.toLowerCase()];
+  return e ? e.s[it.si] : null;
+}
+function logAnswer(correct) {
+  var d = today();
+  if (!S.log[d]) S.log[d] = { a: 0, c: 0 };
+  S.log[d].a++;
+  if (correct) S.log[d].c++;
+}
+
+/* ---------- 3. 例句處理 ---------- */
+/* 把 "He {{abandoned}} the plan." 拆成 前段 / 答案 / 後段 */
+function splitEx(en) {
+  var m = en.match(/\{\{(.+?)\}\}/);
+  if (!m) return { pre: en, ans: "", post: "" };
+  return { pre: en.slice(0, m.index), ans: m[1], post: en.slice(m.index + m[0].length) };
+}
+function plainEx(en) { return en.replace(/\{\{(.+?)\}\}/g, "$1"); }
+function boldEx(en) { return esc(en).replace(/\{\{(.+?)\}\}/g, "<em>$1</em>"); }
+
+/* 把句子切成一個個可以點的單字 */
+function clickable(text) {
+  return esc(text).split(/([A-Za-z][A-Za-z'-]*)/).map(function (p, i) {
+    return i % 2 ? '<span class="tk" data-look="' + p + '">' + p + "</span>" : p;
+  }).join("");
+}
+function norm(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9' -]/g, "").replace(/\s+/g, " ").trim();
+}
+
+/* 判斷答案是原形的哪一種變化。
+   規則變化（直接加 d/ed/s/es/ing）→ 把字尾標在輸入框旁邊，你只要打字根就算對。
+   不規則或字根有變（freeze→froze、study→studied）→ 不幫你打，改成提醒你注意時態。 */
+function formInfo(word, ans) {
+  var w = String(word).toLowerCase(), a = String(ans).toLowerCase();
+  if (a === w) return { suffix: "", tip: "" };
+  /* 片語：變化一定在某一個字上，找出那個字來判斷，但不幫忙補字尾
+     （整串片語補字尾會變成 "look forward to" + "ing"，沒有意義） */
+  if (w.indexOf(" ") > -1) {
+    var ws = w.split(" "), as = a.split(" ");
+    for (var k = 0; k < Math.min(ws.length, as.length); k++) {
+      if (ws[k] !== as[k]) return { suffix: "", tip: formInfo(ws[k], as[k]).tip };
+    }
+    return { suffix: "", tip: "" };
+  }
+  var reg = [
+    ["d", "過去式／過去分詞"], ["ed", "過去式／過去分詞"],
+    ["ing", "現在分詞／動名詞"], ["es", "第三人稱單數／複數"], ["s", "第三人稱單數／複數"]
+  ];
+  for (var i = 0; i < reg.length; i++) {
+    if (a === w + reg[i][0]) return { suffix: reg[i][0], tip: reg[i][1] };
+  }
+  if (/ing$/.test(a)) return { suffix: "", tip: "現在分詞，注意拼字變化" };
+  if (/ied$/.test(a) || /ed$/.test(a)) return { suffix: "", tip: "過去式，注意拼字變化" };
+  if (/ies$/.test(a)) return { suffix: "", tip: "複數／單三，注意拼字變化" };
+  return { suffix: "", tip: "不規則變化，注意時態" };
+}
+
+/* 變化形還原後再查官方詞彙表 */
+function officialLemma(w) {
+  if (!w || w.indexOf(" ") > -1) return null;
+  var c = [];
+  if (/ies$/.test(w)) c.push(w.slice(0, -3) + "y");
+  if (/ied$/.test(w)) c.push(w.slice(0, -3) + "y");
+  if (/es$/.test(w)) c.push(w.slice(0, -2));
+  if (/s$/.test(w)) c.push(w.slice(0, -1));
+  if (/ed$/.test(w)) { c.push(w.slice(0, -1), w.slice(0, -2)); if (/(.)\1ed$/.test(w)) c.push(w.slice(0, -3)); }
+  if (/ing$/.test(w)) { c.push(w.slice(0, -3), w.slice(0, -3) + "e"); if (/(.)\1ing$/.test(w)) c.push(w.slice(0, -4)); }
+  if (/ly$/.test(w)) c.push(w.slice(0, -2), w.slice(0, -2) + "e");
+  for (var i = 0; i < c.length; i++) if (OFFICIAL[c[i]]) return OFFICIAL[c[i]];
+  return null;
+}
+
+/* 大考中心《高中英文參考詞彙表》分級標籤 */
+function lvTag(e) {
+  if (e.ph) return '<span class="lv ph">片語</span>';
+  if (e.lv === 0) return '<span class="lv out">表外</span>';
+  if (!e.lv) return "";
+  return '<span class="lv l' + e.lv + '">' + e.lv + "級</span>";
+}
+function lvText(e) {
+  if (e.ph) return "片語（官方詞彙表不收片語）";
+  if (e.lv === 0) return "不在大考中心詞彙表內";
+  if (!e.lv) return "";
+  return "大考中心第 " + e.lv + " 級";
+}
+
+/* ---------- 4. 頁面切換 ---------- */
+var VIEWS = {
+  drill: { t: "練習", r: drawDrill },
+  plan: { t: "每日課表", r: drawPlan },
+  find: { t: "查單字", r: drawFind },
+  mine: { t: "我的字", r: drawMine },
+  wrong: { t: "錯題本", r: drawWrong },
+  set: { t: "設定", r: drawSet }
+};
+var cur = "drill";
+
+function go(v) {
+  cur = v;
+  document.querySelectorAll(".view").forEach(function (s) { s.classList.remove("on"); });
+  $("#v-" + v).classList.add("on");
+  document.querySelectorAll("#nav button").forEach(function (b) {
+    b.classList.toggle("on", b.dataset.v === v);
+  });
+  $("#title").textContent = VIEWS[v].t;
+  window.scrollTo(0, 0);
+  refreshHeader();
+  VIEWS[v].r();
+}
+$("#nav").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-v]");
+  if (b) go(b.dataset.v);
+});
+
+function refreshHeader() {
+  var l = S.log[today()] || { a: 0, c: 0 };
+  var d = dueItems().length;
+  $("#daily").textContent = "今日 " + l.a + " 題・待複習 " + d;
+  var nb = $("#nav").querySelector('button[data-v="wrong"]');
+  var old = nb.querySelector(".badge");
+  if (old) old.remove();
+  var n = wrongItems().length;
+  if (n) {
+    var s = document.createElement("span");
+    s.className = "badge"; s.textContent = n > 99 ? "99+" : n;
+    nb.appendChild(s);
+  }
+}
+
+/* ============================================================
+   練習
+   ============================================================ */
+var queue = [], qTotal = 0, qCur = null, answered = false, hinted = 0, drillMode = "normal";
+
+/* 一般練習「不含」錯題本裡的字——錯題有自己獨立的一輪，
+   混在一起會讓你在同一輪反覆撞同一個不會的字，很挫折也沒效率。 */
+function normalDue() { return dueItems().filter(function (i) { return !i.wb; }); }
+
+function buildQueue(mode) {
+  drillMode = mode || "normal";
+  var list;
+  if (drillMode === "wrong") list = shuffle(wrongItems().slice());
+  else if (drillMode === "extra") list = shuffle(allItems().filter(function (i) { return !i.wb; }));
+  else list = shuffle(normalDue());
+  queue = list;
+  qTotal = queue.length;
+}
+
+function drawDrill() {
+  var el = $("#v-drill");
+  if (!allItems().length) {
+    el.innerHTML =
+      '<div class="empty"><span class="big">📖</span>' +
+      "你的練習清單還是空的。<br>先到「課表」加入 Day 1，或到「查單字」自己挑。</div>" +
+      '<div class="row"><button class="btn" id="goPlan">去看課表</button>' +
+      '<button class="btn ghost" id="goFind">自己查單字</button></div>';
+    $("#goPlan").onclick = function () { go("plan"); };
+    $("#goFind").onclick = function () { go("find"); };
+    return;
+  }
+  if (!queue.length) { drawDrillStart(el); return; }
+  qCur = queue[0]; answered = false; hinted = 0;
+  renderCard();
+}
+
+/* 未來七天各有幾個字到期，讓你提前看到複習量會不會爆掉 */
+function loadForecast() {
+  var now = Date.now(), start = new Date(); start.setHours(0, 0, 0, 0);
+  var days = [0, 0, 0, 0, 0, 0, 0], overdue = 0;
+  allItems().forEach(function (it) {
+    if (it.due <= now) { overdue++; return; }
+    var d = Math.floor((it.due - start.getTime()) / DAY);
+    if (d >= 0 && d < 7) days[d]++;
+  });
+  var max = Math.max.apply(null, days.concat([overdue, 1]));
+  var names = ["今天", "明天", "後天", "第4天", "第5天", "第6天", "第7天"];
+  var rows = days.map(function (n, i) {
+    var total = i === 0 ? n + overdue : n;
+    return '<div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">' +
+      '<span style="width:44px;font-size:12px;color:var(--sub)">' + names[i] + "</span>" +
+      '<span class="bar" style="flex:1;margin:0"><i style="width:' +
+      Math.round(total / max * 100) + '%"></i></span>' +
+      '<span style="width:34px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums">' +
+      total + "</span></div>";
+  }).join("");
+  var week = days.reduce(function (a, b) { return a + b; }, 0) + overdue;
+  return rows + '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
+    "七天內共 <b>" + week + "</b> 題。抓一題 12 秒，大約是 " +
+    Math.max(1, Math.round(week * 12 / 60)) + " 分鐘。<br>" +
+    "覺得太多就到「課表」把每天的新字數調低——<b>新字數是唯一能控制複習量的閥門</b>。</p>";
+}
+
+/* 開始畫面：一般練習與錯題練習分開兩個入口 */
+function drawDrillStart(el) {
+  var due = normalDue().length, wrong = wrongItems().length, all = allItems().length;
+  var doneToday = (S.log[today()] || { a: 0 }).a;
+  var quota = perDay();
+
+  var nxt = allItems().sort(function (a, b) { return a.due - b.due; })[0];
+  var wait = nxt ? Math.max(0, nxt.due - Date.now()) : 0;
+  var waitTxt = wait < 60000 ? "馬上"
+    : wait < 3600000 ? Math.ceil(wait / 60000) + " 分鐘後"
+    : wait < DAY ? Math.ceil(wait / 3600000) + " 小時後"
+    : Math.ceil(wait / DAY) + " 天後";
+
+  el.innerHTML =
+    '<div class="plan-head">' +
+    '<div class="big">' + doneToday + ' <span style="font-size:15px;color:var(--sub);font-weight:500">題／今天</span></div>' +
+    '<div class="bar"><i style="width:' + Math.min(100, Math.round(doneToday / quota * 100)) + '%"></i></div>' +
+    '<div class="cap">' +
+    (doneToday >= quota
+      ? "已達成今天設定的最低額度（" + quota + " 題），想繼續練隨時都可以。"
+      : "今天的最低額度是 " + quota + " 題，還差 " + (quota - doneToday) + " 題。") +
+    "</div></div>" +
+
+    '<h2 class="sec">一般練習</h2>' +
+    (due
+      ? '<button class="btn" id="btnNormal">開始（' + due + " 個字到期）</button>"
+      : '<div class="empty" style="padding:20px 8px">到期的字都複習完了，下一批 <b>' + waitTxt + "</b> 到期。</div>") +
+
+    '<h2 class="sec">錯題練習（獨立計算）</h2>' +
+    (wrong
+      ? '<button class="btn bad" id="btnWrongDrill">只練錯題（' + wrong + " 個字）</button>" +
+        '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
+        "錯題不會混進一般練習。連續答對兩次才會移出錯題本。</p>"
+      : '<div class="empty" style="padding:20px 8px">錯題本是空的 🎉</div>') +
+
+    '<h2 class="sec">還想多練</h2>' +
+    '<button class="btn ghost" id="btnExtra">從清單裡隨機加練（共 ' + all + " 個字）</button>" +
+
+    '<h2 class="sec">未來七天的複習量</h2>' + loadForecast();
+
+  if (due) $("#btnNormal").onclick = function () { buildQueue("normal"); drawDrill(); };
+  if (wrong) $("#btnWrongDrill").onclick = function () { buildQueue("wrong"); drawDrill(); };
+  $("#btnExtra").onclick = function () { buildQueue("extra"); drawDrill(); };
+}
+
+function renderCard() {
+  var it = qCur, sn = senseOf(it);
+  if (!sn || !sn.ex.length) { queue.shift(); drawDrill(); return; }
+  var ex = sn.ex[it.seen % sn.ex.length];
+  var p = splitEx(ex.en);
+  var fi = formInfo(it.w, p.ans);
+  var done = qTotal - queue.length + 1;
+  var dots = "";
+  for (var i = 1; i <= MAXBOX; i++) dots += "<i" + (i <= it.box ? ' class="f"' : "") + "></i>";
+
+  $("#v-drill").innerHTML =
+    '<div class="card">' +
+    '<div class="qmeta"><span>' +
+    (drillMode === "wrong" ? '<span class="lv out">錯題</span> ' : "") +
+    "第 " + done + " / " + qTotal + " 題</span>" +
+    '<span class="dots" title="熟練度">' + dots + "</span></div>" +
+    '<p class="zhline">' + esc(ex.zh) + "</p>" +
+    '<p class="enline" id="enLine">' + clickable(p.pre) +
+    '<span class="blank" id="blank">' + "_".repeat(Math.min(p.ans.replace(/\s/g, "").length, 12)) + "</span>" +
+    clickable(p.post) + "</p>" +
+    '<div class="hintbar"><span class="tag">' + esc(sn.p) + "</span>" +
+    '<span class="zh">' + esc(sn.zh) + "</span>" +
+    (fi.tip ? '<span class="tag gray">' + esc(fi.tip) + "</span>" : "") + "</div>" +
+    '<div class="inwrap">' +
+    '<input id="ansIn" placeholder="在這裡拼出單字" autocomplete="off" autocorrect="off" ' +
+    'autocapitalize="none" spellcheck="false" enterkeyhint="done">' +
+    (fi.suffix ? '<span class="sfx">' + esc(fi.suffix) + "</span>" : "") + "</div>" +
+    '<div class="row" style="margin-top:12px">' +
+    '<button class="btn" id="btnGo">送出</button></div>' +
+    '<div class="row" style="margin-top:9px" id="rowAid">' +
+    '<button class="btn ghost" id="btnHint">提示</button>' +
+    '<button class="btn ghost" id="btnGiveUp">不會</button></div>' +
+    '<div id="fb"></div>' +
+    '<div style="text-align:center;margin-top:14px" id="rowSkip">' +
+    '<button class="minilink" id="btnKnow">這個我早就會了，不用再排複習</button></div>' +
+    '<div style="text-align:center;margin-top:10px">' +
+    '<button class="minilink" id="btnBad">這句怪怪的，回報給 Claude</button></div>' +
+    "</div>";
+
+  $("#btnGo").onclick = function () { submit(); };
+  $("#btnHint").onclick = giveHint;
+  $("#btnGiveUp").onclick = giveUp;
+  $("#btnKnow").onclick = alreadyKnow;
+  $("#btnBad").onclick = reportBad;
+  $("#ansIn").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); submit(); }
+  });
+  $("#enLine").addEventListener("click", onTokenClick);
+  refreshHeader();
+}
+
+/* 提示規則：
+   單字 → 最多只給前兩個字母
+   片語 → 給每一個字的開頭字母（因為片語難在「是哪幾個字」，不是拼字） */
+function maxHint() {
+  var sn = senseOf(qCur);
+  var ans = splitEx(sn.ex[qCur.seen % sn.ex.length].en).ans;
+  return ans.indexOf(" ") > -1 ? 1 : 2;
+}
+
+function giveHint() {
+  var sn = senseOf(qCur);
+  var ans = splitEx(sn.ex[qCur.seen % sn.ex.length].en).ans;
+  var isPhrase = ans.indexOf(" ") > -1;
+  hinted = Math.min(hinted + 1, maxHint());
+
+  var masked;
+  if (isPhrase) {
+    masked = ans.split(" ").map(function (w) {
+      return w.charAt(0) + "_".repeat(Math.max(w.length - 1, 0));
+    }).join(" ");
+    toast("提示：共 " + ans.split(" ").length + " 個字，這是每個字的開頭");
+  } else {
+    masked = ans.split("").map(function (ch, i) {
+      return (i < hinted || ch === "-") ? ch : "_";
+    }).join("");
+    toast(hinted === 1
+      ? "提示：共 " + ans.length + " 個字母，開頭是 " + ans.charAt(0)
+      : "再給一個字母，提示到這裡為止");
+  }
+  $("#blank").textContent = masked;
+  $("#blank").style.letterSpacing = ".1em";
+  if (hinted >= maxHint()) {
+    $("#btnHint").disabled = true;
+    $("#btnHint").style.opacity = ".45";
+  }
+}
+
+/* 「不會」＝直接認輸看答案，等同答錯：熟練度歸零並進錯題本 */
+function giveUp() {
+  if (answered) return;
+  $("#ansIn").value = "";
+  submit(true);
+}
+
+/* 「我早就會了」＝把熟練度直接推到接近滿級，只留一次很久以後的抽查。
+   每天七十個字時，簡單字如果照normal排程走，會吃掉大半練習時間。 */
+function alreadyKnow() {
+  if (answered) return;
+  var it = qCur;
+  it.box = MAXBOX - 1;
+  it.due = Date.now() + INT[it.box];
+  it.st = 2; it.wb = false;
+  save();
+  toast(it.w + " 已跳過，" + Math.round(INT[it.box] / DAY) + " 天後才會再抽查一次");
+  queue.shift(); qTotal--;
+  refreshHeader();
+  if (!queue.length) { drawDrill(); return; }
+  qCur = queue[0]; answered = false; hinted = 0;
+  renderCard();
+}
+
+function submit(gaveUp) {
+  if (answered) { next(); return; }
+  var it = qCur, sn = senseOf(it);
+  var ex = sn.ex[it.seen % sn.ex.length];
+  var ans = splitEx(ex.en).ans;
+  var input = $("#ansIn").value;
+  if (!gaveUp && !norm(input)) { $("#ansIn").focus(); return; }
+
+  answered = true;
+  /* 字尾已經幫你標在框旁邊了，所以打字根或打完整形都算對 */
+  var fi = formInfo(it.w, ans);
+  var ok = !gaveUp && (norm(input) === norm(ans) ||
+    (!!fi.suffix && norm(input + fi.suffix) === norm(ans)));
+  it.seen++;
+  logAnswer(ok);
+
+  if (ok) {
+    it.right++; it.st++;
+    if (hinted === 0) {
+      /* 第一次看到就答對，代表這個字你本來就會 —— 直接跳三級，
+         不要浪費你的時間陪它從頭走一次完整的間隔重複。 */
+      var jump = (it.seen === 1 && it.wrong === 0) ? 3 : 1;
+      it.box = Math.min(it.box + jump, MAXBOX);
+    }
+    if (it.st >= 2) it.wb = false;
+    it.due = Date.now() + INT[it.box];
+  } else {
+    it.wrong++; it.st = 0; it.wb = true;
+    it.box = 0;
+    it.due = Date.now() + INT[1];
+  }
+  save();
+
+  $("#ansIn").className = ok ? "ok" : "bad";
+  $("#ansIn").blur();
+  $("#blank").textContent = ans;
+  $("#blank").className = "blank rev";
+  $("#rowAid").style.display = "none";
+  $("#rowSkip").style.display = "none";
+  $("#btnGo").textContent = queue.length > 1 ? "下一題" : "完成";
+  $("#btnGo").className = "btn " + (ok ? "ok" : "");
+
+  $("#fb").innerHTML =
+    '<div class="fb ' + (ok ? "ok" : "bad") + '">' +
+    (ok ? "✓ 答對了"
+        : (gaveUp ? "答案是 <b>" + esc(ans) + "</b>，已放進錯題本"
+                  : "✗ 正確答案是 <b>" + esc(ans) + "</b>")) +
+    '<div style="margin-top:8px;color:var(--text);font-size:14px;line-height:1.8" id="fullEn">' +
+    clickable(plainEx(ex.en)) + "</div></div>";
+  $("#fullEn").addEventListener("click", onTokenClick);
+
+  // 一般練習答錯就交給錯題本處理，不在本回合重複糾纏；
+  // 錯題練習模式才把它留在尾巴再考一次。
+  if (!ok && drillMode === "wrong") { queue.push(it); qTotal++; }
+  refreshHeader();
+}
+
+function next() {
+  queue.shift();
+  if (!queue.length) { drawDrill(); return; }
+  qCur = queue[0]; answered = false; hinted = 0;
+  renderCard();
+}
+
+function reportBad() {
+  var sn = senseOf(qCur);
+  var ex = sn.ex[qCur.seen % sn.ex.length];
+  S.bad.push({ w: qCur.w, p: sn.p, en: plainEx(ex.en), zh: ex.zh });
+  save();
+  toast("已記下，到「設定」可以一次複製給 Claude 修");
+}
+
+/* ---------- 句子裡的字：點一下就查 ---------- */
+function onTokenClick(e) {
+  var t = e.target.closest("[data-look]");
+  if (t) openWord(t.dataset.look);
+}
+
+/* ============================================================
+   底部彈出視窗
+   ============================================================ */
+function openSheet(html) {
+  $("#sheetBody").innerHTML = html;
+  $("#sheetBg").classList.add("on");
+  setTimeout(function () { $("#sheet").classList.add("on"); }, 10);
+}
+function closeSheet() {
+  $("#sheet").classList.remove("on");
+  $("#sheetBg").classList.remove("on");
+}
+$("#sheetBg").onclick = closeSheet;
+
+function openWord(raw) {
+  var e = lookup(raw);
+  if (!e) {
+    var w = String(raw).toLowerCase().replace(/[^a-z' -]/g, "").replace(/\s+/g, " ").trim();
+    var off = OFFICIAL[w] || officialLemma(w);
+    openSheet(
+      "<h3>" + esc(raw) + "</h3>" +
+      (off
+        ? '<div class="sub">大考中心第 ' + off.lv + " 級・官方詞性 " + esc(off.pos) +
+          "</div>" +
+          '<p style="font-size:14px;line-height:1.8;margin:0 0 16px">' +
+          "這個字<b>在學測範圍內</b>，但還沒有編寫中文釋義與例句，所以還不能練習。</p>"
+        : '<div class="sub">字庫裡沒有，官方詞彙表裡也查不到</div>') +
+      '<button class="btn" id="btnTodo">加入待補清單</button>' +
+      '<p style="font-size:13px;color:var(--sub);margin-top:14px;line-height:1.7">' +
+      "待補清單累積之後，到「設定」複製一段話貼給 Claude Code，它就會把這些字寫進字庫。</p>"
+    );
+    $("#btnTodo").onclick = function () {
+      if (S.todo.indexOf(w) < 0) S.todo.push(w);
+      save(); closeSheet(); toast("已加入待查清單");
+    };
+    return;
+  }
+  openSheet(
+    "<h3>" + esc(e.w) + "</h3>" +
+    '<div class="sub">' + lvText(e) + "・共 " + e.s.length + " 個意思，選你想練的加入</div>" +
+    e.s.map(function (sn, i) { return senseHTML(e, sn, i); }).join("")
+  );
+  bindAdd(e);
+}
+
+function senseHTML(e, sn, i) {
+  var on = hasItem(e.w, i);
+  return '<div class="sense">' +
+    '<div class="top"><div>' +
+    '<span class="tag gray">' + esc(sn.p) + "</span> " +
+    '<span class="zh">' + esc(sn.zh) + "</span></div>" +
+    '<button class="addbtn' + (on ? " done" : "") + '" data-add="' + i + '">' +
+    (on ? "已加入" : "＋ 加入") + "</button></div>" +
+    (sn.ex[0] ? '<div class="ex">' + boldEx(sn.ex[0].en) + "<br>" + esc(sn.ex[0].zh) + "</div>" : "") +
+    "</div>";
+}
+
+function bindAdd(e) {
+  $("#sheetBody").querySelectorAll("[data-add]").forEach(function (b) {
+    b.onclick = function () {
+      var i = +b.dataset.add;
+      if (hasItem(e.w, i)) {
+        delItem(e.w, i);
+        b.className = "addbtn"; b.textContent = "＋ 加入";
+        toast("已從清單移除");
+      } else {
+        addItem(e.w, i);
+        b.className = "addbtn done"; b.textContent = "已加入";
+        toast("已加入練習清單");
+      }
+      refreshHeader();
+      if (cur === "mine") drawMine();
+    };
+  });
+}
+
+/* ============================================================
+   每日課表：把字庫依「分級 → 字母」切成一天一組
+   ============================================================ */
+function perDay() { return S.perDay || 15; }
+
+function mixOn() { return S.mixLevels !== false; }
+
+/* 課表的排序有兩種：
+   「由淺到深」把同一級的字排在一起，前面幾天全是簡單字；
+   「難度平均混合」讓每一天都按比例含有各個分級的字。
+   後者是預設，因為交錯練習（interleaving）在長期保留與辨別能力上
+   優於一次只練同一類的集中練習。 */
+function planWords() {
+  var ws = BANK.filter(function (e) { return !e.ph; }).slice();
+  var byWord = function (a, b) { return a.w < b.w ? -1 : a.w > b.w ? 1 : 0; };
+
+  if (!mixOn()) {
+    return ws.sort(function (a, b) { return (a.lv || 9) - (b.lv || 9) || byWord(a, b); });
+  }
+
+  /* 依分級分堆，然後每次挑「最落後於自己應有比例」的那一堆，
+     這樣每一天的分級組成都會貼近整體比例。 */
+  var buckets = {};
+  ws.forEach(function (e) {
+    var k = e.lv || 9;
+    (buckets[k] = buckets[k] || []).push(e);
+  });
+  var keys = Object.keys(buckets).sort(function (a, b) { return a - b; });
+  keys.forEach(function (k) { buckets[k].sort(byWord); });
+
+  var total = ws.length, out = [], idx = {};
+  keys.forEach(function (k) { idx[k] = 0; });
+  while (out.length < total) {
+    var best = null, bestGap = -Infinity;
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      if (idx[k] >= buckets[k].length) continue;
+      var gap = (out.length + 1) * buckets[k].length / total - idx[k];
+      if (gap > bestGap) { bestGap = gap; best = k; }
+    }
+    out.push(buckets[best][idx[best]++]);
+  }
+  return out;
+}
+function dayGroups() {
+  var ws = planWords(), n = perDay(), g = [];
+  for (var i = 0; i < ws.length; i += n) g.push(ws.slice(i, i + n));
+  return g;
+}
+function dayStat(group) {
+  var added = 0, mastered = 0;
+  group.forEach(function (e) {
+    var any = false, allOk = true;
+    e.s.forEach(function (sn, i) {
+      var it = S.items[idOf(e.w, i)];
+      if (it) { any = true; if (it.box < 5) allOk = false; }
+    });
+    if (any) added++;
+    if (any && allOk) mastered++;
+  });
+  return { added: added, mastered: mastered, total: group.length };
+}
+
+var openDay = -1;
+
+/* 考試日規劃：算出「要在考前 7 天把新字上完」需要每天學幾個，
+   並且誠實告訴你目前的設定夠不夠、字庫寫得夠不夠快。 */
+/* 日期輸入框本身不能跟著重畫，否則你還沒選完它就被砍掉重建，
+   會變成「改不動」。所以輸入框固定在外面，只有下面的資訊區塊會更新。 */
+function examPlan(written) {
+  return '<input class="num" id="examDate" type="date" value="' +
+    esc(S.examDate || "") + '">' +
+    '<div id="examInfo">' + examInfoHTML(written) + "</div>";
+}
+
+function examInfoHTML(written) {
+  var d = S.examDate || "";
+  var box = "";
+  if (!d) {
+    return '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
+      "填上<b>實際考試日期</b>（例如學測是 2027/01/22），" +
+      "我會自動算出學習期有幾天、每天至少要學幾個新字。<br>" +
+      "不要填「100 天後」那種推算過的日期，倒數和分段都會算錯。</p>";
+  }
+  var left = Math.ceil((new Date(d + "T00:00:00").getTime() - Date.now()) / DAY);
+  if (left <= 0) {
+    return box + '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0">考試日已過，改個日期吧。</p>';
+  }
+  /* 留 65 天鞏固期，跟下面「讀書計畫」的分段一致 */
+  var learnDays = Math.max(1, left - 65);
+  var startedWords = {};
+  Object.keys(S.items).forEach(function (k) { startedWords[S.items[k].w] = 1; });
+  var remainWritten = written - Object.keys(startedWords).length;
+  var remainAll = OFF_COUNT - Object.keys(startedWords).length;
+  var needWritten = Math.ceil(remainWritten / learnDays);
+  var needAll = Math.ceil(remainAll / learnDays);
+  var enough = perDay() >= needAll;
+
+  return box +
+    '<p style="font-size:14px;line-height:1.9;margin:12px 4px 0">' +
+    "距離考試還有 <b>" + left + " 天</b>（扣掉最後 65 天鞏固期，可以上新字的有 " + learnDays + " 天）<br>" +
+    "把<b>已編好例句的字</b>全部吃完 → 每天 <b>" + needWritten + "</b> 個<br>" +
+    "把<b>官方 " + OFF_COUNT + " 個字</b>全部吃完 → 每天 <b>" + needAll + "</b> 個" +
+    "，預估每天要做 <b>" + Math.round(needAll * 6.6) + "</b> 題、約 <b>" +
+    Math.round(needAll * 6.6 * 12 / 60) + "</b> 分鐘</p>" +
+    '<p style="font-size:13px;margin:10px 4px 0;line-height:1.7;color:' +
+    (enough ? "var(--ok)" : "var(--bad)") + '">' +
+    (enough
+      ? "✓ 你目前設定每天 " + perDay() + " 個，來得及。"
+      : "⚠ 你目前設定每天 " + perDay() + " 個，照這個速度到考前只能學完 " +
+        (perDay() * learnDays + Object.keys(startedWords).length) + " 個字。") +
+    "</p>" +
+    '<button class="btn ghost sm" id="btnSprint" style="width:100%;margin-top:12px">' +
+    "啟動考前總複習（把所有字重排進最後 " + Math.min(10, left) + " 天）</button>" +
+    '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
+    "考前十天按這個。它會把清單裡<b>每一個字</b>平均分散到剩下的日子重考一次，" +
+    "避免有些字最後一次複習停在兩個月前就進考場。</p>";
+}
+
+/* 三階段讀書計畫。階段界線直接由考試日推算：
+   考前 10 天＝總複習、再往前 55 天＝鞏固期、更早＝學習期。 */
+function phasePlan(written) {
+  if (!S.examDate) return "";
+  var left = Math.ceil((new Date(S.examDate + "T00:00:00").getTime() - Date.now()) / DAY);
+  if (left <= 0) return "";
+
+  var SPRINT = 10, CONSOLIDATE = 65;
+  var phases = [
+    { n: "學習期", d: "每天上新字，同時消化到期的複習。這段最重。",
+      from: CONSOLIDATE, to: 1e9 },
+    { n: "鞏固期", d: "停止上新字，只做複習。負擔會明顯下降，讓每個字走完整個間隔週期。",
+      from: SPRINT, to: CONSOLIDATE },
+    { n: "考前總複習", d: "按上面那顆按鈕，把所有字重排一次，確保沒有字是兩個月前複習的。",
+      from: 0, to: SPRINT }
+  ];
+  var cur = phases.filter(function (p) { return left > p.from && left <= p.to; })[0] || phases[0];
+
+  var rows = phases.map(function (p) {
+    var on = p === cur;
+    var range = p.to > 1e8 ? "考前 " + CONSOLIDATE + " 天以前"
+      : "考前 " + p.to + "～" + (p.from + 1) + " 天";
+    return '<div class="day' + (on ? " done open" : "") + '" style="cursor:default">' +
+      '<div class="top"><span class="n">' + p.n + (on ? "　← 你在這裡" : "") + "</span>" +
+      '<span class="st">' + range + "</span></div>" +
+      '<div class="words" style="display:block">' + p.d + "</div></div>";
+  }).join("");
+
+  var ladder = INT.slice(1).map(function (v) {
+    return v < DAY ? Math.round(v / 60000) + " 分" : Math.round(v / DAY) + " 天";
+  }).join(" → ");
+
+  var short = OFF_COUNT - written;
+  return '<h2 class="sec">讀書計畫（依考試日自動分段）</h2>' + rows +
+    '<div class="plan-head" style="margin-top:14px">' +
+    '<div class="cap" style="line-height:1.9">' +
+    "<b>答對後的複習間隔</b><br>" + ladder + "<br><br>" +
+    "中段之所以跳這麼開，是因為研究顯示最佳間隔取決於你要記多久：" +
+    "目標 70 天與 350 天時，最佳間隔都落在 21 天上下。" +
+    "距離學測還有幾個月的現在，1 天、2 天那種密集複習屬於低效區，" +
+    "花很多時間但長期保留不成比例。" +
+    "</div></div>" +
+    (short > 0
+      ? '<div class="plan-head" style="margin-top:12px;border-color:var(--warn)">' +
+        '<div class="cap" style="line-height:1.9;color:var(--warn)">' +
+        "<b>⚠ 目前的瓶頸是字庫，不是你的時間</b><br>" +
+        "官方 " + OFF_COUNT + " 個字裡還有 <b>" + short + "</b> 個沒有例句，不能練。<br>" +
+        "找 Claude Code 說「繼續補單字」，一次可以補一百多個。" +
+        "</div></div>"
+      : "");
+}
+
+function drawPlan() {
+  var groups = dayGroups();
+  var written = writtenCount();
+  var doneDays = groups.filter(function (g) { return dayStat(g).added === g.length; }).length;
+  var pct = Math.round(written / OFF_COUNT * 100);
+
+  var html =
+    '<div class="plan-head">' +
+    '<div class="big">' + written + ' <span style="font-size:15px;color:var(--sub);font-weight:500">/ ' +
+    OFF_COUNT + " 個官方單字</span></div>" +
+    '<div class="bar"><i style="width:' + Math.max(pct, 1) + '%"></i></div>' +
+    '<div class="cap">已編好釋義與例句、可以練習的有 ' + written + " 個（" + pct + "%）。" +
+    "其餘的字在「查單字」查得到分級與詞性，但還沒有例句。</div>" +
+    '<div class="cap" style="margin-top:10px">目前的進度：<b>' + doneDays + " / " + groups.length +
+    " 天</b>已排入練習清單</div></div>";
+
+  html += '<h2 class="sec">考試日倒數</h2>' + examPlan(written);
+  html += '<div id="phaseBox">' + phasePlan(written) + "</div>";
+
+  html += '<h2 class="sec">每天最少學幾個新字</h2>' +
+    '<input class="num" id="perDay" type="number" min="3" max="200" value="' + perDay() + '">' +
+    '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
+    "這是<b>下限不是上限</b>——練完當天的量還想繼續，隨時可以再加練或直接吃下一個 Day。<br>" +
+    "改這個數字會重新分組。以每天 " + perDay() + " 個新字估算，穩定之後每天大約 " +
+    Math.round(perDay() * 6.6) + " 題、" + Math.round(perDay() * 6.6 * 12 / 60) + " 分鐘（含複習）。</p>";
+
+  html += '<h2 class="sec">課表怎麼排</h2>' +
+    '<div class="seg">' +
+    '<button data-mix="1"' + (mixOn() ? ' class="on"' : "") + ">難度平均混合</button>" +
+    '<button data-mix="0"' + (mixOn() ? "" : ' class="on"') + ">由淺到深</button></div>" +
+    '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
+    (mixOn()
+      ? "每一天都按比例含有各個分級的字。研究上稱為<b>交錯練習</b>，" +
+        "長期保留與辨別能力都優於一次只練同一類。"
+      : "同一級的字排在一起，由簡單到困難。<b>前面幾天會幾乎都是你已經會的字。</b>") +
+    "</p>";
+  html += groups.map(function (g, i) {
+    var st = dayStat(g);
+    var done = st.added === st.total;
+    var lvs = {};
+    g.forEach(function (e) { lvs[e.lv || 0] = 1; });
+    return '<div class="day' + (done ? " done" : "") + (openDay === i ? " open" : "") + '" data-d="' + i + '">' +
+      '<div class="top"><span class="n">Day ' + (i + 1) + "</span>" +
+      '<span class="st">' + st.added + " / " + st.total + " 已加入・熟練 " + st.mastered + "</span></div>" +
+      '<div class="words">' + g.map(function (e) {
+        return (S.items[idOf(e.w, 0)] ? "<b>" + esc(e.w) + "</b>" : esc(e.w)) +
+          '<span class="lv l' + (e.lv || 1) + '" style="margin-left:3px">' + (e.lv || "?") + "</span>";
+      }).join("　") +
+      '<div style="margin-top:12px"><button class="btn sm" data-add-day="' + i + '">' +
+      (done ? "已全部加入" : "把這組加入練習清單") + "</button></div></div></div>";
+  }).join("");
+
+  $("#v-plan").innerHTML = html;
+
+  if ($("#examDate")) {
+    /* 只更新受日期影響的兩個區塊，不碰輸入框本身，
+       否則日期選擇器會在你選到一半時被砍掉重建。 */
+    $("#examDate").onchange = function () {
+      S.examDate = this.value; save();
+      var w = writtenCount();
+      $("#examInfo").innerHTML = examInfoHTML(w);
+      $("#phaseBox").innerHTML = phasePlan(w);
+      bindSprint();
+    };
+  }
+  bindSprint();
+  bindPlanRest();
+}
+
+function bindSprint() {
+  if ($("#btnSprint")) {
+    $("#btnSprint").onclick = function () {
+      var items = allItems();
+      if (!items.length) return toast("練習清單是空的");
+      var left = Math.max(1, Math.ceil(
+        (new Date(S.examDate + "T00:00:00").getTime() - Date.now()) / DAY));
+      var span = Math.min(10, left);
+      if (!confirm("這會把清單裡全部 " + items.length +
+        " 個字重新排進未來 " + span + " 天，每天平均 " +
+        Math.ceil(items.length / span) + " 個。熟練度不會被清掉。要繼續嗎？")) return;
+      shuffle(items).forEach(function (it, i) {
+        it.due = Date.now() + (i % span) * DAY;
+      });
+      save(); queue = [];
+      toast("已排定考前總複習，去「練習」開始");
+      drawPlan(); refreshHeader();
+    };
+  }
+}
+
+function bindPlanRest() {
+  $("#v-plan").querySelectorAll("[data-mix]").forEach(function (b) {
+    b.onclick = function () {
+      S.mixLevels = b.dataset.mix === "1";
+      save(); openDay = -1; drawPlan();
+    };
+  });
+  $("#perDay").onchange = function () {
+    var n = Math.max(3, Math.min(200, parseInt(this.value, 10) || 15));
+    S.perDay = n; save(); openDay = -1; drawPlan();
+  };
+  $("#v-plan").querySelectorAll(".day").forEach(function (d) {
+    d.onclick = function (e) {
+      if (e.target.closest("[data-add-day]")) return;
+      openDay = openDay === +d.dataset.d ? -1 : +d.dataset.d;
+      drawPlan();
+    };
+  });
+  $("#v-plan").querySelectorAll("[data-add-day]").forEach(function (b) {
+    b.onclick = function () {
+      var g = dayGroups()[+b.dataset.addDay], n = 0;
+      g.forEach(function (e) { if (addItem(e.w, 0)) n++; });
+      queue = [];
+      toast(n ? "已加入 " + n + " 個新字，去「練習」開始吧" : "這組都已經在清單裡了");
+      refreshHeader(); drawPlan();
+    };
+  });
+}
+
+/* ============================================================
+   查單字
+   ============================================================ */
+function drawFind() {
+  $("#v-find").innerHTML =
+    '<input id="searchIn" placeholder="輸入英文或中文，例如 abandon、放棄" autocomplete="off" ' +
+    'autocorrect="off" autocapitalize="none" spellcheck="false">' +
+    '<div id="hits"></div>';
+  $("#searchIn").oninput = function () { runSearch(this.value); };
+  runSearch("");
+}
+
+function runSearch(q) {
+  q = q.trim().toLowerCase();
+  var box = $("#hits");
+  if (!q) {
+    box.innerHTML =
+      '<p style="color:var(--sub);font-size:14px;margin:18px 4px;line-height:1.8">' +
+      "可以搜尋<b>大考中心詞彙表全部 " + OFF_COUNT + " 個字</b>，查得到分級與官方詞性。<br>" +
+      "其中 <b>" + writtenCount() + "</b> 個已經編好釋義與例句，可以直接練習。<br>" +
+      "英文中文都能搜，例如打「忍受」會找出 endure、tolerate、put up with。</p>" +
+      '<h2 class="sec">隨機看看</h2>' +
+      shuffle(BANK.slice()).slice(0, 12).map(hitHTML).join("");
+    bindHits();
+    return;
+  }
+  var hits = BANK.filter(function (e) {
+    if (e.w.toLowerCase().indexOf(q) > -1) return true;
+    return e.s.some(function (sn) { return sn.zh.indexOf(q) > -1; });
+  }).sort(function (a, b) {
+    return (a.w.toLowerCase().indexOf(q) === 0 ? 0 : 1) - (b.w.toLowerCase().indexOf(q) === 0 ? 0 : 1);
+  }).slice(0, 40);
+
+  /* 官方詞彙表裡有、但還沒編寫例句的字 */
+  var pend = [];
+  if (/^[a-z]/.test(q)) {
+    pend = Object.keys(OFFICIAL).filter(function (w) {
+      return w.indexOf(q) === 0 && !DICT[w];
+    }).sort().slice(0, 40);
+  }
+
+  var html = hits.length ? hits.map(hitHTML).join("") : "";
+  if (pend.length) {
+    html += '<h2 class="sec">在學測範圍內，但還沒編寫例句（' + pend.length + "）</h2>" +
+      pend.map(function (w) {
+        var o = OFFICIAL[w];
+        return '<div class="hit" data-w="' + esc(w) + '"><div>' +
+          '<div class="w">' + esc(w) + ' <span class="lv l' + o.lv + '">' + o.lv + "級</span></div>" +
+          '<div class="m">' + esc(o.pos) + "　尚未編寫釋義與例句</div></div>" +
+          '<div class="arrow">›</div></div>';
+      }).join("");
+  }
+  if (!html) {
+    html = '<div class="empty">字庫與官方詞彙表裡都找不到「' + esc(q) + '」' +
+      '<div style="margin-top:16px"><button class="btn" id="btnTodo2">加入待補清單</button></div></div>';
+  }
+  box.innerHTML = html;
+  if ($("#btnTodo2")) {
+    $("#btnTodo2").onclick = function () {
+      if (S.todo.indexOf(q) < 0) S.todo.push(q);
+      save(); toast("已加入待補清單，之後叫 Claude 寫進字庫");
+    };
+  }
+  bindHits();
+}
+
+function hitHTML(e) {
+  var n = e.s.filter(function (sn, i) { return hasItem(e.w, i); }).length;
+  return '<div class="hit" data-w="' + esc(e.w) + '">' +
+    "<div><div class=\"w\">" + esc(e.w) + " " + lvTag(e) + "</div>" +
+    '<div class="m">' + e.s.map(function (sn) { return sn.p + " " + sn.zh; }).join("；") + "</div></div>" +
+    '<div class="arrow">' + (n ? "✓" + n : "›") + "</div></div>";
+}
+function bindHits() {
+  $("#hits").querySelectorAll(".hit").forEach(function (h) {
+    h.onclick = function () { openWord(h.dataset.w); };
+  });
+}
+
+/* ============================================================
+   我的字
+   ============================================================ */
+function drawMine() {
+  var items = allItems();
+  var l = S.log[today()] || { a: 0, c: 0 };
+  var rate = l.a ? Math.round(l.c / l.a * 100) : 0;
+  var mastered = items.filter(function (i) { return i.box >= 5; }).length;
+
+  var html =
+    '<div class="stats">' +
+    '<div class="stat"><div class="n">' + items.length + '</div><div class="l">練習中</div></div>' +
+    '<div class="stat"><div class="n">' + mastered + '</div><div class="l">已熟練</div></div>' +
+    '<div class="stat"><div class="n">' + rate + '%</div><div class="l">今日正確率</div></div>' +
+    "</div>";
+
+  if (!items.length) {
+    $("#v-mine").innerHTML = html + '<div class="empty">還沒有加任何單字</div>';
+    return;
+  }
+  items.sort(function (a, b) { return a.due - b.due; });
+  var now = Date.now();
+  html += '<h2 class="sec">練習清單（' + items.length + "）</h2>";
+  html += items.map(function (it) {
+    var e = DICT[it.w.toLowerCase()], sn = e.s[it.si];
+    var d = it.due <= now ? "待複習" : fmtDue(it.due - now);
+    return '<div class="li"><div><div class="w">' + esc(e.w) + " " + lvTag(e) +
+      ' <span class="tag gray">' + esc(sn.p) + "</span></div>" +
+      '<div class="m">' + esc(sn.zh) + " ・ 熟練度 " + it.box + " ・ " + d + "</div></div>" +
+      '<button class="del" data-del="' + esc(it.w) + "::" + it.si + '">✕</button></div>';
+  }).join("");
+
+  $("#v-mine").innerHTML = html;
+  $("#v-mine").querySelectorAll("[data-del]").forEach(function (b) {
+    b.onclick = function () {
+      var p = b.dataset.del.split("::");
+      delItem(p[0], +p[1]);
+      queue = queue.filter(function (q) { return !(q.w === p[0] && q.si === +p[1]); });
+      drawMine(); refreshHeader(); toast("已移除");
+    };
+  });
+}
+function fmtDue(ms) {
+  if (ms < 3600000) return Math.ceil(ms / 60000) + " 分後";
+  if (ms < DAY) return Math.ceil(ms / 3600000) + " 小時後";
+  return Math.ceil(ms / DAY) + " 天後";
+}
+
+/* ============================================================
+   錯題本（單字卡）
+   ============================================================ */
+var flashList = [], flashI = 0, flipped = false;
+
+function drawWrong() {
+  flashList = wrongItems();
+  if (!flashList.length) {
+    $("#v-wrong").innerHTML =
+      '<div class="empty"><span class="big">🎉</span>' +
+      "錯題本是空的。<br>答錯的字會自動跑到這裡，<br>連續答對兩次就會畢業。</div>";
+    return;
+  }
+  if (flashI >= flashList.length) flashI = 0;
+  flipped = false;
+  renderFlash();
+}
+
+function renderFlash() {
+  var it = flashList[flashI];
+  var e = DICT[it.w.toLowerCase()], sn = e.s[it.si];
+  var ex = sn.ex[it.seen % sn.ex.length] || sn.ex[0];
+
+  /* 正面只給中文與挖空句子，逼你把英文回想出來（跟練習模式同方向）；
+     翻面才看到答案。看著英文想中文太簡單，練不到真正要考的能力。 */
+  var face = flipped
+    ? '<div class="fw">' + esc(e.w) + "</div>" +
+      '<div class="fp">' + esc(sn.p) + "　" + esc(sn.zh) + "</div>" +
+      (ex ? '<div class="fe" style="margin-top:16px">' + boldEx(ex.en) + "<br>" + esc(ex.zh) + "</div>" : "")
+    : '<div class="fz">' + esc(sn.zh) + "</div>" +
+      '<div class="fp">' + esc(sn.p) + "・答錯 " + it.wrong + " 次</div>" +
+      (ex ? '<div class="fe" style="margin-top:14px">' +
+        esc(splitEx(ex.en).pre) + "________" + esc(splitEx(ex.en).post) + "</div>" : "") +
+      '<div class="tip">先在心裡拼出英文，再點卡片對答案</div>';
+
+  $("#v-wrong").innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+    '<span style="color:var(--sub);font-size:13px">' + (flashI + 1) + " / " + flashList.length + " 張</span>" +
+    '<button class="btn sm ghost" id="fDrill">直接重練這些錯字</button></div>' +
+    '<div class="flash" id="flash">' + face + "</div>" +
+    (flipped
+      ? '<div class="row" style="margin-top:16px">' +
+        '<button class="btn bad" id="fNo">還是不會</button>' +
+        '<button class="btn ok" id="fYes">記起來了</button></div>'
+      : '<button class="btn ghost" id="fSkip" style="margin-top:16px">跳過</button>');
+
+  $("#flash").onclick = function () { flipped = !flipped; renderFlash(); };
+  $("#fDrill").onclick = function () {
+    queue = shuffle(wrongItems().slice());
+    qTotal = queue.length;
+    toast("這一輪只考錯題本裡的 " + qTotal + " 個字");
+    go("drill");
+  };
+  if (flipped) {
+    $("#fNo").onclick = function () { it.st = 0; it.box = 0; save(); nextFlash(); };
+    $("#fYes").onclick = function () {
+      it.st++;
+      if (it.st >= 2) { it.wb = false; toast(e.w + " 已移出錯題本"); }
+      save(); refreshHeader(); drawWrong();
+    };
+  } else {
+    $("#fSkip").onclick = nextFlash;
+  }
+}
+function nextFlash() {
+  flashI = (flashI + 1) % flashList.length;
+  flipped = false;
+  renderFlash();
+}
+
+/* ============================================================
+   設定
+   ============================================================ */
+function drawSet() {
+  $("#v-set").innerHTML =
+    '<h2 class="sec">要叫 Claude 幫忙的事</h2>' +
+    '<div class="setrow"><div><div class="t">待查單字（' + S.todo.length + "）</div>" +
+    '<div class="d">字庫裡沒有、你想加進來的字</div></div>' +
+    '<button class="btn sm ghost" id="cpTodo">複製指令</button></div>' +
+    '<div class="setrow"><div><div class="t">回報的怪句子（' + S.bad.length + "）</div>" +
+    '<div class="d">你覺得不自然或有錯的例句</div></div>' +
+    '<button class="btn sm ghost" id="cpBad">複製指令</button></div>' +
+
+    '<h2 class="sec">備份</h2>' +
+    '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.7">' +
+    "進度存在這個瀏覽器裡。換手機、或清掉瀏覽器資料之前，記得先匯出備份。</p>" +
+    '<textarea class="io" id="io" placeholder="按「匯出」會把進度貼在這裡；也可以把備份貼進來再按「匯入」"></textarea>' +
+    '<div class="row" style="margin-top:10px">' +
+    '<button class="btn ghost" id="btnExp">匯出</button>' +
+    '<button class="btn ghost" id="btnImp">匯入</button></div>' +
+
+    '<h2 class="sec">字庫</h2>' +
+    '<div class="setrow"><div><div class="t">目前收錄</div>' +
+    '<div class="d">' + BANK.length + " 個單字與片語・" +
+    BANK.reduce(function (n, e) { return n + e.s.reduce(function (m, s) { return m + s.ex.length; }, 0); }, 0) +
+    " 個例句</div></div></div>" +
+
+    '<h2 class="sec">危險操作</h2>' +
+    '<button class="btn ghost" id="btnWipe" style="color:var(--bad)">清除全部學習進度</button>' +
+    '<p style="font-size:12px;color:var(--sub);text-align:center;margin-top:28px">v1・完全離線運作</p>';
+
+  $("#cpTodo").onclick = function () {
+    if (!S.todo.length) return toast("待查清單是空的");
+    copy("請幫我把這些字加進單字庫（照 data/bank.js 的格式，新增到 data/ 裡的檔案）：\n" +
+      S.todo.join("、"));
+  };
+  $("#cpBad").onclick = function () {
+    if (!S.bad.length) return toast("沒有回報過句子");
+    copy("這幾句例句我覺得怪怪的，請幫我檢查並修正單字庫裡的內容：\n" +
+      S.bad.map(function (b) { return "- " + b.w + "（" + b.p + "）：" + b.en + " / " + b.zh; }).join("\n"));
+  };
+  $("#btnExp").onclick = function () {
+    $("#io").value = JSON.stringify(S);
+    $("#io").select();
+    toast("已產生備份，請整段複製起來存好");
+  };
+  $("#btnImp").onclick = function () {
+    try {
+      var o = JSON.parse($("#io").value);
+      if (!o.items) throw 0;
+      S = o; S.todo = S.todo || []; S.bad = S.bad || []; S.log = S.log || {};
+      save(); queue = []; toast("匯入成功"); go("mine");
+    } catch (e) { toast("格式不對，請確認貼上的是完整備份"); }
+  };
+  $("#btnWipe").onclick = function () {
+    if (!confirm("確定要清除全部進度嗎？這會刪掉你的練習清單、熟練度與錯題本，無法復原。")) return;
+    S = { v: 1, items: {}, todo: [], bad: [], log: {} };
+    save(); queue = []; toast("已清除"); go("drill");
+  };
+}
+
+function copy(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(function () { toast("已複製，貼給 Claude Code 就好"); },
+      function () { fallbackCopy(text); });
+  } else fallbackCopy(text);
+}
+function fallbackCopy(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); toast("已複製"); }
+  catch (e) { toast("複製失敗，請手動選取"); }
+  document.body.removeChild(ta);
+}
+
+/* ---------- 啟動 ---------- */
+go("drill");
+
+if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+  navigator.serviceWorker.register("sw.js").catch(function () { });
+}
