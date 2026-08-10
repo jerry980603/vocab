@@ -1005,6 +1005,8 @@ function bindHits() {
 /* ============================================================
    我的字
    ============================================================ */
+var openMineDay = null;   // 目前展開的是哪一個 Day 資料夾
+
 function drawMine() {
   var items = allItems();
   var l = S.log[today()] || { a: 0, c: 0 };
@@ -1022,19 +1024,57 @@ function drawMine() {
     $("#v-mine").innerHTML = html + '<div class="empty">還沒有加任何單字</div>';
     return;
   }
-  items.sort(function (a, b) { return a.due - b.due; });
+
+  /* 依課表的 Day 分組，一天一個資料夾。
+     分組依據就是課表當下的排法，所以改了「每天幾個字」或切換排序方式，
+     這裡的資料夾也會跟著重新分。 */
+  var dayOf = {};
+  dayGroups().forEach(function (g, i) {
+    g.forEach(function (e) { dayOf[e.w.toLowerCase()] = i; });
+  });
+
+  var folders = {};
+  items.forEach(function (it) {
+    var d = dayOf[it.w.toLowerCase()];
+    d = (d === undefined) ? -1 : d;      // -1 = 自己從查單字加的，不屬於任何 Day
+    (folders[d] = folders[d] || []).push(it);
+  });
+
   var now = Date.now();
-  html += '<h2 class="sec">練習清單（' + items.length + "）</h2>";
-  html += items.map(function (it) {
-    var e = DICT[it.w.toLowerCase()], sn = e.s[it.si];
-    var d = it.due <= now ? "待複習" : fmtDue(it.due - now);
-    return '<div class="li"><div><div class="w">' + esc(e.w) + " " + lvTag(e) +
-      ' <span class="tag gray">' + esc(sn.p) + "</span></div>" +
-      '<div class="m">' + esc(sn.zh) + " ・ 熟練度 " + it.box + " ・ " + d + "</div></div>" +
-      '<button class="del" data-del="' + esc(it.w) + "::" + it.si + '">✕</button></div>';
+  var keys = Object.keys(folders).map(Number).sort(function (a, b) { return a - b; });
+  html += '<h2 class="sec">練習清單（' + items.length + " 個字義，分 " + keys.length + " 個資料夾）</h2>";
+
+  html += keys.map(function (d) {
+    var list = folders[d].slice().sort(function (a, b) { return a.due - b.due; });
+    var due = list.filter(function (it) { return it.due <= now; }).length;
+    var mastered = list.filter(function (it) { return it.box >= 5; }).length;
+    var title = d < 0 ? "自己加的" : "Day " + (d + 1);
+    var open = openMineDay === d;
+    return '<div class="day' + (open ? " open" : "") + '" data-m="' + d + '">' +
+      '<div class="top"><span class="n">' + title + "</span>" +
+      '<span class="st">' + list.length + " 個・熟練 " + mastered +
+      (due ? "・<b style=\"color:var(--accent)\">待複習 " + due + "</b>" : "") + "</span></div>" +
+      '<div class="words" style="padding-top:4px">' +
+      list.map(function (it) {
+        var e = DICT[it.w.toLowerCase()], sn = e.s[it.si];
+        var t = it.due <= now ? "待複習" : fmtDue(it.due - now);
+        return '<div class="li" style="padding:10px 0"><div><div class="w">' +
+          esc(e.w) + " " + lvTag(e) +
+          ' <span class="tag gray">' + esc(sn.p) + "</span></div>" +
+          '<div class="m">' + esc(sn.zh) + " ・ 熟練度 " + it.box + " ・ " + t + "</div></div>" +
+          '<button class="del" data-del="' + esc(it.w) + "::" + it.si + '">✕</button></div>';
+      }).join("") + "</div></div>";
   }).join("");
 
   $("#v-mine").innerHTML = html;
+
+  $("#v-mine").querySelectorAll("[data-m]").forEach(function (f) {
+    f.onclick = function (e) {
+      if (e.target.closest("[data-del]")) return;
+      openMineDay = openMineDay === +f.dataset.m ? null : +f.dataset.m;
+      drawMine();
+    };
+  });
   $("#v-mine").querySelectorAll("[data-del]").forEach(function (b) {
     b.onclick = function () {
       var p = b.dataset.del.split("::");
