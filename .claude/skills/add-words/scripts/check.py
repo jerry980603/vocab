@@ -145,6 +145,18 @@ def main():
                     bad = [c for c in bare if c in SIMPLIFIED]
                     if bad:
                         fail("E 中文純度", "%s 的%s有簡體字 %s：%s" % (w, label, bad, txt))
+                    # 中文欄位裡不該出現中日韓與常用標點以外的文字。
+                    # 踩過：security 的中譯被誤植成俄文「первый次給了他安全感」，
+                    # 只查英文字母和簡體字的話完全抓不到。
+                    alien = [c for c in txt if not (
+                        "一" <= c <= "鿿" or           # 漢字
+                        "　" <= c <= "〿" or           # 中文標點
+                        "＀" <= c <= "￯" or           # 全形符號
+                        c in "…—–‧·※" or              # 中文行文常用的其他標點
+                        c.isascii() or c.isspace())]
+                    if alien:
+                        fail("E 中文純度",
+                             "%s 的%s出現非中文字元 %s：%s" % (w, label, alien, txt))
 
         # C 詞性覆蓋
         if not is_phrase and key in off:

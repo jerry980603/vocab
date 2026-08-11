@@ -13,25 +13,26 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：548 / 6114**
+**已編好釋義與例句：648 / 6114（952 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
 - `w7`：61 字（第 3 級，形容詞）
+- `w8`：55 字（第 3 級，抽象名詞 A–M）
+- `w9`：45 字（第 3 級，抽象名詞 N–Z）
 - `p1`：52 個片語
 
-**下一批要做**：第 3 級的抽象名詞
-（achievement、ambition、background、breath、budget、clue、comfort、comparison、
-conclusion、credit、definition、democracy、election、element、emergency、entry、
-envy、expectation、faith、fortune、gap、glory、guidance、honesty、horror、humor、
-imagination、information、injury、leisure、liberty、location、majority、mission、
-mystery、necessity、patience、performance、permission、pity、politics、presence、
-proof、property、protection、reaction、relief、responsibility、security、similarity、
-situation、sorrow、strength、structure、substance、summary、suspicion、technique、
-temper、theory、threat、tourism、union、unity、variety、violence、vision、
-vocabulary、volume、wage、warmth、weapon、zone…）
+**下一批要做**：第 3 級還缺約 680 個字。優先挑動詞與形容詞，
+跳過冷僻具體名詞（kangaroo、spaghetti、doughnut 這類學測不會考的）。
+用下面的腳本就能列出待補清單：
 
-要看還有哪些字沒寫，用 `data/official.js` 的清單減掉 `WORD_BANK` 已有的字即可。
+```bash
+python .claude/skills/add-words/scripts/todo.py 3 130
+```
+
+**已知待改善（還沒動）**：`w1`～`w5` 與 `p1` 有 987 句例句短於 10 字，
+情境線索不足。`w6` 之後的批次都符合 10～14 字的標準。
+重寫這批大約需要 6～8 次對話，使用者知道這件事，目前選擇先衝數量。
 
 ### ⚠ 內容進度是整個計畫的瓶頸
 
