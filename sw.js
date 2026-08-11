@@ -1,5 +1,5 @@
 /* 離線快取：第一次開啟後，之後沒網路也能用 */
-var CACHE = "vocab-v4";
+var CACHE = "vocab-v5";
 var FILES = [
   "./", "./index.html", "./app.js", "./manifest.json", "./icon.svg",
   "./data/official.js", "./data/bank.js",
@@ -22,11 +22,16 @@ self.addEventListener("activate", function (e) {
   }).then(function () { return self.clients.claim(); }));
 });
 
-/* 先用網路（拿得到就順便更新快取），沒網路就用快取 */
+/* 先用網路（拿得到就順便更新快取），沒網路就用快取。
+
+   注意 { cache: "no-cache" }：少了它，這個 fetch 會走瀏覽器自己的 HTTP 快取，
+   而 GitHub Pages 給的是 max-age=600，等於補完新單字後手機最久要等十分鐘
+   才看得到，PWA 情境下還可能更久。no-cache 不是不用快取，
+   是強制跟伺服器確認一次（沒變就回 304，很便宜），這樣更新才會即時。 */
 self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET") return;
   e.respondWith(
-    fetch(e.request).then(function (res) {
+    fetch(e.request, { cache: "no-cache" }).then(function (res) {
       var copy = res.clone();
       caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
       return res;
