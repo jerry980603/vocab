@@ -703,26 +703,46 @@ var openDay = -1;
 /* 日期輸入框本身不能跟著重畫，否則你還沒選完它就被砍掉重建，
    會變成「改不動」。所以輸入框固定在外面，只有下面的資訊區塊會更新。 */
 function examPlan(written) {
-  return '<input class="num" id="examDate" type="date" value="' +
-    esc(S.examDate || "") + '">' +
+  return '<div style="font-size:13px;color:var(--sub);margin:0 4px 6px">考試日期</div>' +
+    '<input class="num" id="examDate" type="date" value="' + esc(S.examDate || "") + '">' +
+    '<div style="font-size:13px;color:var(--sub);margin:12px 4px 6px">新字要在哪天學完</div>' +
+    '<input class="num" id="learnEnd" type="date" value="' + esc(S.learnEndDate || "") + '">' +
     '<div id="examInfo">' + examInfoHTML(written) + "</div>";
 }
 
+/* 距離某個日期還有幾天（今天算 0） */
+function daysTo(dateStr) {
+  if (!dateStr) return null;
+  var t = new Date(dateStr + "T00:00:00").getTime();
+  if (isNaN(t)) return null;
+  return Math.ceil((t - Date.now()) / DAY);
+}
+
 function examInfoHTML(written) {
-  var d = S.examDate || "";
-  var box = "";
-  if (!d) {
-    return '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
-      "填上<b>實際考試日期</b>（例如學測是 2027/01/22），" +
-      "我會自動算出學習期有幾天、每天至少要學幾個新字。<br>" +
-      "不要填「100 天後」那種推算過的日期，倒數和分段都會算錯。</p>";
+  var msg = function (t) {
+    return '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' + t + "</p>";
+  };
+  if (!S.examDate) {
+    return msg("先填<b>實際考試日期</b>（學測是 2027/01/22）。<br>" +
+      "不要填「100 天後」那種推算過的日期，倒數和分段都會算錯。");
   }
-  var left = Math.ceil((new Date(d + "T00:00:00").getTime() - Date.now()) / DAY);
-  if (left <= 0) {
-    return box + '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0">考試日已過，改個日期吧。</p>';
+  var left = daysTo(S.examDate);
+  if (left === null || left <= 0) return msg("考試日已過或格式不對，改個日期吧。");
+
+  if (!S.learnEndDate) {
+    return msg("距離考試還有 <b>" + left + " 天</b>。<br>" +
+      "再填<b>新字要在哪天學完</b>，那天到考試日之間就是你的鞏固期——" +
+      "鞏固期不上新字，只把學過的複習到熟。<br>" +
+      "填好之後我會反推每天要學幾個字義才來得及。");
   }
-  /* 留 65 天鞏固期，跟下面「讀書計畫」的分段一致 */
-  var learnDays = Math.max(1, left - 65);
+  var learnDays = daysTo(S.learnEndDate);
+  if (learnDays === null) return msg("學完日格式不對。");
+  if (learnDays <= 0) return msg("學完日已經過了，表示你現在就該進入鞏固期，或把日期往後調。");
+  if (learnDays >= left) {
+    return msg("⚠ 學完日必須<b>早於</b>考試日，中間那段才是鞏固期。現在等於完全沒有鞏固期。");
+  }
+  var consolidate = left - learnDays;
+
   /* 單位一律用「字義」，跟課表一致。
      官方 6114 個字還沒編寫的部分，用目前的平均義項數推估。 */
   var units = unitCount();
@@ -734,9 +754,9 @@ function examInfoHTML(written) {
   var needAll = Math.ceil(remainAll / learnDays);
   var enough = perDay() >= needAll;
 
-  return box +
-    '<p style="font-size:14px;line-height:1.9;margin:12px 4px 0">' +
-    "距離考試還有 <b>" + left + " 天</b>（扣掉最後 65 天鞏固期，可以上新字的有 " + learnDays + " 天）<br>" +
+  return '<p style="font-size:14px;line-height:1.9;margin:12px 4px 0">' +
+    "距離考試還有 <b>" + left + " 天</b>：學習期 <b>" + learnDays +
+    " 天</b>，之後鞏固期 <b>" + consolidate + " 天</b><br>" +
     '<span style="color:var(--sub);font-size:13px">以下都以「字義」計算，' +
     "因為 42% 的字有兩個以上的意思，一個字平均 " + perWord.toFixed(1) + " 個字義。</span><br>" +
     "把<b>已編好例句的</b>全部吃完 → 每天 <b>" + needWritten + "</b> 個字義<br>" +
@@ -758,14 +778,15 @@ function examInfoHTML(written) {
     "避免有些字最後一次複習停在兩個月前就進考場。</p>";
 }
 
-/* 三階段讀書計畫。階段界線直接由考試日推算：
-   考前 10 天＝總複習、再往前 55 天＝鞏固期、更早＝學習期。 */
+/* 三階段讀書計畫。分界完全由你填的兩個日期決定，沒有寫死的數字：
+   今天 → 學完日 = 學習期；學完日 → 考前 10 天 = 鞏固期；最後 10 天 = 總複習。 */
 function phasePlan(written) {
-  if (!S.examDate) return "";
-  var left = Math.ceil((new Date(S.examDate + "T00:00:00").getTime() - Date.now()) / DAY);
-  if (left <= 0) return "";
+  if (!S.examDate || !S.learnEndDate) return "";
+  var left = daysTo(S.examDate), learnDays = daysTo(S.learnEndDate);
+  if (left === null || left <= 0 || learnDays === null || learnDays >= left) return "";
 
-  var SPRINT = 10, CONSOLIDATE = 65;
+  var SPRINT = Math.min(10, left);
+  var CONSOLIDATE = left - learnDays;          // 由你的學完日算出來
   var phases = [
     { n: "學習期", d: "每天上新字，同時消化到期的複習。這段最重。",
       from: CONSOLIDATE, to: 1e9 },
@@ -778,8 +799,8 @@ function phasePlan(written) {
 
   var rows = phases.map(function (p) {
     var on = p === cur;
-    var range = p.to > 1e8 ? "考前 " + CONSOLIDATE + " 天以前"
-      : "考前 " + p.to + "～" + (p.from + 1) + " 天";
+    var range = p.to > 1e8 ? "今天起 " + (left - CONSOLIDATE) + " 天"
+      : (p.to - p.from) + " 天（考前 " + p.to + "～" + (p.from + 1) + " 天）";
     return '<div class="day' + (on ? " done open" : "") + '" style="cursor:default">' +
       '<div class="top"><span class="n">' + p.n + (on ? "　← 你在這裡" : "") + "</span>" +
       '<span class="st">' + range + "</span></div>" +
@@ -791,7 +812,7 @@ function phasePlan(written) {
   }).join(" → ");
 
   var short = OFF_COUNT - written;
-  return '<h2 class="sec">讀書計畫（依考試日自動分段）</h2>' + rows +
+  return '<h2 class="sec">讀書計畫（依你填的兩個日期分段）</h2>' + rows +
     '<div class="plan-head" style="margin-top:14px">' +
     '<div class="cap" style="line-height:1.9">' +
     "<b>答對後的複習間隔</b><br>" + ladder + "<br><br>" +
@@ -871,16 +892,19 @@ function drawPlan() {
 
   $("#v-plan").innerHTML = html;
 
+  /* 只更新受日期影響的兩個區塊，不碰輸入框本身，
+     否則日期選擇器會在你選到一半時被砍掉重建。 */
+  function refreshDates() {
+    var w = writtenCount();
+    $("#examInfo").innerHTML = examInfoHTML(w);
+    $("#phaseBox").innerHTML = phasePlan(w);
+    bindSprint();
+  }
   if ($("#examDate")) {
-    /* 只更新受日期影響的兩個區塊，不碰輸入框本身，
-       否則日期選擇器會在你選到一半時被砍掉重建。 */
-    $("#examDate").onchange = function () {
-      S.examDate = this.value; save();
-      var w = writtenCount();
-      $("#examInfo").innerHTML = examInfoHTML(w);
-      $("#phaseBox").innerHTML = phasePlan(w);
-      bindSprint();
-    };
+    $("#examDate").onchange = function () { S.examDate = this.value; save(); refreshDates(); };
+  }
+  if ($("#learnEnd")) {
+    $("#learnEnd").onchange = function () { S.learnEndDate = this.value; save(); refreshDates(); };
   }
   bindSprint();
   bindPlanRest();
