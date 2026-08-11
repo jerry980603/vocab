@@ -640,30 +640,33 @@ function perDay() { return S.perDay || 15; }
 
 function mixOn() { return S.mixLevels !== false; }
 
-/* 課表的排序有兩種：
-   「由淺到深」把同一級的字排在一起，前面幾天全是簡單字；
-   「難度平均混合」讓每一天都按比例含有各個分級的字。
-   後者是預設，因為交錯練習（interleaving）在長期保留與辨別能力上
-   優於一次只練同一類的集中練習。 */
-function planWords() {
-  var ws = BANK.filter(function (e) { return !e.ph; }).slice();
-  var byWord = function (a, b) { return a.w < b.w ? -1 : a.w > b.w ? 1 : 0; };
+/* 課表的單位是「字義」而不是「單字」。
+   42% 的字有兩個以上的意思（claim 有 4 個、account 有 3 個），
+   如果一個字只排第一個意思，那 260 個義項永遠不會被練到。
+   所以「每天 62 個」指的是 62 個字義。同一個字的不同意思會排在一起。 */
+function planUnits() {
+  var units = [];
+  BANK.filter(function (e) { return !e.ph; }).forEach(function (e) {
+    e.s.forEach(function (sn, i) {
+      units.push({ w: e.w, si: i, lv: e.lv || 9, e: e, sn: sn });
+    });
+  });
 
+  var ord = function (a, b) {
+    return a.w < b.w ? -1 : a.w > b.w ? 1 : a.si - b.si;
+  };
   if (!mixOn()) {
-    return ws.sort(function (a, b) { return (a.lv || 9) - (b.lv || 9) || byWord(a, b); });
+    return units.sort(function (a, b) { return a.lv - b.lv || ord(a, b); });
   }
 
-  /* 依分級分堆，然後每次挑「最落後於自己應有比例」的那一堆，
-     這樣每一天的分級組成都會貼近整體比例。 */
+  /* 依分級分堆，每次挑「最落後於自己應有比例」的那一堆，
+     讓每一天的分級組成都貼近整體比例（交錯練習）。 */
   var buckets = {};
-  ws.forEach(function (e) {
-    var k = e.lv || 9;
-    (buckets[k] = buckets[k] || []).push(e);
-  });
+  units.forEach(function (u) { (buckets[u.lv] = buckets[u.lv] || []).push(u); });
   var keys = Object.keys(buckets).sort(function (a, b) { return a - b; });
-  keys.forEach(function (k) { buckets[k].sort(byWord); });
+  keys.forEach(function (k) { buckets[k].sort(ord); });
 
-  var total = ws.length, out = [], idx = {};
+  var total = units.length, out = [], idx = {};
   keys.forEach(function (k) { idx[k] = 0; });
   while (out.length < total) {
     var best = null, bestGap = -Infinity;
@@ -677,21 +680,18 @@ function planWords() {
   }
   return out;
 }
+function unitCount() { return planUnits().length; }
+
 function dayGroups() {
-  var ws = planWords(), n = perDay(), g = [];
-  for (var i = 0; i < ws.length; i += n) g.push(ws.slice(i, i + n));
+  var us = planUnits(), n = perDay(), g = [];
+  for (var i = 0; i < us.length; i += n) g.push(us.slice(i, i + n));
   return g;
 }
 function dayStat(group) {
   var added = 0, mastered = 0;
-  group.forEach(function (e) {
-    var any = false, allOk = true;
-    e.s.forEach(function (sn, i) {
-      var it = S.items[idOf(e.w, i)];
-      if (it) { any = true; if (it.box < 5) allOk = false; }
-    });
-    if (any) added++;
-    if (any && allOk) mastered++;
+  group.forEach(function (u) {
+    var it = S.items[idOf(u.w, u.si)];
+    if (it) { added++; if (it.box >= 5) mastered++; }
   });
   return { added: added, mastered: mastered, total: group.length };
 }
@@ -723,10 +723,13 @@ function examInfoHTML(written) {
   }
   /* 留 65 天鞏固期，跟下面「讀書計畫」的分段一致 */
   var learnDays = Math.max(1, left - 65);
-  var startedWords = {};
-  Object.keys(S.items).forEach(function (k) { startedWords[S.items[k].w] = 1; });
-  var remainWritten = written - Object.keys(startedWords).length;
-  var remainAll = OFF_COUNT - Object.keys(startedWords).length;
+  /* 單位一律用「字義」，跟課表一致。
+     官方 6114 個字還沒編寫的部分，用目前的平均義項數推估。 */
+  var units = unitCount();
+  var perWord = units / Math.max(written, 1);
+  var startedUnits = Object.keys(S.items).length;
+  var remainWritten = Math.max(0, units - startedUnits);
+  var remainAll = Math.max(0, Math.round(OFF_COUNT * perWord) - startedUnits);
   var needWritten = Math.ceil(remainWritten / learnDays);
   var needAll = Math.ceil(remainAll / learnDays);
   var enough = perDay() >= needAll;
@@ -734,16 +737,19 @@ function examInfoHTML(written) {
   return box +
     '<p style="font-size:14px;line-height:1.9;margin:12px 4px 0">' +
     "距離考試還有 <b>" + left + " 天</b>（扣掉最後 65 天鞏固期，可以上新字的有 " + learnDays + " 天）<br>" +
-    "把<b>已編好例句的字</b>全部吃完 → 每天 <b>" + needWritten + "</b> 個<br>" +
-    "把<b>官方 " + OFF_COUNT + " 個字</b>全部吃完 → 每天 <b>" + needAll + "</b> 個" +
+    '<span style="color:var(--sub);font-size:13px">以下都以「字義」計算，' +
+    "因為 42% 的字有兩個以上的意思，一個字平均 " + perWord.toFixed(1) + " 個字義。</span><br>" +
+    "把<b>已編好例句的</b>全部吃完 → 每天 <b>" + needWritten + "</b> 個字義<br>" +
+    "把<b>官方 " + OFF_COUNT + " 個字</b>全部吃完 → 每天 <b>" + needAll + "</b> 個字義" +
     "，預估每天要做 <b>" + Math.round(needAll * 6.6) + "</b> 題、約 <b>" +
     Math.round(needAll * 6.6 * 12 / 60) + "</b> 分鐘</p>" +
     '<p style="font-size:13px;margin:10px 4px 0;line-height:1.7;color:' +
     (enough ? "var(--ok)" : "var(--bad)") + '">' +
     (enough
-      ? "✓ 你目前設定每天 " + perDay() + " 個，來得及。"
-      : "⚠ 你目前設定每天 " + perDay() + " 個，照這個速度到考前只能學完 " +
-        (perDay() * learnDays + Object.keys(startedWords).length) + " 個字。") +
+      ? "✓ 你目前設定每天 " + perDay() + " 個字義，來得及。"
+      : "⚠ 你目前設定每天 " + perDay() + " 個字義，照這個速度到考前只能學完 " +
+        (perDay() * learnDays + startedUnits) + " 個字義（目標 " +
+        Math.round(OFF_COUNT * perWord) + "）。") +
     "</p>" +
     '<button class="btn ghost sm" id="btnSprint" style="width:100%;margin-top:12px">' +
     "啟動考前總複習（把所有字重排進最後 " + Math.min(10, left) + " 天）</button>" +
@@ -827,7 +833,9 @@ function drawPlan() {
     '<input class="num" id="perDay" type="number" min="3" max="200" value="' + perDay() + '">' +
     '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
     "這是<b>下限不是上限</b>——練完當天的量還想繼續，隨時可以再加練或直接吃下一個 Day。<br>" +
-    "改這個數字會重新分組。以每天 " + perDay() + " 個新字估算，穩定之後每天大約 " +
+    "單位是<b>字義</b>不是單字——一個字有幾個常考意思就算幾個，" +
+    "目前 " + writtenCount() + " 個字共 " + unitCount() + " 個字義。<br>" +
+    "改這個數字會重新分組。以每天 " + perDay() + " 個字義估算，穩定之後每天大約 " +
     Math.round(perDay() * 6.6) + " 題、" + Math.round(perDay() * 6.6 * 12 / 60) + " 分鐘（含複習）。</p>";
 
   html += '<h2 class="sec">課表怎麼排</h2>' +
@@ -843,14 +851,19 @@ function drawPlan() {
   html += groups.map(function (g, i) {
     var st = dayStat(g);
     var done = st.added === st.total;
-    var lvs = {};
-    g.forEach(function (e) { lvs[e.lv || 0] = 1; });
+    var nWords = Object.keys(g.reduce(function (m, u) { m[u.w] = 1; return m; }, {})).length;
     return '<div class="day' + (done ? " done" : "") + (openDay === i ? " open" : "") + '" data-d="' + i + '">' +
       '<div class="top"><span class="n">Day ' + (i + 1) + "</span>" +
       '<span class="st">' + st.added + " / " + st.total + " 已加入・熟練 " + st.mastered + "</span></div>" +
-      '<div class="words">' + g.map(function (e) {
-        return (S.items[idOf(e.w, 0)] ? "<b>" + esc(e.w) + "</b>" : esc(e.w)) +
-          '<span class="lv l' + (e.lv || 1) + '" style="margin-left:3px">' + (e.lv || "?") + "</span>";
+      '<div class="words">' +
+      '<div style="margin-bottom:8px;font-size:12px">' + st.total + " 個字義，來自 " + nWords + " 個單字</div>" +
+      g.map(function (u) {
+        /* 一個字有多個意思時右上角標序號，讓你看得出同一個字被拆成幾筆 */
+        var mark = u.e.s.length > 1 ? "<sup>" + (u.si + 1) + "</sup>" : "";
+        var name = esc(u.w) + mark;
+        return (S.items[idOf(u.w, u.si)] ? "<b>" + name + "</b>" : name) +
+          '<span class="lv l' + (u.lv === 9 ? 1 : u.lv) + '" style="margin-left:3px">' +
+          (u.lv === 9 ? "外" : u.lv) + "</span>";
       }).join("　") +
       '<div style="margin-top:12px"><button class="btn sm" data-add-day="' + i + '">' +
       (done ? "已全部加入" : "把這組加入練習清單") + "</button></div></div></div>";
@@ -915,9 +928,9 @@ function bindPlanRest() {
   $("#v-plan").querySelectorAll("[data-add-day]").forEach(function (b) {
     b.onclick = function () {
       var g = dayGroups()[+b.dataset.addDay], n = 0;
-      g.forEach(function (e) { if (addItem(e.w, 0)) n++; });
+      g.forEach(function (u) { if (addItem(u.w, u.si)) n++; });
       queue = [];
-      toast(n ? "已加入 " + n + " 個新字，去「練習」開始吧" : "這組都已經在清單裡了");
+      toast(n ? "已加入 " + n + " 個字義，去「練習」開始吧" : "這組都已經在清單裡了");
       refreshHeader(); drawPlan();
     };
   });
@@ -1007,6 +1020,24 @@ function bindHits() {
    ============================================================ */
 var openMineDay = null;   // 目前展開的是哪一個 Day 資料夾
 
+/* 把一堆練習項目依課表的 Day 分組。
+   -1 代表不屬於任何 Day（自己從查單字加的）。
+   分組依據是課表當下的排法，所以改「每天幾個」或切換排序方式，資料夾也會跟著重分。 */
+function groupByDay(items) {
+  var dayOf = {};
+  dayGroups().forEach(function (g, i) {
+    g.forEach(function (u) { dayOf[idOf(u.w, u.si)] = i; });
+  });
+  var folders = {};
+  items.forEach(function (it) {
+    var d = dayOf[idOf(it.w, it.si)];
+    d = (d === undefined) ? -1 : d;
+    (folders[d] = folders[d] || []).push(it);
+  });
+  return folders;
+}
+function dayLabel(d) { return d < 0 ? "自己加的" : "Day " + (d + 1); }
+
 function drawMine() {
   var items = allItems();
   var l = S.log[today()] || { a: 0, c: 0 };
@@ -1028,17 +1059,7 @@ function drawMine() {
   /* 依課表的 Day 分組，一天一個資料夾。
      分組依據就是課表當下的排法，所以改了「每天幾個字」或切換排序方式，
      這裡的資料夾也會跟著重新分。 */
-  var dayOf = {};
-  dayGroups().forEach(function (g, i) {
-    g.forEach(function (e) { dayOf[e.w.toLowerCase()] = i; });
-  });
-
-  var folders = {};
-  items.forEach(function (it) {
-    var d = dayOf[it.w.toLowerCase()];
-    d = (d === undefined) ? -1 : d;      // -1 = 自己從查單字加的，不屬於任何 Day
-    (folders[d] = folders[d] || []).push(it);
-  });
+  var folders = groupByDay(items);
 
   var now = Date.now();
   var keys = Object.keys(folders).map(Number).sort(function (a, b) { return a - b; });
@@ -1048,7 +1069,7 @@ function drawMine() {
     var list = folders[d].slice().sort(function (a, b) { return a.due - b.due; });
     var due = list.filter(function (it) { return it.due <= now; }).length;
     var mastered = list.filter(function (it) { return it.box >= 5; }).length;
-    var title = d < 0 ? "自己加的" : "Day " + (d + 1);
+    var title = dayLabel(d);
     var open = openMineDay === d;
     return '<div class="day' + (open ? " open" : "") + '" data-m="' + d + '">' +
       '<div class="top"><span class="n">' + title + "</span>" +
@@ -1095,14 +1116,46 @@ function fmtDue(ms) {
    ============================================================ */
 var flashList = [], flashI = 0, flipped = false;
 
+var wrongDay = null;   // null = 停在資料夾清單；數字或 "all" = 正在翻該組的卡
+
 function drawWrong() {
-  flashList = wrongItems();
-  if (!flashList.length) {
+  var all = wrongItems();
+  if (!all.length) {
+    wrongDay = null;
     $("#v-wrong").innerHTML =
       '<div class="empty"><span class="big">🎉</span>' +
       "錯題本是空的。<br>答錯的字會自動跑到這裡，<br>連續答對兩次就會畢業。</div>";
     return;
   }
+
+  /* 先給資料夾清單，選一組才進卡片模式。
+     一次翻三十幾張沒有段落感，分成一天一疊比較容易做完。 */
+  if (wrongDay === null) {
+    var folders = groupByDay(all);
+    var keys = Object.keys(folders).map(Number).sort(function (a, b) { return a - b; });
+    $("#v-wrong").innerHTML =
+      '<div class="plan-head"><div class="big">' + all.length +
+      ' <span style="font-size:15px;color:var(--sub);font-weight:500">個字義還沒過關</span></div>' +
+      '<div class="cap">連續答對兩次才會移出錯題本。選一組開始翻卡。</div></div>' +
+      '<button class="btn bad" data-wd="all">全部一起翻（' + all.length + " 張）</button>" +
+      '<h2 class="sec">依課表分組</h2>' +
+      keys.map(function (d) {
+        var n = folders[d].length;
+        return '<div class="day" data-wd="' + d + '"><div class="top">' +
+          '<span class="n">' + dayLabel(d) + "</span>" +
+          '<span class="st">' + n + " 張 ›</span></div></div>";
+      }).join("");
+    $("#v-wrong").querySelectorAll("[data-wd]").forEach(function (b) {
+      b.onclick = function () {
+        wrongDay = b.dataset.wd === "all" ? "all" : +b.dataset.wd;
+        flashI = 0; flipped = false; drawWrong();
+      };
+    });
+    return;
+  }
+
+  flashList = wrongDay === "all" ? all : (groupByDay(all)[wrongDay] || []);
+  if (!flashList.length) { wrongDay = null; drawWrong(); return; }
   if (flashI >= flashList.length) flashI = 0;
   flipped = false;
   renderFlash();
@@ -1127,8 +1180,10 @@ function renderFlash() {
 
   $("#v-wrong").innerHTML =
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+    '<button class="btn sm ghost" id="fBack">‹ ' +
+    (wrongDay === "all" ? "全部" : dayLabel(wrongDay)) + "</button>" +
     '<span style="color:var(--sub);font-size:13px">' + (flashI + 1) + " / " + flashList.length + " 張</span>" +
-    '<button class="btn sm ghost" id="fDrill">直接重練這些錯字</button></div>' +
+    '<button class="btn sm ghost" id="fDrill">重練這組</button></div>' +
     '<div class="flash" id="flash">' + face + "</div>" +
     (flipped
       ? '<div class="row" style="margin-top:16px">' +
@@ -1137,10 +1192,12 @@ function renderFlash() {
       : '<button class="btn ghost" id="fSkip" style="margin-top:16px">跳過</button>');
 
   $("#flash").onclick = function () { flipped = !flipped; renderFlash(); };
+  $("#fBack").onclick = function () { wrongDay = null; drawWrong(); };
   $("#fDrill").onclick = function () {
-    queue = shuffle(wrongItems().slice());
+    queue = shuffle(flashList.slice());
     qTotal = queue.length;
-    toast("這一輪只考錯題本裡的 " + qTotal + " 個字");
+    drillMode = "wrong";
+    toast("這一輪只考這組的 " + qTotal + " 個字義");
     go("drill");
   };
   if (flipped) {
@@ -1176,10 +1233,15 @@ function drawSet() {
     '<h2 class="sec">備份</h2>' +
     '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.7">' +
     "進度存在這個瀏覽器裡。換手機、或清掉瀏覽器資料之前，記得先匯出備份。</p>" +
-    '<textarea class="io" id="io" placeholder="按「匯出」會把進度貼在這裡；也可以把備份貼進來再按「匯入」"></textarea>' +
+    '<div class="row" style="margin-bottom:10px">' +
+    '<button class="btn" id="btnCopy">複製進度</button>' +
+    '<button class="btn" id="btnFile">存成檔案</button></div>' +
+    '<p style="font-size:13px;color:var(--sub);margin:0 4px 12px;line-height:1.7">' +
+    "「複製進度」直接進剪貼簿，貼到備忘錄就好，不用手動選取。<br>" +
+    "「存成檔案」會下載一個 .txt 到手機的「檔案」App，比貼在備忘錄可靠。</p>" +
+    '<textarea class="io" id="io" placeholder="要復原的話，把之前備份的那串文字貼進這裡，再按「從這裡匯入」"></textarea>' +
     '<div class="row" style="margin-top:10px">' +
-    '<button class="btn ghost" id="btnExp">匯出</button>' +
-    '<button class="btn ghost" id="btnImp">匯入</button></div>' +
+    '<button class="btn ghost" id="btnImp">從這裡匯入</button></div>' +
 
     '<h2 class="sec">字庫</h2>' +
     '<div class="setrow"><div><div class="t">目前收錄</div>' +
@@ -1201,10 +1263,16 @@ function drawSet() {
     copy("這幾句例句我覺得怪怪的，請幫我檢查並修正單字庫裡的內容：\n" +
       S.bad.map(function (b) { return "- " + b.w + "（" + b.p + "）：" + b.en + " / " + b.zh; }).join("\n"));
   };
-  $("#btnExp").onclick = function () {
-    $("#io").value = JSON.stringify(S);
-    $("#io").select();
-    toast("已產生備份，請整段複製起來存好");
+  $("#btnCopy").onclick = function () { copy(JSON.stringify(S)); };
+  $("#btnFile").onclick = function () {
+    var d = new Date(), pad = function (n) { return ("0" + n).slice(-2); };
+    var name = "單字進度-" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + ".txt";
+    var url = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: "text/plain" }));
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast("已存成 " + name);
   };
   $("#btnImp").onclick = function () {
     try {
