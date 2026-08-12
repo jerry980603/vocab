@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：759 / 6114（1124 個字義）**
+**已編好釋義與例句：875 / 6114（1424 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -22,10 +22,19 @@
 - `w9`：45 字（第 3 級，抽象名詞 N–Z）
 - `w10`：52 字（第 3 級，動詞與多詞性字）
 - `w11`：59 字（第 3 級，形容詞、動詞與名詞）
+- `w12`：116 字（第 3 級，副詞、介系詞與多詞性動詞名詞 A–P）
 - `p1`：52 個片語
 
-**下一批要做**：第 3 級還缺約 570 個字。優先挑動詞與形容詞，
-跳過冷僻具體名詞（kangaroo、spaghetti、doughnut 這類學測不會考的）。
+**下一批要做**：第 3 級還缺約 454 個字，但**剩下的大多是冷僻具體名詞**
+（kangaroo、spaghetti、doughnut、lollipop 這類學測不會考的），
+值得做的只剩 Q–Z 那一段：`rid`、`roar`、`roast`、`rot`、`rotten`、`roughly`、
+`rumor`、`sake`、`satisfactory`、`scale`、`scary`、`seal`、`shadow`、`shortly`、
+`sin`、`sip`、`slice`、`somehow`、`spite`、`splash`、`spray`、`spy`、`staff`、
+`steam`、`sting`、`strip`、`stuff`、`sum`、`summit`、`swift`、`tag`、`tap`、
+`thread`、`thumb`、`tide`、`tow`、`trail`、`tune`、`weave`、`whip`、`whistle` 等，
+大約 60～80 字。**做完那批就轉戰第 4 級**（還缺 887 字，抽象名詞與動詞多，
+是學測的主要得分區，比第 3 級剩下的具體名詞值得做）。
+
 用下面的腳本就能列出待補清單：
 
 ```bash
@@ -80,14 +89,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js` | 第 3 級補充（第 1 批，動詞為主） |
+| `data/w6.js`～`data/w12.js` | 第 3 級補充（第 1～7 批） |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 487 個**。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 875 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -123,7 +132,11 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 
 **目前刻意不收的**：`unique` n.（非現代標準用法）、`steady` adv./n.（過時）、
 `scatter` n. 與 `grab` n.（口語且罕用，學測不會考）、
-`rough` adv./n.（sleep rough 是英式且限於「露宿街頭」，n. 指草圖，兩者都罕用）。
+`rough` adv./n.（sleep rough 是英式且限於「露宿街頭」，n. 指草圖，兩者都罕用）、
+`plenty` adv.（美式口語 plenty big enough，學測不考）。
+
+**因為官方詞性湊不出現代用法而整個跳過的字**：`cable` v.（只有「發電報」這個舊義）、
+`fist` v.（現代英文沒有這個動詞）。要收的話得先想好動詞義項怎麼寫。
 
 ### 品質優先序（使用者明確指定）
 
