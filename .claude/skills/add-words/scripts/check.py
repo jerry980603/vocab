@@ -25,6 +25,8 @@ TERM = "`);"
 SKIP_POS = {
     "unique": {"n."}, "steady": {"adv.", "n."}, "scatter": {"n."},
     "grab": {"n."}, "rough": {"adv.", "n."},
+    # 名詞用法罕見或非現代標準，學測不會考
+    "skip": {"n."}, "suck": {"n."}, "swell": {"n."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"

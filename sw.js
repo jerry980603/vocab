@@ -1,10 +1,11 @@
 /* 離線快取：第一次開啟後，之後沒網路也能用 */
-var CACHE = "vocab-v9";
+var CACHE = "vocab-v10";
 var FILES = [
   "./", "./index.html", "./app.js", "./manifest.json", "./icon.svg",
   "./data/official.js", "./data/bank.js",
   "./data/w1.js", "./data/w2.js", "./data/w3.js", "./data/w4.js", "./data/w5.js",
-  "./data/w6.js", "./data/w7.js", "./data/w8.js", "./data/w9.js", "./data/p1.js"
+  "./data/w6.js", "./data/w7.js", "./data/w8.js", "./data/w9.js",
+  "./data/w10.js", "./data/w11.js", "./data/p1.js"
 ];
 
 self.addEventListener("install", function (e) {
