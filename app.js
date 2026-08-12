@@ -345,6 +345,15 @@ function drawDrillStart(el) {
       : "今天的最低額度是 " + quota + " 題，還差 " + (quota - doneToday) + " 題。") +
     "</div></div>" +
 
+    /* 把清單的去向攤開來。不然你會看到「清單有 132 個字」
+       但一般練習只剩 9 個，以為字不見了。 */
+    '<div class="plan-head"><div class="cap" style="line-height:1.9">' +
+    "<b>清單裡的 " + all + " 個字義現在在哪</b><br>" +
+    "・<b>" + due + "</b> 個到期，可以現在練<br>" +
+    "・<b>" + wrong + "</b> 個在錯題本（不混進一般練習）<br>" +
+    "・<b>" + (all - due - wrong) + "</b> 個還沒到複習時間，最近一批 " + waitTxt +
+    "</div></div>" +
+
     '<h2 class="sec">一般練習</h2>' +
     (due
       ? '<button class="btn" id="btnNormal">開始（' + due + " 個字到期）</button>"
@@ -354,7 +363,7 @@ function drawDrillStart(el) {
     (wrong
       ? '<button class="btn bad" id="btnWrongDrill">只練錯題（' + wrong + " 個字）</button>" +
         '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
-        "錯題不會混進一般練習。連續答對兩次才會移出錯題本。</p>"
+        "錯題不會混進一般練習。在這裡答對一次就會移出錯題本。</p>"
       : '<div class="empty" style="padding:20px 8px">錯題本是空的 🎉</div>') +
 
     '<h2 class="sec">還想多練</h2>' +
@@ -503,7 +512,9 @@ function submit(gaveUp) {
       var jump = (it.seen === 1 && it.wrong === 0) ? 3 : 1;
       it.box = Math.min(it.box + jump, MAXBOX);
     }
-    if (it.st >= 2) it.wb = false;
+    /* 答對一次就移出錯題本。原本要連續兩次，但那會讓錯題本一直積著，
+       而且同一個字在一般練習答對了卻還掛在錯題本，看起來像壞掉。 */
+    it.wb = false;
     it.due = Date.now() + INT[it.box];
   } else {
     it.wrong++; it.st = 0; it.wb = true;
@@ -1148,7 +1159,7 @@ function drawWrong() {
     wrongDay = null;
     $("#v-wrong").innerHTML =
       '<div class="empty"><span class="big">🎉</span>' +
-      "錯題本是空的。<br>答錯的字會自動跑到這裡，<br>連續答對兩次就會畢業。</div>";
+      "錯題本是空的。<br>答錯的字會自動跑到這裡，<br>再答對一次就會畢業。</div>";
     return;
   }
 
@@ -1160,7 +1171,8 @@ function drawWrong() {
     $("#v-wrong").innerHTML =
       '<div class="plan-head"><div class="big">' + all.length +
       ' <span style="font-size:15px;color:var(--sub);font-weight:500">個字義還沒過關</span></div>' +
-      '<div class="cap">連續答對兩次才會移出錯題本。選一組開始翻卡。</div></div>' +
+      '<div class="cap">卡片只用來翻閱複習，不會改動熟練度。' +
+      "要讓字離開錯題本，用「重練這組」把它答對一次。</div></div>" +
       '<button class="btn bad" data-wd="all">全部一起翻（' + all.length + " 張）</button>" +
       '<h2 class="sec">依課表分組</h2>' +
       keys.map(function (d) {
@@ -1209,11 +1221,13 @@ function renderFlash() {
     '<span style="color:var(--sub);font-size:13px">' + (flashI + 1) + " / " + flashList.length + " 張</span>" +
     '<button class="btn sm ghost" id="fDrill">重練這組</button></div>' +
     '<div class="flash" id="flash">' + face + "</div>" +
-    (flipped
-      ? '<div class="row" style="margin-top:16px">' +
-        '<button class="btn bad" id="fNo">還是不會</button>' +
-        '<button class="btn ok" id="fYes">記起來了</button></div>'
-      : '<button class="btn ghost" id="fSkip" style="margin-top:16px">跳過</button>');
+    /* 卡片就是單純翻閱用的，不會改動熟練度。
+       真正把字移出錯題本的方式是去「練習」把它答對一次。 */
+    '<div class="row" style="margin-top:16px">' +
+    '<button class="btn ghost" id="fPrev">‹ 上一張</button>' +
+    '<button class="btn ghost" id="fNext">下一張 ›</button></div>' +
+    '<p style="font-size:13px;color:var(--sub);margin:12px 4px 0;line-height:1.7;text-align:center">' +
+    "翻卡片只是複習，不會改變熟練度。<br>要讓字離開錯題本，去「重練這組」把它答對一次。</p>";
 
   $("#flash").onclick = function () { flipped = !flipped; renderFlash(); };
   $("#fBack").onclick = function () { wrongDay = null; drawWrong(); };
@@ -1224,16 +1238,11 @@ function renderFlash() {
     toast("這一輪只考這組的 " + qTotal + " 個字義");
     go("drill");
   };
-  if (flipped) {
-    $("#fNo").onclick = function () { it.st = 0; it.box = 0; save(); nextFlash(); };
-    $("#fYes").onclick = function () {
-      it.st++;
-      if (it.st >= 2) { it.wb = false; toast(e.w + " 已移出錯題本"); }
-      save(); refreshHeader(); drawWrong();
-    };
-  } else {
-    $("#fSkip").onclick = nextFlash;
-  }
+  $("#fPrev").onclick = function () {
+    flashI = (flashI - 1 + flashList.length) % flashList.length;
+    flipped = false; renderFlash();
+  };
+  $("#fNext").onclick = nextFlash;
 }
 function nextFlash() {
   flashI = (flashI + 1) % flashList.length;
