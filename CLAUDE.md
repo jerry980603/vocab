@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：875 / 6114（1424 個字義）**
+**已編好釋義與例句：1000 / 6114（1647 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -23,17 +23,21 @@
 - `w10`：52 字（第 3 級，動詞與多詞性字）
 - `w11`：59 字（第 3 級，形容詞、動詞與名詞）
 - `w12`：116 字（第 3 級，副詞、介系詞與多詞性動詞名詞 A–P）
+- `w13`：125 字（第 3 級 R–Y 收尾 67 字 ＋ 第 4 級 A–B 起頭 58 字）
 - `p1`：52 個片語
 
-**下一批要做**：第 3 級還缺約 454 個字，但**剩下的大多是冷僻具體名詞**
-（kangaroo、spaghetti、doughnut、lollipop 這類學測不會考的），
-值得做的只剩 Q–Z 那一段：`rid`、`roar`、`roast`、`rot`、`rotten`、`roughly`、
-`rumor`、`sake`、`satisfactory`、`scale`、`scary`、`seal`、`shadow`、`shortly`、
-`sin`、`sip`、`slice`、`somehow`、`spite`、`splash`、`spray`、`spy`、`staff`、
-`steam`、`sting`、`strip`、`stuff`、`sum`、`summit`、`swift`、`tag`、`tap`、
-`thread`、`thumb`、`tide`、`tow`、`trail`、`tune`、`weave`、`whip`、`whistle` 等，
-大約 60～80 字。**做完那批就轉戰第 4 級**（還缺 887 字，抽象名詞與動詞多，
-是學測的主要得分區，比第 3 級剩下的具體名詞值得做）。
+**下一批要做**：**專心做第 4 級**（還缺 830 字，抽象名詞與動詞多，是學測的主要得分區）。
+`w13` 已經做到 `brutal`，下一批從 **C 開頭接下去**：`calculation`、`candidate`、
+`capacity`、`category`、`cease`、`celebration`、`characteristic`、`charity`、`cherish`、
+`circumstance`、`civilization`、`clarify`、`classify`、`collapse`、`colleague`、
+`combination`、`commerce`、`community`、`companion`、`competition`、`competitive`、
+`compose`、`concept`、`concrete`、`confess`、`confidence`、`conquer`、`conscience`、
+`consequence`、`consist`、`consistent`、`construct`、`consult`、`consumer`、`context`、
+`contrary`、`contrast`、`convention`、`convey`、`cope`、`correspond`、`critical`、
+`criticize`、`curiosity` 等，一批抓 120 字左右。
+
+**第 3 級剩下的 387 字幾乎全是冷僻具體名詞**（kangaroo、spaghetti、doughnut、
+lollipop、zipper 這類），學測不會考，除非使用者另有要求，否則不必再回頭補。
 
 用下面的腳本就能列出待補清單：
 
@@ -89,14 +93,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w12.js` | 第 3 級補充（第 1～7 批） |
+| `data/w6.js`～`data/w13.js` | 第 3 級補充（第 1～8 批），`w13` 後半開始收第 4 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 875 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1000 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
