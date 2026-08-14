@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：1252 / 6114（2053 個字義）**
+**已編好釋義與例句：1374 / 6114（2236 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -26,18 +26,23 @@
 - `w13`：125 字（第 3 級 R–Y 收尾 67 字 ＋ 第 4 級 A–B 起頭 58 字）
 - `w14`：127 字（第 4 級：A–B 補遺 20 字 ＋ C 開頭 107 字，做到 `curve`）
 - `w15`：125 字（第 4 級 D–F，做到 `freshman`）
+- `w16`：122 字（第 4 級 G–L，做到 `luxury`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續做第 4 級**（還缺 578 字）。`w15` 已經做到 `freshman`，
-下一批從 **G 開頭接下去**：`gene`、`generation`、`generosity`、`genius`、`gifted`、
-`glimpse`、`globe`、`grace`、`graceful`、`graduation`、`grammar`、`gratitude`、`grave`、
-`grief`、`grind`、`guilt`、`halt`、`hardship`、`harmony`、`harsh`、`hatred`、`hesitation`、
-`horizon`、`household`、`humanity`、`identical`、`idle`、`ignorance`、`ignorant`、
-`imaginary`、`imaginative`、`immigrant`、`impose`、`impression`、`incident`、
-`incredible`、`infant`、`inflation`、`influential`、`ingredient`、`initial`、`innocence`、
-`insert`、`instinct`、`instruct`、`insult`、`insurance`、`intellectual`、`intelligence`、
-`intense`、`intention`、`interact`、`interfere`、`intimate`、`invade`、`invasion`、
-`investigation`、`isolate`、`jealousy`、`keen` 等，一批抓 120 字左右。
+**下一批要做**：**繼續做第 4 級**（還缺 456 字）。`w16` 已經做到 `luxury`，
+下一批從 **M 開頭接下去**：`magnificent`、`manual`、`manufacturer`、`margin`、`maturity`、
+`maximum`、`mechanical`、`memorable`、`memorize`、`merchant`、`mercy`、`mere`、`merit`、
+`mild`、`minimum`、`minister`、`mischief`、`miserable`、`misfortune`、`mislead`、
+`moderate`、`modesty`、`monitor`、`monument`、`moreover`、`motivation`、`mysterious`、
+`namely`、`negotiate`、`nevertheless`、`noble`、`nonsense`、`nowadays`、`numerous`、
+`obedient`、`objection`、`objective`、`observation`、`obstacle`、`occasional`、
+`occupation`、`offend`、`offense`、`offensive`、`option`、`orbit`、`otherwise`、
+`outstanding`、`overlook`、`pace`、`panel`、`partial`、`passive`、`peculiar`、`peer`、
+`penalty`、`percentage`、`perfection`、`persuasive`、`pessimistic`、`phenomenon`、
+`philosophy`、`possess`、`precise`、`prediction`、`pregnant`、`prime`、`primitive`、
+`privacy`、`privilege`、`procedure`、`proceed`、`productive`、`profession`、
+`professional`、`prominent`、`promising`、`promotion`、`proposal`、`prosperity` 等，
+一批抓 120 字左右。
 
 **第 4 級剩下的字裡有一批冷僻具體名詞可以跳過**（aquarium、aspirin、bracelet、
 bridegroom、broom、cane、canoe、cargo、cottage、cushion、diploma 這類），
@@ -100,14 +105,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w15.js` | 補充批次（第 1～10 批）。`w6`～`w13` 前半是第 3 級，`w13` 後半起是第 4 級 |
+| `data/w6.js`～`data/w16.js` | 補充批次（第 1～11 批）。`w6`～`w13` 前半是第 3 級，`w13` 後半起是第 4 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1252 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1374 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
