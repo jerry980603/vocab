@@ -29,6 +29,8 @@ SKIP_POS = {
     "skip": {"n."}, "suck": {"n."}, "swell": {"n."},
     # plenty 的副詞用法是美式口語（plenty big enough），學測不考
     "plenty": {"adv."},
+    # cease 的名詞只出現在文言的 without cease，學測不考
+    "cease": {"n."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"

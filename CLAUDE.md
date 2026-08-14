@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：1000 / 6114（1647 個字義）**
+**已編好釋義與例句：1127 / 6114（1857 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -24,17 +24,19 @@
 - `w11`：59 字（第 3 級，形容詞、動詞與名詞）
 - `w12`：116 字（第 3 級，副詞、介系詞與多詞性動詞名詞 A–P）
 - `w13`：125 字（第 3 級 R–Y 收尾 67 字 ＋ 第 4 級 A–B 起頭 58 字）
+- `w14`：127 字（第 4 級：A–B 補遺 20 字 ＋ C 開頭 107 字，做到 `curve`）
 - `p1`：52 個片語
 
-**下一批要做**：**專心做第 4 級**（還缺 830 字，抽象名詞與動詞多，是學測的主要得分區）。
-`w13` 已經做到 `brutal`，下一批從 **C 開頭接下去**：`calculation`、`candidate`、
-`capacity`、`category`、`cease`、`celebration`、`characteristic`、`charity`、`cherish`、
-`circumstance`、`civilization`、`clarify`、`classify`、`collapse`、`colleague`、
-`combination`、`commerce`、`community`、`companion`、`competition`、`competitive`、
-`compose`、`concept`、`concrete`、`confess`、`confidence`、`conquer`、`conscience`、
-`consequence`、`consist`、`consistent`、`construct`、`consult`、`consumer`、`context`、
-`contrary`、`contrast`、`convention`、`convey`、`cope`、`correspond`、`critical`、
-`criticize`、`curiosity` 等，一批抓 120 字左右。
+**下一批要做**：**繼續做第 4 級**（還缺 703 字）。`w14` 已經做到 `curve`，
+下一批從 **D 開頭接下去**：`deadline`、`declare`、`defense`、`defensive`、`definite`、
+`delicate`、`delight`、`demonstrate`、`dense`、`depart`、`departure`、`dependent`、
+`depression`、`desperate`、`despite`、`destruction`、`determination`、`device`、`devise`、
+`differ`、`digital`、`dignity`、`diligent`、`disability`、`disadvantage`、`disaster`、
+`discipline`、`discourage`、`disguise` 等，一批抓 120 字左右。
+
+**第 4 級剩下的字裡有一批冷僻具體名詞可以跳過**（aquarium、aspirin、bracelet、
+bridegroom、broom、cane、canoe、cargo、cottage、cushion、diploma 這類），
+挑字時優先拿抽象名詞、動詞、形容詞。
 
 **第 3 級剩下的 387 字幾乎全是冷僻具體名詞**（kangaroo、spaghetti、doughnut、
 lollipop、zipper 這類），學測不會考，除非使用者另有要求，否則不必再回頭補。
@@ -93,14 +95,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w13.js` | 第 3 級補充（第 1～8 批），`w13` 後半開始收第 4 級 |
+| `data/w6.js`～`data/w14.js` | 補充批次（第 1～9 批）。`w6`～`w13` 前半是第 3 級，`w13` 後半起是第 4 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1000 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1127 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -137,10 +139,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 **目前刻意不收的**：`unique` n.（非現代標準用法）、`steady` adv./n.（過時）、
 `scatter` n. 與 `grab` n.（口語且罕用，學測不會考）、
 `rough` adv./n.（sleep rough 是英式且限於「露宿街頭」，n. 指草圖，兩者都罕用）、
-`plenty` adv.（美式口語 plenty big enough，學測不考）。
+`plenty` adv.（美式口語 plenty big enough，學測不考）、
+`cease` n.（只出現在文言的 without cease）。
 
 **因為官方詞性湊不出現代用法而整個跳過的字**：`cable` v.（只有「發電報」這個舊義）、
-`fist` v.（現代英文沒有這個動詞）。要收的話得先想好動詞義項怎麼寫。
+`fist` v.（現代英文沒有這個動詞）、`addict` v.（現代只用 be addicted to，動詞原形不用）、
+`counter` adj./adv.（只存在於 run counter to 這一個片語，硬寫會變成兩個重複的義項）、
+`choke` n.（只有汽車的「阻風門」這個義項，學測不會考）。
+要收的話得先想好那個詞性的義項怎麼寫。
 
 ### 品質優先序（使用者明確指定）
 
