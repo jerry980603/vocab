@@ -31,6 +31,10 @@ SKIP_POS = {
     "plenty": {"adv."},
     # cease 的名詞只出現在文言的 without cease，學測不考
     "cease": {"n."},
+    # disorder 的動詞（使凌亂）現代英文已不用，只剩過去分詞 disordered
+    "disorder": {"v."},
+    # ethnic 的名詞（少數族裔的一員）是過時用法，學測只考形容詞
+    "ethnic": {"n."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"
