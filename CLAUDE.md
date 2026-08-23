@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：1497 / 6114（2420 個字義）**
+**已編好釋義與例句：1611 / 6114（2604 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -28,19 +28,16 @@
 - `w15`：125 字（第 4 級 D–F，做到 `freshman`）
 - `w16`：122 字（第 4 級 G–L，做到 `luxury`）
 - `w17`：123 字（第 4 級 M–P，做到 `pursuit`）
+- `w18`：114 字（第 4 級 Q–T，做到 `timetable`）
 - `p1`：52 個片語
 
-**下一批要做**：**做完第 4 級最後一段**（還缺 333 字）。`w17` 已經做到 `pursuit`，
-下一批從 **Q 開頭接下去**：`quarrel`、`quotation`、`rage`、`realistic`、`rebel`、`reception`、
-`recognition`、`recovery`、`reduction`、`reference`、`reflection`、`reform`、`refugee`、
-`refusal`、`regulate`、`regulation`、`rejection`、`relevant`、`reluctant`、`remark`、
-`remarkable`、`remedy`、`renew`、`repetition`、`resemble`、`reservation`、`resign`、
-`resistance`、`resolution`、`resolve`、`restore`、`restriction`、`retain`、`retreat`、
-`revenge`、`revise`、`revolution`、`scarcely`、`seize`、`significance`、`split`、`status`、
-`strive`、`stroke`、`summarize`、`surrender`、`suspicious`、`tendency`、`tense`、`tension`、
-`thorough`、`tolerance`、`tragedy`、`tragic`、`triumph`、`universal`、`urgent`、`vain`、
-`vast`、`violation`、`visual`、`voluntary`、`welfare` 等，一批抓 120 字左右。
-**第 4 級再約 3 批就做完，之後接第 5 級**（學測範圍到第 5 級為止，第 6 級可略）。
+**下一批要做**：**收掉第 4 級**（還剩 219 字，一批就能做完大半）。`w18` 已經做到
+`timetable`，下一批從 **T 尾端接下去**：`tolerable`、`tolerance`、`tolerant`、`tomb`、
+`torture`、`tragedy`、`tragic`、`translation`、`transportation`、`tremble`、`tribal`、
+`triumph`、`troublesome`、`tumble`、`universal`、`urgent`、`usage`、`vacancy`、`vain`、
+`vast`、`vegetarian`、`vessel`、`violation`、`virus`、`visual`、`voluntary`、`voyage`、
+`waken`、`website`、`welfare`、`wink`、`wit`、`witch`、`workout`、`workplace`、`wreck`、
+`yawn`、`youthful` 等。**第 4 級收完就接第 5 級**（學測範圍到第 5 級為止，第 6 級可略）。
 
 **第 4 級剩下的字裡有一批冷僻具體名詞可以跳過**（aquarium、aspirin、bracelet、
 bridegroom、broom、cane、canoe、cargo、cottage、cushion、diploma 這類），
@@ -103,14 +100,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w17.js` | 補充批次（第 1～12 批）。`w6`～`w13` 前半是第 3 級，`w13` 後半起是第 4 級 |
+| `data/w6.js`～`data/w18.js` | 補充批次（第 1～13 批）。`w6`～`w13` 前半是第 3 級，`w13` 後半起是第 4 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1497 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1611 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
