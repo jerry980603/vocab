@@ -149,6 +149,41 @@ function splitEx(en) {
 function plainEx(en) { return en.replace(/\{\{(.+?)\}\}/g, "$1"); }
 function boldEx(en) { return esc(en).replace(/\{\{(.+?)\}\}/g, "<em>$1</em>"); }
 
+/* 例句要同時能點字查詢，又要把目標字標粗 */
+function clickableBold(en) {
+  var p = splitEx(en);
+  if (!p.ans) return clickable(en);
+  return clickable(p.pre) + "<em>" + clickable(p.ans) + "</em>" + clickable(p.post);
+}
+
+/* 答完題之後，把這個字所有義項的例句都列出來。
+   同一個字在多個情境裡再出現一次，正是情境記憶法要的。 */
+function allExamplesHTML(w, curSi, curEx) {
+  var e = DICT[String(w).toLowerCase()];
+  if (!e) return "";
+  var h = '<div class="alleg" id="allEg">';
+  e.s.forEach(function (sn, i) {
+    h += '<div class="egsense"><div class="eghd">' +
+      '<span class="tag gray">' + esc(sn.p) + "</span> " +
+      '<span class="zh">' + esc(sn.zh) + "</span></div>";
+    sn.ex.forEach(function (x) {
+      h += '<div class="eg' + (i === curSi && x === curEx ? " now" : "") + '">' +
+        '<div class="en">' + clickableBold(x.en) + "</div>" +
+        '<div class="zh">' + esc(x.zh) + "</div></div>";
+    });
+    h += "</div>";
+  });
+  return h + "</div>";
+}
+
+/* 中文提示預設蓋著，點一下才翻開；作答後自動翻開 */
+function revealZh(zh) {
+  var el = $("#zhLine");
+  if (!el || el.className.indexOf("masked") < 0) return;
+  el.className = "zhline";
+  el.textContent = zh;
+}
+
 /* 把句子切成一個個可以點的單字 */
 function clickable(text) {
   return esc(text).split(/([A-Za-z][A-Za-z'-]*)/).map(function (p, i) {
@@ -392,7 +427,7 @@ function renderCard() {
     (drillMode === "wrong" ? '<span class="lv out">錯題</span> ' : "") +
     "第 " + done + " / " + qTotal + " 題</span>" +
     '<span class="dots" title="熟練度">' + dots + "</span></div>" +
-    '<p class="zhline">' + esc(ex.zh) + "</p>" +
+    '<p class="zhline masked" id="zhLine">中文提示（點一下顯示）</p>' +
     '<p class="enline" id="enLine">' + clickable(p.pre) +
     '<span class="blank" id="blank">' + "_".repeat(Math.min(p.ans.replace(/\s/g, "").length, 12)) + "</span>" +
     clickable(p.post) + "</p>" +
@@ -423,6 +458,7 @@ function renderCard() {
   $("#ansIn").addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); submit(); }
   });
+  $("#zhLine").onclick = function () { revealZh(ex.zh); };
   $("#enLine").addEventListener("click", onTokenClick);
   refreshHeader();
 }
@@ -537,9 +573,10 @@ function submit(gaveUp) {
     (ok ? "✓ 答對了"
         : (gaveUp ? "答案是 <b>" + esc(ans) + "</b>，已放進錯題本"
                   : "✗ 正確答案是 <b>" + esc(ans) + "</b>")) +
-    '<div style="margin-top:8px;color:var(--text);font-size:14px;line-height:1.8" id="fullEn">' +
-    clickable(plainEx(ex.en)) + "</div></div>";
-  $("#fullEn").addEventListener("click", onTokenClick);
+    "</div>" + allExamplesHTML(it.w, it.si, ex);
+  revealZh(ex.zh);
+  var egBox = $("#allEg");
+  if (egBox) egBox.addEventListener("click", onTokenClick);
 
   // 一般練習答錯就交給錯題本處理，不在本回合重複糾纏；
   // 錯題練習模式才把它留在尾巴再考一次。
