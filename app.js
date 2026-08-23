@@ -83,10 +83,11 @@ function load() {
     var o = JSON.parse(localStorage.getItem(LS));
     if (o && o.items) {
       o.todo = o.todo || []; o.bad = o.bad || []; o.log = o.log || {};
+      o.known = o.known || {};   /* 快篩標記「我已經會了」的字，不進練習清單 */
       return o;
     }
   } catch (e) { }
-  return { v: 1, items: {}, todo: [], bad: [], log: {} };
+  return { v: 1, items: {}, todo: [], bad: [], log: {}, known: {} };
 }
 function save() {
   try { localStorage.setItem(LS, JSON.stringify(S)); }
@@ -404,11 +405,35 @@ function drawDrillStart(el) {
     '<h2 class="sec">還想多練</h2>' +
     '<button class="btn ghost" id="btnExtra">從清單裡隨機加練（共 ' + all + " 個字）</button>" +
 
+    '<h2 class="sec">快篩（把已經會的字先篩掉）</h2>' +
+    '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.75">' +
+    "第 1、2 級大多是國中就會的字，用完整的拼字練習去篩太浪費時間。" +
+    "這裡只問你「會不會」，會的直接跳過、永遠不排進練習，" +
+    "<b>不會的才整個字加進清單</b>。已篩掉 <b>" + Object.keys(S.known).length + "</b> 個字。</p>" +
+    scrButtons() +
+
     '<h2 class="sec">未來七天的複習量</h2>' + loadForecast();
 
   if (due) $("#btnNormal").onclick = function () { buildQueue("normal"); drawDrill(); };
   if (wrong) $("#btnWrongDrill").onclick = function () { buildQueue("wrong"); drawDrill(); };
   $("#btnExtra").onclick = function () { buildQueue("extra"); drawDrill(); };
+  el.querySelectorAll("[data-scr]").forEach(function (b) {
+    b.onclick = function () { startScreen(+b.dataset.scr); };
+  });
+}
+
+/* 各級還剩幾個字沒篩也沒加入清單 */
+function scrButtons() {
+  var html = "", any = false;
+  for (var lv = 1; lv <= 6; lv++) {
+    var n = screenPool(lv).length;
+    if (!n) continue;
+    any = true;
+    html += '<button class="btn ghost sm" data-scr="' + lv + '" ' +
+      'style="margin:0 8px 8px 0">第 ' + lv + " 級（" + n + "）</button>";
+  }
+  return any ? '<div>' + html + "</div>"
+             : '<div class="empty" style="padding:20px 8px">所有字都篩過了 🎉</div>';
 }
 
 function renderCard() {
@@ -524,6 +549,68 @@ function alreadyKnow() {
   renderCard();
 }
 
+/* ============================================================
+   快篩：第 1、2 級大多是國中就會的字，用完整的拼字練習去篩太浪費。
+   這裡只問「這個字你會不會」，會的直接標記起來、永遠不進練習清單。
+   ============================================================ */
+var scrQueue = [], scrTotal = 0;
+
+function screenPool(lv) {
+  return BANK.filter(function (e) {
+    if (e.ph || (e.lv || 9) !== lv) return false;
+    if (S.known[e.w]) return false;
+    return !e.s.some(function (sn, i) { return hasItem(e.w, i); });
+  });
+}
+
+function startScreen(lv) {
+  scrQueue = shuffle(screenPool(lv));
+  scrTotal = scrQueue.length;
+  if (!scrTotal) { toast("第 " + lv + " 級沒有可篩的字了"); return; }
+  drillMode = "screen";
+  renderScreenCard();
+}
+
+function renderScreenCard() {
+  if (!scrQueue.length) {
+    drillMode = "normal";
+    toast("這一級篩完了");
+    drawDrill();
+    return;
+  }
+  var e = scrQueue[0], done = scrTotal - scrQueue.length + 1;
+  var zh = e.s.map(function (sn) { return sn.p + " " + sn.zh; }).join("　");
+
+  $("#v-drill").innerHTML =
+    '<div class="card">' +
+    '<div class="qmeta"><span>' + lvTag(e) + " 快篩 " + done + " / " + scrTotal + "</span>" +
+    '<span>已篩掉 ' + Object.keys(S.known).length + " 個</span></div>" +
+    '<p style="font-size:31px;font-weight:700;text-align:center;margin:14px 0 18px;' +
+    'letter-spacing:.01em">' + esc(e.w) + "</p>" +
+    '<p class="zhline masked" id="scrZh">想不出來？點一下看中文</p>' +
+    '<div class="row" style="margin-top:18px">' +
+    '<button class="btn ghost" id="scrKnow">我會，跳過</button>' +
+    '<button class="btn" id="scrLearn">不會，加入練習</button></div>' +
+    '<div style="text-align:center;margin-top:14px">' +
+    '<button class="minilink" id="scrQuit">結束快篩</button></div>' +
+    "</div>";
+
+  $("#scrZh").onclick = function () {
+    this.className = "zhline"; this.textContent = zh;
+  };
+  $("#scrKnow").onclick = function () {
+    S.known[e.w] = 1; save(); scrQueue.shift(); renderScreenCard();
+  };
+  $("#scrLearn").onclick = function () {
+    e.s.forEach(function (sn, i) { addItem(e.w, i); });
+    scrQueue.shift(); refreshHeader(); renderScreenCard();
+  };
+  $("#scrQuit").onclick = function () {
+    drillMode = "normal"; scrQueue = []; drawDrill();
+  };
+  refreshHeader();
+}
+
 function submit(gaveUp) {
   if (answered) { next(); return; }
   var it = qCur, sn = senseOf(it);
@@ -554,7 +641,11 @@ function submit(gaveUp) {
     it.due = Date.now() + INT[it.box];
   } else {
     it.wrong++; it.st = 0; it.wb = true;
-    it.box = 0;
+    /* 答錯退兩級，不打回原點。
+       FSRS 與 Anki 的 relearning steps 都不是全歸零：全歸零會讓一個
+       已經複習到 60 天間隔的字重走整條階梯，每日複習量因此暴增。
+       退兩級 ＋ 10 分鐘後重考，等於「這次答對就回到大約一半的間隔」。 */
+    it.box = Math.max(0, it.box - 2);
     it.due = Date.now() + INT[1];
   }
   save();
