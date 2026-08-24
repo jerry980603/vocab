@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：1734 / 6114（2773 個字義）**
+**已編好釋義與例句：1852 / 6114（2942 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -30,25 +30,24 @@
 - `w17`：123 字（第 4 級 M–P，做到 `pursuit`）
 - `w18`：114 字（第 4 級 Q–T，做到 `timetable`）
 - `w19`：121 字（第 4 級 T–Z 收尾 ＋ 前段補遺）
+- `w20`：118 字（第 5 級 A–C，做到 `cluster`）
 - `p1`：52 個片語
 
-**下一批要做**：**開始做第 5 級**（992 字，學測範圍的最後一級）。
+**下一批要做**：**繼續第 5 級**（還缺 874 字）。`w20` 已經做到 `cluster`，
+下一批從 **C 尾端接下去**：`coalition`、`coherent`、`coincide`、`collective`、`colonial`、
+`commence`、`commission`、`commitment`、`commodity`、`compact`、`compassion`、
+`compel`、`compensate`、`competence`、`compile`、`complement`、`complexity`、
+`compliment`、`comply`、`comprehensive`、`compromise`、`conceive`、`concession`、
+`condemn`、`confine`、`conform`、`confront`、`consensus`、`conserve`、`considerate`、
+`console`、`conspiracy`、`constrain`、`consult`、`contaminate`、`contemplate`、
+`contemporary`、`contempt`、`contend`、`controversial`、`convert`、`conviction`、
+`coordinate`、`cope`、`cordial`、`corporate`、`corrupt`、`counsel`、`counterpart`、
+`courtship`、`crab`、`cripple`、`crucial`、`crude`、`cruise`、`crystal`、`cuisine`、
+`cultivate`、`curb`、`curriculum`、`custody`、`cynical` 等，一批抓 120 字左右。
 
-第 4 級只剩 96 字，而且**幾乎全是冷僻具體名詞**（aquarium、aspirin、bracelet、broom、
-cane、canoe、cargo、cottage、lobster、pasta、pickle、plum、plumber、raisin、spade、
-stocking、tortoise、twig 這類），學測不會考，**不必回頭補**。少數還算有用的
-（`arch`、`audio`、`facial`、`fossil`、`percent`、`physicist`、`skyscraper`、`socket`、
-`vegetarian`）可以在做第 5 級時順手夾帶。
-
-第 5 級用這個指令列出清單，一批抓 120 字左右，一樣優先挑抽象名詞、動詞、形容詞：
-
-```bash
-python .claude/skills/add-words/scripts/todo.py 5 130
-```
-
-**第 4 級剩下的字裡有一批冷僻具體名詞可以跳過**（aquarium、aspirin、bracelet、
-bridegroom、broom、cane、canoe、cargo、cottage、cushion、diploma 這類），
-挑字時優先拿抽象名詞、動詞、形容詞。
+**第 4 級只剩 96 字**，幾乎全是冷僻具體名詞（aquarium、broom、lobster、pasta、
+raisin 這類），學測不會考，不必回頭補。少數還算有用的（`arch`、`audio`、`facial`、
+`fossil`、`percent`、`physicist`、`skyscraper`、`socket`、`vegetarian`）可以順手夾帶。
 
 **第 3 級剩下的 387 字幾乎全是冷僻具體名詞**（kangaroo、spaghetti、doughnut、
 lollipop、zipper 這類），學測不會考，除非使用者另有要求，否則不必再回頭補。
@@ -107,14 +106,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w19.js` | 補充批次（第 1～14 批）。`w6`～`w13` 前半是第 3 級，`w13` 後半起是第 4 級 |
+| `data/w6.js`～`data/w20.js` | 補充批次（第 1～15 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1734 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1852 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
