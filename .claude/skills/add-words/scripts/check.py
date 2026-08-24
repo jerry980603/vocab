@@ -37,6 +37,8 @@ SKIP_POS = {
     "ethnic": {"n."},
     # universal 的名詞在朗文只有電影公司這個專有名詞，學測不考
     "universal": {"n."},
+    # external 的名詞（externals＝外表）與 exotic 的名詞都很文言，學測只考形容詞
+    "external": {"n."}, "exotic": {"n."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"

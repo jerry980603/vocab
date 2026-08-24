@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：1969 / 6114（3111 個字義）**
+**已編好釋義與例句：2089 / 6114（3287 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -32,20 +32,20 @@
 - `w19`：121 字（第 4 級 T–Z 收尾 ＋ 前段補遺）
 - `w20`：118 字（第 5 級 A–C，做到 `cluster`）
 - `w21`：116 字（第 5 級 C–D，做到 `document`）
+- `w22`：120 字（第 5 級 D–H，做到 `hazard`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 5 級**（還缺 757 字）。`w21` 已經做到 `document`，
-下一批從 **D 尾端接下去**：`dominate`、`donate`、`donor`、`dose`、`drain`、`drastic`、
-`dread`、`drought`、`dual`、`dubious`、`dwell`、`dynamics`、`eccentric`、`ecology`、
-`economical`、`ecosystem`、`edible`、`editorial`、`elaborate`、`eligible`、`eliminate`、
-`elite`、`eloquent`、`embargo`、`embrace`、`emerge`、`emigrate`、`eminent`、`emission`、
-`empirical`、`enclosure`、`encounter`、`endeavor`、`endorse`、`endowment`、`endurance`、
-`endure`、`enhance`、`enrich`、`enroll`、`ensure`、`entail`、`enterprise`、`enthusiastic`、
-`entitle`、`entity`、`epidemic`、`episode`、`equate`、`equilibrium`、`equivalent`、`erect`、
-`erode`、`erupt`、`escort`、`essence`、`establishment`、`esteem`、`eternal`、`ethical`、
-`ethics`、`evacuate`、`evolve`、`exaggeration`、`exceed`、`excerpt`、`exclude`、`exclusive`、
-`execute`、`exempt`、`exert`、`exhibition`、`exile`、`expedition`、`expel`、`expenditure`、
-`expertise`、`explicit`、`exploit`、`exquisite`、`extend`、`external`、`extract` 等，
+**下一批要做**：**繼續第 5 級**（還缺 637 字）。`w22` 已經做到 `hazard`，
+下一批從 **H 尾端接下去**：`heighten`、`heritage`、`hierarchy`、`homogeneous`、
+`hospitality`、`hostile`、`hostility`、`humiliate`、`hypothesis`、`identify`、`ideology`、
+`ignite`、`illuminate`、`illusion`、`imply`、`implication`、`impose`、`impulse`、
+`incentive`、`incline`、`incorporate`、`index`、`indicate`、`indifferent`、`indigenous`、
+`indignant`、`induce`、`indulge`、`inevitable`、`infer`、`inference`、`infinite`、
+`inflict`、`inhabit`、`inherent`、`inherit`、`inhibit`、`initiate`、`initiative`、
+`inject`、`innovation`、`input`、`inquire`、`insight`、`inspire`、`install`、`instance`、
+`institute`、`institution`、`integrate`、`integrity`、`intellect`、`intensify`、
+`interfere`、`interior`、`interpret`、`interval`、`intervene`、`intrigue`、`intrinsic`、
+`invaluable`、`inventory`、`invest`、`invoke`、`involve`、`ironic`、`irony`、`irritate` 等，
 一批抓 120 字左右。
 
 **第 4 級只剩 96 字**，幾乎全是冷僻具體名詞（aquarium、broom、lobster、pasta、
@@ -109,14 +109,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w21.js` | 補充批次（第 1～16 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w22.js` | 補充批次（第 1～17 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1969 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2089 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -157,7 +157,8 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 `cease` n.（只出現在文言的 without cease）、
 `disorder` v.（現代英文已不用，只剩過去分詞 disordered）、
 `ethnic` n.（「少數族裔的一員」是過時用法，學測只考形容詞）、
-`universal` n.（朗文只有電影公司這個專有名詞）。
+`universal` n.（朗文只有電影公司這個專有名詞）、
+`external` n. 與 `exotic` n.（都很文言，學測只考形容詞）。
 
 **因為官方詞性湊不出現代用法而整個跳過的字**：`cable` v.（只有「發電報」這個舊義）、
 `fist` v.（現代英文沒有這個動詞）、`addict` v.（現代只用 be addicted to，動詞原形不用）、
