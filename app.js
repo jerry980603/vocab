@@ -178,11 +178,12 @@ function allExamplesHTML(w, curSi, curEx) {
 }
 
 /* 中文提示預設蓋著，點一下才翻開；作答後自動翻開 */
-function revealZh(zh) {
-  var el = $("#zhLine");
-  if (!el || el.className.indexOf("masked") < 0) return;
-  el.className = "zhline";
-  el.textContent = zh;
+function revealHint(sn) {
+  var el = $("#posZh");
+  if (!el || el.className.indexOf("posmask") < 0) return;
+  el.className = "";
+  el.innerHTML = '<span class="tag">' + esc(sn.p) + "</span> " +
+    '<span class="zh">' + esc(sn.zh) + "</span>";
 }
 
 /* 把句子切成一個個可以點的單字 */
@@ -452,12 +453,12 @@ function renderCard() {
     (drillMode === "wrong" ? '<span class="lv out">錯題</span> ' : "") +
     "第 " + done + " / " + qTotal + " 題</span>" +
     '<span class="dots" title="熟練度">' + dots + "</span></div>" +
-    '<p class="zhline masked" id="zhLine">中文提示（點一下顯示）</p>' +
+    '<p class="zhline">' + esc(ex.zh) + "</p>" +
     '<p class="enline" id="enLine">' + clickable(p.pre) +
     '<span class="blank" id="blank">' + "_".repeat(Math.min(p.ans.replace(/\s/g, "").length, 12)) + "</span>" +
     clickable(p.post) + "</p>" +
-    '<div class="hintbar"><span class="tag">' + esc(sn.p) + "</span>" +
-    '<span class="zh">' + esc(sn.zh) + "</span>" +
+    '<div class="hintbar">' +
+    '<span class="posmask" id="posZh">詞性與中文（點一下顯示）</span>' +
     (fi.tip ? '<span class="tag gray">' + esc(fi.tip) + "</span>" : "") + "</div>" +
     '<div class="inwrap">' +
     '<input id="ansIn" placeholder="在這裡拼出單字" autocomplete="off" autocorrect="off" ' +
@@ -483,7 +484,7 @@ function renderCard() {
   $("#ansIn").addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); submit(); }
   });
-  $("#zhLine").onclick = function () { revealZh(ex.zh); };
+  $("#posZh").onclick = function () { revealHint(sn); };
   $("#enLine").addEventListener("click", onTokenClick);
   refreshHeader();
 }
@@ -665,7 +666,7 @@ function submit(gaveUp) {
         : (gaveUp ? "答案是 <b>" + esc(ans) + "</b>，已放進錯題本"
                   : "✗ 正確答案是 <b>" + esc(ans) + "</b>")) +
     "</div>" + allExamplesHTML(it.w, it.si, ex);
-  revealZh(ex.zh);
+  revealHint(sn);
   var egBox = $("#allEg");
   if (egBox) egBox.addEventListener("click", onTokenClick);
 
