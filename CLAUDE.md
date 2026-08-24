@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：1611 / 6114（2604 個字義）**
+**已編好釋義與例句：1734 / 6114（2773 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -29,15 +29,22 @@
 - `w16`：122 字（第 4 級 G–L，做到 `luxury`）
 - `w17`：123 字（第 4 級 M–P，做到 `pursuit`）
 - `w18`：114 字（第 4 級 Q–T，做到 `timetable`）
+- `w19`：121 字（第 4 級 T–Z 收尾 ＋ 前段補遺）
 - `p1`：52 個片語
 
-**下一批要做**：**收掉第 4 級**（還剩 219 字，一批就能做完大半）。`w18` 已經做到
-`timetable`，下一批從 **T 尾端接下去**：`tolerable`、`tolerance`、`tolerant`、`tomb`、
-`torture`、`tragedy`、`tragic`、`translation`、`transportation`、`tremble`、`tribal`、
-`triumph`、`troublesome`、`tumble`、`universal`、`urgent`、`usage`、`vacancy`、`vain`、
-`vast`、`vegetarian`、`vessel`、`violation`、`virus`、`visual`、`voluntary`、`voyage`、
-`waken`、`website`、`welfare`、`wink`、`wit`、`witch`、`workout`、`workplace`、`wreck`、
-`yawn`、`youthful` 等。**第 4 級收完就接第 5 級**（學測範圍到第 5 級為止，第 6 級可略）。
+**下一批要做**：**開始做第 5 級**（992 字，學測範圍的最後一級）。
+
+第 4 級只剩 96 字，而且**幾乎全是冷僻具體名詞**（aquarium、aspirin、bracelet、broom、
+cane、canoe、cargo、cottage、lobster、pasta、pickle、plum、plumber、raisin、spade、
+stocking、tortoise、twig 這類），學測不會考，**不必回頭補**。少數還算有用的
+（`arch`、`audio`、`facial`、`fossil`、`percent`、`physicist`、`skyscraper`、`socket`、
+`vegetarian`）可以在做第 5 級時順手夾帶。
+
+第 5 級用這個指令列出清單，一批抓 120 字左右，一樣優先挑抽象名詞、動詞、形容詞：
+
+```bash
+python .claude/skills/add-words/scripts/todo.py 5 130
+```
 
 **第 4 級剩下的字裡有一批冷僻具體名詞可以跳過**（aquarium、aspirin、bracelet、
 bridegroom、broom、cane、canoe、cargo、cottage、cushion、diploma 這類），
@@ -100,14 +107,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w18.js` | 補充批次（第 1～13 批）。`w6`～`w13` 前半是第 3 級，`w13` 後半起是第 4 級 |
+| `data/w6.js`～`data/w19.js` | 補充批次（第 1～14 批）。`w6`～`w13` 前半是第 3 級，`w13` 後半起是第 4 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1611 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1734 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -147,7 +154,8 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 `plenty` adv.（美式口語 plenty big enough，學測不考）、
 `cease` n.（只出現在文言的 without cease）、
 `disorder` v.（現代英文已不用，只剩過去分詞 disordered）、
-`ethnic` n.（「少數族裔的一員」是過時用法，學測只考形容詞）。
+`ethnic` n.（「少數族裔的一員」是過時用法，學測只考形容詞）、
+`universal` n.（朗文只有電影公司這個專有名詞）。
 
 **因為官方詞性湊不出現代用法而整個跳過的字**：`cable` v.（只有「發電報」這個舊義）、
 `fist` v.（現代英文沒有這個動詞）、`addict` v.（現代只用 be addicted to，動詞原形不用）、
