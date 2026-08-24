@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：1852 / 6114（2942 個字義）**
+**已編好釋義與例句：1969 / 6114（3111 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -31,19 +31,22 @@
 - `w18`：114 字（第 4 級 Q–T，做到 `timetable`）
 - `w19`：121 字（第 4 級 T–Z 收尾 ＋ 前段補遺）
 - `w20`：118 字（第 5 級 A–C，做到 `cluster`）
+- `w21`：116 字（第 5 級 C–D，做到 `document`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 5 級**（還缺 874 字）。`w20` 已經做到 `cluster`，
-下一批從 **C 尾端接下去**：`coalition`、`coherent`、`coincide`、`collective`、`colonial`、
-`commence`、`commission`、`commitment`、`commodity`、`compact`、`compassion`、
-`compel`、`compensate`、`competence`、`compile`、`complement`、`complexity`、
-`compliment`、`comply`、`comprehensive`、`compromise`、`conceive`、`concession`、
-`condemn`、`confine`、`conform`、`confront`、`consensus`、`conserve`、`considerate`、
-`console`、`conspiracy`、`constrain`、`consult`、`contaminate`、`contemplate`、
-`contemporary`、`contempt`、`contend`、`controversial`、`convert`、`conviction`、
-`coordinate`、`cope`、`cordial`、`corporate`、`corrupt`、`counsel`、`counterpart`、
-`courtship`、`crab`、`cripple`、`crucial`、`crude`、`cruise`、`crystal`、`cuisine`、
-`cultivate`、`curb`、`curriculum`、`custody`、`cynical` 等，一批抓 120 字左右。
+**下一批要做**：**繼續第 5 級**（還缺 757 字）。`w21` 已經做到 `document`，
+下一批從 **D 尾端接下去**：`dominate`、`donate`、`donor`、`dose`、`drain`、`drastic`、
+`dread`、`drought`、`dual`、`dubious`、`dwell`、`dynamics`、`eccentric`、`ecology`、
+`economical`、`ecosystem`、`edible`、`editorial`、`elaborate`、`eligible`、`eliminate`、
+`elite`、`eloquent`、`embargo`、`embrace`、`emerge`、`emigrate`、`eminent`、`emission`、
+`empirical`、`enclosure`、`encounter`、`endeavor`、`endorse`、`endowment`、`endurance`、
+`endure`、`enhance`、`enrich`、`enroll`、`ensure`、`entail`、`enterprise`、`enthusiastic`、
+`entitle`、`entity`、`epidemic`、`episode`、`equate`、`equilibrium`、`equivalent`、`erect`、
+`erode`、`erupt`、`escort`、`essence`、`establishment`、`esteem`、`eternal`、`ethical`、
+`ethics`、`evacuate`、`evolve`、`exaggeration`、`exceed`、`excerpt`、`exclude`、`exclusive`、
+`execute`、`exempt`、`exert`、`exhibition`、`exile`、`expedition`、`expel`、`expenditure`、
+`expertise`、`explicit`、`exploit`、`exquisite`、`extend`、`external`、`extract` 等，
+一批抓 120 字左右。
 
 **第 4 級只剩 96 字**，幾乎全是冷僻具體名詞（aquarium、broom、lobster、pasta、
 raisin 這類），學測不會考，不必回頭補。少數還算有用的（`arch`、`audio`、`facial`、
@@ -106,14 +109,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w20.js` | 補充批次（第 1～15 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w21.js` | 補充批次（第 1～16 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1852 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 1969 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
