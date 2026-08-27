@@ -121,6 +121,18 @@ var SYNC = (function () {
     });
   }
 
+  /* 第二台裝置只會拿到 token，本機沒有 gist id。
+     少了這一步，它會自己建一個新 gist，兩台各存各的，永遠對不起來。
+     所以先用 token 去帳號裡找那個放著進度檔的 gist。 */
+  function findGist() {
+    return req("/gists?per_page=100").then(function (list) {
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].files && list[i].files[FILE]) return list[i].id;
+      }
+      return null;
+    });
+  }
+
   function readGist() {
     return req("/gists/" + cfg.gistId).then(function (g) {
       var f = g.files && g.files[FILE];
@@ -167,7 +179,16 @@ var SYNC = (function () {
     if (busy) return Promise.resolve({ skipped: "同步進行中" });
     busy = true;
 
-    var pull = cfg.gistId ? readGist() : Promise.resolve(null);
+    /* 沒有 gist id 就先找一次；找不到才會在寫入時建新的 */
+    var ready = cfg.gistId
+      ? Promise.resolve()
+      : findGist().then(function (id) {
+        if (id) { cfg.gistId = id; saveCfg(); }
+      });
+
+    var pull = ready.then(function () {
+      return cfg.gistId ? readGist() : null;
+    });
 
     return pull.catch(function (e) {
       /* gist 被刪掉了就重建一個，其他錯誤往上拋 */
