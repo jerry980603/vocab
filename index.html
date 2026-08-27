@@ -131,6 +131,15 @@ h2.sec:first-child{margin-top:0}
   border:1px dashed var(--line);border-radius:9px;padding:5px 11px
 }
 .posmask:active{background:var(--accent-soft);border-color:var(--accent)}
+/* 快捷鍵標籤：只在有實體鍵盤的裝置顯示，手機上藏起來免得占空間 */
+.kbd{display:none}
+@media (hover:hover) and (pointer:fine){
+  .kbd{
+    display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;
+    font-size:11px;font-weight:600;line-height:16px;vertical-align:1px;
+    background:var(--line);color:var(--sub);font-family:ui-monospace,Menlo,Consolas,monospace;
+  }
+}
 .inwrap{display:flex;align-items:stretch;gap:8px}
 .inwrap #ansIn{flex:1}
 .sfx{

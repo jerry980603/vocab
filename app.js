@@ -462,7 +462,7 @@ function renderCard() {
     '<span class="blank" id="blank">' + "_".repeat(Math.min(p.ans.replace(/\s/g, "").length, 12)) + "</span>" +
     clickable(p.post) + "</p>" +
     '<div class="hintbar">' +
-    '<span class="posmask" id="posZh">詞性與中文（點一下顯示）</span>' +
+    '<span class="posmask" id="posZh">詞性與中文（點一下顯示）<span class="kbd">Shift</span></span>' +
     (fi.tip ? '<span class="tag gray">' + esc(fi.tip) + "</span>" : "") + "</div>" +
     '<div class="inwrap">' +
     '<input id="ansIn" placeholder="在這裡拼出單字" autocomplete="off" autocorrect="off" ' +
@@ -472,7 +472,7 @@ function renderCard() {
     '<button class="btn" id="btnGo">送出</button></div>' +
     '<div class="row" style="margin-top:9px" id="rowAid">' +
     '<button class="btn ghost" id="btnHint">提示</button>' +
-    '<button class="btn ghost" id="btnGiveUp">不會</button></div>' +
+    '<button class="btn ghost" id="btnGiveUp">不會<span class="kbd">Alt</span></button></div>' +
     '<div id="fb"></div>' +
     '<div style="text-align:center;margin-top:14px" id="rowSkip">' +
     '<button class="minilink" id="btnKnow">這個我早就會了，不用再排複習</button></div>' +
@@ -1549,6 +1549,49 @@ function fallbackCopy(text) {
   catch (e) { toast("複製失敗，請手動選取"); }
   document.body.removeChild(ta);
 }
+
+/* 電腦版快捷鍵：單獨按 Shift 翻開中文、單獨按 Alt 認輸看答案。
+
+   為什麼要「單獨」按？Shift 本來就是打大寫用的，一按下就翻開中文的話，
+   拼 Taiwan 這種字會在打第一個字母時就把答案提示掀掉。
+   所以改成按住到放開之間都沒碰別的鍵才算數 —— Shift+t 打大寫不會誤觸發。
+
+   Alt 另外要 preventDefault：Windows 的瀏覽器按 Alt 會跳到選單列。 */
+var modKey = null, modClean = false;
+
+function hotkeyTarget(e) {
+  /* 回傳這次按鍵該不該處理。只在練習頁、還沒作答時有效。 */
+  if (cur !== "drill" || answered || !qCur) return false;
+  if ($("#sheetBg").classList.contains("on")) return false;
+  var t = e.target;
+  if (t && (t.tagName === "TEXTAREA" ||
+            (t.tagName === "INPUT" && t.id !== "ansIn"))) return false;
+  return true;
+}
+
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Shift" || e.key === "Alt") {
+    if (modKey !== e.key) { modKey = e.key; modClean = true; }
+    if (e.key === "Alt") e.preventDefault();
+    return;
+  }
+  /* 按了別的鍵 —— 這次的修飾鍵是拿來組合用的，不算快捷鍵 */
+  modClean = false;
+});
+
+document.addEventListener("keyup", function (e) {
+  if (e.key !== "Shift" && e.key !== "Alt") return;
+  var solo = modClean && modKey === e.key;
+  modKey = null; modClean = false;
+  if (!solo || !hotkeyTarget(e)) return;
+  e.preventDefault();
+  if (e.key === "Shift") revealHint(senseOf(qCur));
+  else giveUp();
+});
+
+/* 切換頁面或視窗失焦時把狀態清掉，
+   不然 Alt+Tab 切出去再回來，殘留的 modKey 會讓下一次按鍵誤判。 */
+window.addEventListener("blur", function () { modKey = null; modClean = false; });
 
 /* 電腦版：答完之後直接按 Enter 進下一題。
 
