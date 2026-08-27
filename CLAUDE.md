@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：2218 / 6114（3481 個字義）**
+**已編好釋義與例句：2343 / 6114（3689 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -34,31 +34,30 @@
 - `w21`：116 字（第 5 級 C–D，做到 `document`）
 - `w22`：120 字（第 5 級 D–H，做到 `hazard`）
 - `w23`：129 字（第 5 級 H–N，`heir` 到 `notion`）
+- `w24`：125 字（第 5 級 A–G 漏網 ＋ O–R，做到 `recruit`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 5 級**（還缺 508 字）。`w23` 已做完 H–N
-（`heir` 到 `notion`）。第 5 級的 A–G 當初跳過了不少，下一批建議
-**回頭掃 A–G 的漏網之魚，再接著做 O 開頭**：
+**下一批要做**：**繼續第 5 級**（還缺 383 字）。`w24` 做完 A–G 的漏網
+與 O–R（收在 `recruit`）。下一批從 **R 尾端接下去，主攻 S–Z**：
 
-回頭補的（A–G，這些都還沒做）：`accord`、`acknowledgement`、`acquaint`、
-`array`、`bureaucracy`、`certificate`、`confrontation`、`criteria`、
-`disconnect`、`endorsement`、`equity`、`franchise`、`grill`。
+`refuge`、`regardless`、`regime`、`reinforce`、`reminder`、`removal`、`render`、
+`repay`、`resemblance`、`residence`、`resident`、`residential`、`resort`、
+`resume`、`retail`、`revenue`、`reverse`、`rigid`、`riot`、`risky`、`ritual`、
+`rival`、`sacred`、`scan`、`scandal`、`scar`、`scenario`、`scent`、`scheme`、
+`scope`、`scramble`、`scrap`、`script`、`sector`、`segment`、`sensation`、
+`sensitivity`、`sentiment`、`sequence`、`series`、`session`、`setting`、
+`shatter`、`shed`、`sheer`、`shield`、`shiver`、`shrug`、`sibling`、`slam`、
+`slavery`、`smash`、`snatch`、`sneak`、`soak`、`soar`、`sober`、`soften`、
+`sole`、`sophisticated`、`spacious`、`specialist`、`specialize`、`specify`、
+`spectacular`、`spectator`、`spectrum`、`speculate`、`sphere`、`sponsor`、
+`stability`、`stack`、`stain`、`stake`、`stall`、`stance`、`startle`、`steer`、
+`stereotype`、`stimulate`、`storage`、`straightforward`、`strain`、`strap`、
+`strategic`、`striking`、`structural`、`stumble`、`subsequent`、`substantial`、
+`substitute`、`subtle`、`successor`、`superb`、`supervise`、`supreme`、
+`surplus`、`suspend`、`sustain`、`swap`、`symptom` 等，一批抓 120 字左右。
 
-接著做 O–P（第 5 級主力）：`obligation`、`obscure`、`observer`、`odds`、
-`operational`、`opponent`、`opposition`、`opt`、`optimism`、`optional`、
-`organism`、`outlet`、`output`、`outsider`、`overall`、`oversee`、`overtake`、
-`overturn`、`overwhelm`、`parallel`、`participant`、`particle`、`partly`、
-`passionate`、`patch`、`patent`、`pathetic`、`patrol`、`penetrate`、`pension`、
-`perceive`、`perception`、`persist`、`personnel`、`perspective`、`petition`、
-`phase`、`pledge`、`plunge`、`plural`、`practitioner`、`precaution`、`predator`、
-`preference`、`prejudice`、`premature`、`premise`、`prescribe`、`prescription`、
-`presumably`、`presume`、`prevail`、`prey`、`prior`、`proclaim`、`productivity`、
-`profile`、`profound`、`progressive`、`prohibit`、`prolong`、`prone`、
-`proportion`、`prospect`、`province`、`provision`、`provoke`、`pulse` 等，
-一批抓 120 字左右。
-
-⚠ 第 5 級剩下的字裡有不少冷僻具體名詞（aisle、attic、casino、cathedral、
-cemetery、coffin、diaper、escalator、hockey 這類），**挑字時要跳過**，
+⚠ 第 5 級剩下的字裡仍有不少冷僻具體名詞（sandal、salmon、salon、sheriff、
+skull、smog、sponge、squash、stew 這類），**挑字時要跳過**，
 優先做動詞、形容詞與抽象名詞。
 
 **第 4 級只剩 96 字**，幾乎全是冷僻具體名詞（aquarium、broom、lobster、pasta、
@@ -122,14 +121,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w23.js` | 補充批次（第 1～18 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w24.js` | 補充批次（第 1～19 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2218 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2343 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -172,6 +171,20 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 `ethnic` n.（「少數族裔的一員」是過時用法，學測只考形容詞）、
 `universal` n.（朗文只有電影公司這個專有名詞）、
 `external` n. 與 `exotic` n.（都很文言，學測只考形容詞）。
+
+`w23`（第 5 級 H–N）新增的：`incentive` adj.（只當名詞修飾語用，不是真形容詞）、
+`initiate` adj./n. 與 `initiative` adj.（「新加入者」是宗教團體的舊用法）、
+`league` v.（結盟）、`legitimate` v.（使合法）、`marine` n.（海軍陸戰隊員）、
+`masculine` n.、`metropolitan` n.、`mock` n.（英式的模擬考複數 mocks）、
+`neutral` n.（排檔的空檔）。
+
+`w24`（第 5 級 A–G 漏網＋O–R）新增的：`certificate` v.（現代只用過去分詞
+certificated）、`overall` n.（英式的工作罩衫）、`prior` n.（修道院副院長）、
+`overturn` n.（罕用）、`pension` v.（只有 pension somebody off 這個片語）、
+`perspective` adj. 與 `recipient` adj.（都是專門術語）、
+`proportion` v.（只用被動的 be proportioned to，很文言）。
+
+以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 
 **因為官方詞性湊不出現代用法而整個跳過的字**：`cable` v.（只有「發電報」這個舊義）、
 `fist` v.（現代英文沒有這個動詞）、`addict` v.（現代只用 be addicted to，動詞原形不用）、

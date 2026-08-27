@@ -50,6 +50,19 @@ SKIP_POS = {
     "marine": {"n."}, "masculine": {"n."}, "metropolitan": {"n."},
     # mock n.（英式的模擬考複數 mocks）、neutral n.（排檔的空檔）學測不考
     "mock": {"n."}, "neutral": {"n."},
+    # w24（第 5 級 A–G 漏網＋O–R）刻意不收的詞性：
+    # certificate v.（發證書給）現代英文幾乎只用過去分詞 certificated
+    "certificate": {"v."},
+    # overall n. 是英式的工作罩衫、prior n. 是修道院副院長，學測都不考
+    "overall": {"n."}, "prior": {"n."},
+    # overturn n.（翻覆）罕用，現代英文只用動詞
+    "overturn": {"n."},
+    # pension v. 只出現在 pension somebody off 這個片語
+    "pension": {"v."},
+    # perspective adj.（透視的）是繪畫術語，recipient adj. 同樣是專門用法
+    "perspective": {"adj."}, "recipient": {"adj."},
+    # proportion v. 只用被動的 be proportioned to，很文言
+    "proportion": {"v."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"
