@@ -1544,6 +1544,24 @@ function fallbackCopy(text) {
   document.body.removeChild(ta);
 }
 
+/* 電腦版：答完之後直接按 Enter 進下一題。
+
+   送出答案時 submit() 會把輸入框 blur 掉（要讓手機鍵盤收起來），
+   於是掛在 #ansIn 上的那個 Enter 監聽就再也收不到事件了。
+   這裡補一個全域監聽接手「下一題」，手機沒有實體鍵盤，不受影響。 */
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Enter" || e.isComposing) return;
+  if (cur !== "drill" || !answered) return;
+  /* 查單字的彈出開著時不要搶走 Enter */
+  if ($("#sheetBg").classList.contains("on")) return;
+  /* 焦點在別的輸入欄位時交給該欄位自己處理 */
+  var t = e.target;
+  if (t && (t.tagName === "TEXTAREA" ||
+            (t.tagName === "INPUT" && t.id !== "ansIn"))) return;
+  e.preventDefault();
+  submit();          /* answered 為真時 submit() 會轉呼叫 next() */
+});
+
 /* ---------- 啟動 ---------- */
 go("drill");
 
