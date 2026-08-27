@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：2343 / 6114（3689 個字義）**
+**已編好釋義與例句：2469 / 6114（3921 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -35,30 +35,27 @@
 - `w22`：120 字（第 5 級 D–H，做到 `hazard`）
 - `w23`：129 字（第 5 級 H–N，`heir` 到 `notion`）
 - `w24`：125 字（第 5 級 A–G 漏網 ＋ O–R，做到 `recruit`）
+- `w25`：126 字（第 5 級 R 尾端 ＋ S–T，做到 `transition`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 5 級**（還缺 383 字）。`w24` 做完 A–G 的漏網
-與 O–R（收在 `recruit`）。下一批從 **R 尾端接下去，主攻 S–Z**：
+**下一批要做**：**第 5 級收尾**（只剩 257 字）。`w25` 做到 `transition`。
+下一批從 **T 尾端接下去，做完 U–Z 就能結束第 5 級**：
 
-`refuge`、`regardless`、`regime`、`reinforce`、`reminder`、`removal`、`render`、
-`repay`、`resemblance`、`residence`、`resident`、`residential`、`resort`、
-`resume`、`retail`、`revenue`、`reverse`、`rigid`、`riot`、`risky`、`ritual`、
-`rival`、`sacred`、`scan`、`scandal`、`scar`、`scenario`、`scent`、`scheme`、
-`scope`、`scramble`、`scrap`、`script`、`sector`、`segment`、`sensation`、
-`sensitivity`、`sentiment`、`sequence`、`series`、`session`、`setting`、
-`shatter`、`shed`、`sheer`、`shield`、`shiver`、`shrug`、`sibling`、`slam`、
-`slavery`、`smash`、`snatch`、`sneak`、`soak`、`soar`、`sober`、`soften`、
-`sole`、`sophisticated`、`spacious`、`specialist`、`specialize`、`specify`、
-`spectacular`、`spectator`、`spectrum`、`speculate`、`sphere`、`sponsor`、
-`stability`、`stack`、`stain`、`stake`、`stall`、`stance`、`startle`、`steer`、
-`stereotype`、`stimulate`、`storage`、`straightforward`、`strain`、`strap`、
-`strategic`、`striking`、`structural`、`stumble`、`subsequent`、`substantial`、
-`substitute`、`subtle`、`successor`、`superb`、`supervise`、`supreme`、
-`surplus`、`suspend`、`sustain`、`swap`、`symptom` 等，一批抓 120 字左右。
+`transit`、`transmission`、`transparent`、`trauma`、`treaty`、`tribute`、
+`trigger`、`trim`、`triple`、`trivial`、`tuition`、`ultimate`、`uncover`、
+`undergo`、`undergraduate`、`underline`、`undermine`、`undertake`、`undo`、
+`undoubtedly`、`unemployment`、`unfold`、`unlock`、`unprecedented`、`update`、
+`upgrade`、`utility`、`utilize`、`vacuum`、`valid`、`variable`、`variation`、
+`vein`、`vendor`、`venture`、`venue`、`verbal`、`verdict`、`version`、`versus`、
+`vertical`、`veteran`、`via`、`viable`、`vicious`、`viewer`、`viewpoint`、
+`virtual`、`vocal`、`vow`、`vulnerable`、`warrior`、`wary`、`weird`、`whereas`、
+`widespread`、`wilderness`、`wildlife`、`wither`、`witty`、`workshop`、`worship`、
+`worthwhile`、`worthy` 等。
 
-⚠ 第 5 級剩下的字裡仍有不少冷僻具體名詞（sandal、salmon、salon、sheriff、
-skull、smog、sponge、squash、stew 這類），**挑字時要跳過**，
-優先做動詞、形容詞與抽象名詞。
+U–Z 的實詞大約只有 120 字上下，**一批就能把第 5 級收乾淨**，
+剩下的都是 sandal、skull、yacht 那類冷僻具體名詞。
+第 5 級做完之後，**下一個目標是第 2 級**（還缺 877 字，且都是高頻基礎字），
+或依使用者指示轉攻第 6 級。
 
 **第 4 級只剩 96 字**，幾乎全是冷僻具體名詞（aquarium、broom、lobster、pasta、
 raisin 這類），學測不會考，不必回頭補。少數還算有用的（`arch`、`audio`、`facial`、
@@ -121,14 +118,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w24.js` | 補充批次（第 1～19 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w25.js` | 補充批次（第 1～20 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2343 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2469 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -183,6 +180,10 @@ certificated）、`overall` n.（英式的工作罩衫）、`prior` n.（修道�
 `overturn` n.（罕用）、`pension` v.（只有 pension somebody off 這個片語）、
 `perspective` adj. 與 `recipient` adj.（都是專門術語）、
 `proportion` v.（只用被動的 be proportioned to，很文言）。
+
+`w25`（第 5 級 R 尾端＋S–T）新增的：`regardless` adj.（古典用法）、
+`retail` adv.（sell retail 是商業行話）、`sole` v.（給鞋換底，已是古語）、
+`soak` n.、`steer` n.（閹牛）、`texture` v.、`sneak` n.（英式口語「打小報告的人」）。
 
 以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 

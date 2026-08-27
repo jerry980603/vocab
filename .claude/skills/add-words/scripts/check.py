@@ -63,6 +63,17 @@ SKIP_POS = {
     "perspective": {"adj."}, "recipient": {"adj."},
     # proportion v. 只用被動的 be proportioned to，很文言
     "proportion": {"v."},
+    # w25（第 5 級 R 尾端＋S–T）刻意不收的詞性：
+    # regardless adj.（He was regardless of the danger）是古典用法，現代只用副詞
+    "regardless": {"adj."},
+    # retail adv.（sell retail）是商業行話，學測不考
+    "retail": {"adv."},
+    # sole v.（給鞋換底）已是古語，soak n. 與 steer n.（閹牛）同樣罕用
+    "sole": {"v."}, "soak": {"n."}, "steer": {"n."},
+    # texture v.（使有紋理）現代英文幾乎只用過去分詞 textured
+    "texture": {"v."},
+    # sneak n.（打小報告的人）是英式口語，學測只考動詞
+    "sneak": {"n."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"
