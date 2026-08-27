@@ -39,6 +39,17 @@ SKIP_POS = {
     "universal": {"n."},
     # external 的名詞（externals＝外表）與 exotic 的名詞都很文言，學測只考形容詞
     "external": {"n."}, "exotic": {"n."},
+    # w23（第 5 級 H–N）刻意不收的詞性：
+    # incentive adj.（只出現在 incentive scheme 這類名詞修飾語，不是真正的形容詞）
+    "incentive": {"adj."},
+    # initiate 的 adj./n.（「新加入者」是宗教團體的舊用法）、initiative adj.（同理）
+    "initiate": {"adj.", "n."}, "initiative": {"adj."},
+    # league v.（結盟）與 legitimate v.（使合法）都很文言，學測只考名詞與形容詞
+    "league": {"v."}, "legitimate": {"v."},
+    # marine n.（海軍陸戰隊員）、masculine n. 與 metropolitan n. 都是專門用法
+    "marine": {"n."}, "masculine": {"n."}, "metropolitan": {"n."},
+    # mock n.（英式的模擬考複數 mocks）、neutral n.（排檔的空檔）學測不考
+    "mock": {"n."}, "neutral": {"n."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"

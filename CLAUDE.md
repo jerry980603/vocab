@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：2089 / 6114（3287 個字義）**
+**已編好釋義與例句：2218 / 6114（3481 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -33,20 +33,33 @@
 - `w20`：118 字（第 5 級 A–C，做到 `cluster`）
 - `w21`：116 字（第 5 級 C–D，做到 `document`）
 - `w22`：120 字（第 5 級 D–H，做到 `hazard`）
+- `w23`：129 字（第 5 級 H–N，`heir` 到 `notion`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 5 級**（還缺 637 字）。`w22` 已經做到 `hazard`，
-下一批從 **H 尾端接下去**：`heighten`、`heritage`、`hierarchy`、`homogeneous`、
-`hospitality`、`hostile`、`hostility`、`humiliate`、`hypothesis`、`identify`、`ideology`、
-`ignite`、`illuminate`、`illusion`、`imply`、`implication`、`impose`、`impulse`、
-`incentive`、`incline`、`incorporate`、`index`、`indicate`、`indifferent`、`indigenous`、
-`indignant`、`induce`、`indulge`、`inevitable`、`infer`、`inference`、`infinite`、
-`inflict`、`inhabit`、`inherent`、`inherit`、`inhibit`、`initiate`、`initiative`、
-`inject`、`innovation`、`input`、`inquire`、`insight`、`inspire`、`install`、`instance`、
-`institute`、`institution`、`integrate`、`integrity`、`intellect`、`intensify`、
-`interfere`、`interior`、`interpret`、`interval`、`intervene`、`intrigue`、`intrinsic`、
-`invaluable`、`inventory`、`invest`、`invoke`、`involve`、`ironic`、`irony`、`irritate` 等，
+**下一批要做**：**繼續第 5 級**（還缺 508 字）。`w23` 已做完 H–N
+（`heir` 到 `notion`）。第 5 級的 A–G 當初跳過了不少，下一批建議
+**回頭掃 A–G 的漏網之魚，再接著做 O 開頭**：
+
+回頭補的（A–G，這些都還沒做）：`accord`、`acknowledgement`、`acquaint`、
+`array`、`bureaucracy`、`certificate`、`confrontation`、`criteria`、
+`disconnect`、`endorsement`、`equity`、`franchise`、`grill`。
+
+接著做 O–P（第 5 級主力）：`obligation`、`obscure`、`observer`、`odds`、
+`operational`、`opponent`、`opposition`、`opt`、`optimism`、`optional`、
+`organism`、`outlet`、`output`、`outsider`、`overall`、`oversee`、`overtake`、
+`overturn`、`overwhelm`、`parallel`、`participant`、`particle`、`partly`、
+`passionate`、`patch`、`patent`、`pathetic`、`patrol`、`penetrate`、`pension`、
+`perceive`、`perception`、`persist`、`personnel`、`perspective`、`petition`、
+`phase`、`pledge`、`plunge`、`plural`、`practitioner`、`precaution`、`predator`、
+`preference`、`prejudice`、`premature`、`premise`、`prescribe`、`prescription`、
+`presumably`、`presume`、`prevail`、`prey`、`prior`、`proclaim`、`productivity`、
+`profile`、`profound`、`progressive`、`prohibit`、`prolong`、`prone`、
+`proportion`、`prospect`、`province`、`provision`、`provoke`、`pulse` 等，
 一批抓 120 字左右。
+
+⚠ 第 5 級剩下的字裡有不少冷僻具體名詞（aisle、attic、casino、cathedral、
+cemetery、coffin、diaper、escalator、hockey 這類），**挑字時要跳過**，
+優先做動詞、形容詞與抽象名詞。
 
 **第 4 級只剩 96 字**，幾乎全是冷僻具體名詞（aquarium、broom、lobster、pasta、
 raisin 這類），學測不會考，不必回頭補。少數還算有用的（`arch`、`audio`、`facial`、
@@ -109,14 +122,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w22.js` | 補充批次（第 1～17 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w23.js` | 補充批次（第 1～18 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2089 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2218 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
