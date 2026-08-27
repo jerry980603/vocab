@@ -486,7 +486,13 @@ function renderCard() {
   $("#btnKnow").onclick = alreadyKnow;
   $("#btnBad").onclick = reportBad;
   $("#ansIn").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") { e.preventDefault(); submit(); }
+    if (e.key !== "Enter" || e.isComposing) return;
+    e.preventDefault();
+    /* 一定要擋下冒泡：不然這個事件會再傳到 document 上的全域監聽，
+       那裡看到 answered 已經被這次 submit() 設成 true，就會再跳一次 next()，
+       等於按一下 Enter 直接略過答案畫面衝到下一題。 */
+    e.stopPropagation();
+    submit();
   });
   $("#posZh").onclick = function () { revealHint(sn); };
   $("#enLine").addEventListener("click", onTokenClick);
