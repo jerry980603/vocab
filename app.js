@@ -90,8 +90,12 @@ function load() {
   return { v: 1, items: {}, todo: [], bad: [], log: {}, known: {} };
 }
 function save() {
+  /* mtime 給雲端同步用：兩台裝置的純量設定（每日題數、考試日期）
+     起衝突時，靠它決定哪一份比較新。 */
+  S.mtime = Date.now();
   try { localStorage.setItem(LS, JSON.stringify(S)); }
   catch (e) { toast("儲存失敗，可能是瀏覽器空間不足"); }
+  if (window.SYNC) SYNC.touch();
 }
 
 /* 間隔重複的階梯：10 分鐘 → 1 天 → 4 天 → 14 天 → 30 天 → 60 天 → 120 天
@@ -1382,6 +1386,76 @@ function nextFlash() {
 /* ============================================================
    設定
    ============================================================ */
+function syncAgo(t) {
+  if (!t) return "還沒同步過";
+  var s = Math.floor((Date.now() - t) / 1000);
+  if (s < 60) return "剛剛同步";
+  if (s < 3600) return Math.floor(s / 60) + " 分鐘前同步";
+  if (s < 86400) return Math.floor(s / 3600) + " 小時前同步";
+  return Math.floor(s / 86400) + " 天前同步";
+}
+
+function syncBlockHTML() {
+  var i = SYNC.info();
+  if (!SYNC.enabled()) {
+    return '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.7">' +
+      "手機和電腦想共用同一份進度，就貼一組 GitHub token 進來。<br>" +
+      "進度會存到你自己帳號底下的一個 secret gist，免費、只有你看得到。<br>" +
+      '產生方式：GitHub → Settings → Developer settings → ' +
+      "Personal access tokens → Fine-grained tokens，權限只勾 <b>Gists: Read and write</b>。</p>" +
+      '<input class="tokin" id="syncTok" type="password" autocomplete="off" ' +
+      'placeholder="貼上 github_pat_... 開頭的那串">' +
+      '<div class="row" style="margin-top:10px">' +
+      '<button class="btn" id="btnSyncOn">開啟同步</button></div>';
+  }
+  return '<div class="setrow"><div><div class="t">已開啟</div>' +
+    '<div class="d">' + esc(syncAgo(i.lastSync)) +
+    (i.gistId ? "・gist " + esc(i.gistId.slice(0, 7)) : "・尚未建立 gist") + "</div></div>" +
+    '<button class="btn sm ghost" id="btnSyncNow">立刻同步</button></div>' +
+    '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.7">' +
+    "開啟 App 時會自動拉一次，練完停下來幾秒後自動上傳。<br>" +
+    "兩台裝置的進度是逐筆合併的，不會互相蓋掉。</p>" +
+    '<div class="row"><button class="btn ghost" id="btnSyncOff" style="color:var(--bad)">關閉同步</button></div>';
+}
+
+function bindSyncBlock() {
+  var on = $("#btnSyncOn");
+  if (on) {
+    on.onclick = function () {
+      var t = $("#syncTok").value.trim();
+      if (!t) return toast("請先貼上 token");
+      SYNC.setToken(t);
+      toast("正在連線…");
+      SYNC.run().then(function () {
+        toast("同步成功");
+        drawSet();
+      }).catch(function (e) {
+        SYNC.forget();
+        toast(e.code === "auth" ? "token 無效或沒給 Gists 權限" : "連線失敗：" + e.message);
+        drawSet();
+      });
+    };
+  }
+  var now = $("#btnSyncNow");
+  if (now) {
+    now.onclick = function () {
+      toast("同步中…");
+      SYNC.run().then(function () {
+        toast("同步成功"); drawSet(); refreshHeader();
+      }).catch(function (e) {
+        toast(e.code === "auth" ? "token 已失效，請重新設定" : "同步失敗：" + e.message);
+      });
+    };
+  }
+  var off = $("#btnSyncOff");
+  if (off) {
+    off.onclick = function () {
+      if (!confirm("關閉同步？本機進度會留著，雲端那份也不會刪，只是這台不再自動上傳下載。")) return;
+      SYNC.forget(); toast("已關閉同步"); drawSet();
+    };
+  }
+}
+
 function drawSet() {
   $("#v-set").innerHTML =
     '<h2 class="sec">要叫 Claude 幫忙的事</h2>' +
@@ -1391,6 +1465,8 @@ function drawSet() {
     '<div class="setrow"><div><div class="t">回報的怪句子（' + S.bad.length + "）</div>" +
     '<div class="d">你覺得不自然或有錯的例句</div></div>' +
     '<button class="btn sm ghost" id="cpBad">複製指令</button></div>' +
+
+    '<h2 class="sec">雲端同步</h2>' + syncBlockHTML() +
 
     '<h2 class="sec">備份</h2>' +
     '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.7">' +
@@ -1414,6 +1490,8 @@ function drawSet() {
     '<h2 class="sec">危險操作</h2>' +
     '<button class="btn ghost" id="btnWipe" style="color:var(--bad)">清除全部學習進度</button>' +
     '<p style="font-size:12px;color:var(--sub);text-align:center;margin-top:28px">v1・完全離線運作</p>';
+
+  bindSyncBlock();
 
   $("#cpTodo").onclick = function () {
     if (!S.todo.length) return toast("待查清單是空的");
@@ -1468,6 +1546,9 @@ function fallbackCopy(text) {
 
 /* ---------- 啟動 ---------- */
 go("drill");
+
+/* 開 App 先跟雲端對一次。沒設 token 的話這行什麼都不做。 */
+if (window.SYNC) SYNC.auto();
 
 if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
   navigator.serviceWorker.register("sw.js").catch(function () { });

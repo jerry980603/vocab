@@ -269,6 +269,12 @@ textarea.io{
   background:var(--bg);color:var(--text);font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;
   outline:none;resize:vertical;
 }
+/* 同步用的 token 輸入框。字型跟 .io 一樣用等寬，貼上長字串比較好認。 */
+input.tokin{
+  width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);
+  background:var(--bg);color:var(--text);font-size:12px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;outline:none;
+}
 .toast{
   position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:60;
   background:var(--text);color:var(--bg);padding:11px 20px;border-radius:22px;
@@ -332,6 +338,7 @@ textarea.io{
 <script src="data/w21.js"></script>
 <script src="data/w22.js"></script>
 <script src="data/p1.js"></script>
+<script src="sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
