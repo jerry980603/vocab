@@ -74,6 +74,17 @@ SKIP_POS = {
     "texture": {"v."},
     # sneak n.（打小報告的人）是英式口語，學測只考動詞
     "sneak": {"n."},
+    # w26（第 5 級收尾 S 補遺＋T–Z）刻意不收的詞性：
+    # saint v.（封聖）、warehouse v.（入倉）都極罕用
+    "saint": {"v."}, "warehouse": {"v."},
+    # slap adv.（slap in the middle）是口語強調用法
+    "slap": {"adv."},
+    # verbal n. 是文法術語「動狀詞」，學測只考形容詞
+    "verbal": {"n."},
+    # whatsoever pron.（＝whatever）已是古語
+    "whatsoever": {"pron."},
+    # triple n. 是棒球的三壘打（美式），transit v. 與 torch v.（縱火）都罕用
+    "triple": {"n."}, "transit": {"v."}, "torch": {"v."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"
