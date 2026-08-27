@@ -57,9 +57,18 @@ var SYNC = (function () {
       if (!x) { out.items[k] = y; return; }
       if (!y) { out.items[k] = x; return; }
       var sx = x.seen || 0, sy = y.seen || 0;
-      if (sx > sy) out.items[k] = x;
-      else if (sy > sx) out.items[k] = y;
-      else out.items[k] = (x.due || 0) >= (y.due || 0) ? x : y;
+      var pick;
+      if (sx > sy) pick = x;
+      else if (sy > sx) pick = y;
+      else pick = (x.due || 0) >= (y.due || 0) ? x : y;
+      /* 錯題標記取聯集：任何一台標記過答錯，合併後就保留。
+         漏掉會讓該補練的字悄悄消失，寧可多練一次。 */
+      if (!pick.wb && (x.wb || y.wb)) {
+        var c = {};
+        for (var f in pick) if (Object.prototype.hasOwnProperty.call(pick, f)) c[f] = pick[f];
+        c.wb = true; pick = c;
+      }
+      out.items[k] = pick;
     });
 
     /* log：取較大值而不是相加。
