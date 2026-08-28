@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：2725 / 6114（4286 個字義）**
+**已編好釋義與例句：2859 / 6114（4527 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -38,25 +38,33 @@
 - `w25`：126 字（第 5 級 R 尾端 ＋ S–T，做到 `transition`）
 - `w26`：122 字（第 5 級收尾：S 補遺 ＋ T–Z，做到 `worthy`）
 - `w27`：134 字（第 5 級完結：剩餘冷僻名詞全收，**第 5 級 1006/1007 完成**）
+- `w28`：134 字（**第 2 級起頭** A–C，做到 `cheat`）
 - `p1`：52 個片語
 
-**下一批要做**：🎉 **第 5 級已完成（1006／1007）**，只差刻意跳過的 `ass`。
+**下一批要做**：**繼續第 2 級**（還缺 743 字）。`w28` 做完 A–C 的前半，
+收在 `cheat`。下一批從 **`check` 接下去做 C–F**：
 
-**下一個目標是第 2 級**（還缺 877 字）。這是目前 CP 值最高的一塊：
-全是高頻基礎字，學測閱讀與寫作天天用得到，而且字義單純、寫起來快。
-從 A 開始照字母順序做，一批 120～130 字：
+`check`、`cheek`、`cheer`、`chemical`、`chemistry`、`chess`、`chest`、`chew`、
+`chief`、`childhood`、`chill`、`chin`、`chop`、`circle`、`clap`、`classic`、
+`clay`、`clerk`、`click`、`climate`、`closet`、`cloth`、`clothe`、`club`、
+`coach`、`coal`、`coast`、`code`、`coin`、`collar`、`colony`、`comb`、`combine`、
+`comfort`、`command`、`comment`、`commercial`、`committee`、`compare`、
+`complain`、`complete`、`concern`、`conclusion`、`condition`、`confidence`、
+`confuse`、`connect`、`consider`、`contact`、`contain`、`content`、`continue`、
+`contrast`、`control`、`convenient`、`conversation`、`cook`、`copy`、`corner`、
+`correct`、`cost`、`cotton`、`cough`、`count`、`courage`、`court`、`cousin`、
+`cover`、`crash`、`cream`、`create`、`crime`、`cross`、`crowd`、`cruel`、`cry`、
+`cure`、`curious`、`curtain`、`curve`、`custom`、`cycle`、`daily`、`damage`、
+`dare`、`dash`、`data`、`deal`、`dear`、`debate`、`decide`、`declare`、`decrease`、
+`deep`、`defeat`、`defend`、`degree`、`delay`、`delight`、`deliver`、`demand`、
+`dentist`、`deny`、`depend`、`describe`、`desert`、`deserve`、`design`、`desire`
+等，一批 120～130 字。
 
-`absence`、`absent`、`accept`、`accident`、`active`、`activity`、`actual`、
-`addition`、`address`、`adult`、`advance`、`advice`、`affair`、`against`、
-`ahead`、`aid`、`aim`、`aircraft`、`alarm`、`album`、`alike`、`alive`、`alone`、
-`aloud`、`altogether`、`among`、`amount`、`anger`、`angle`、`ankle`、`anyway`、
-`anywhere`、`appearance`、`appetite`、`apply`、`argument`、`army`、`arrangement`、
-`arrival`、`arrow`、`article`、`artist`、`asleep`、`attend`、`attention`、
-`author`、`average`、`backward`、`bake`、`bakery`、`balcony`、`balloon`、`bar`、
-`barbecue` … 依此類推。
-
-⚠ 第 2 級雖然簡單，但**多義字反而更多**（`address`、`advance`、`bar`、
-`article`、`average`、`aim` 都是），朗文查證不能省。
+⚠ 第 2 級的多義字密度比第 5 級還高。這批光是 `better`（adj./adv./n./v. 四個詞性）、
+`charge`（5 個義項）、`capital`、`bill`、`board`、`article`、`address`、`base`、
+`bar`、`cell`、`branch`、`channel` 就都要逐一查朗文。下一批的 `check`、`content`、
+`cost`、`court`、`cover`、`cross`、`deal`、`degree`、`desert`（重音不同意思不同）
+同樣要小心。
 
 第 2 級做完之後：第 1 級（缺 1008）→ 第 3 級（缺 386）→ 第 6 級（缺 1023）。
 
@@ -121,14 +129,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w27.js` | 補充批次（第 1～22 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w28.js` | 補充批次（第 1～23 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2725 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2859 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -202,6 +210,9 @@ certificated）、`overall` n.（英式的工作罩衫）、`prior` n.（修道�
 **整個字跳過的**：`ass`（第 5 級唯一未收的字）。官方標 n.，
 但現代英文只剩粗俗義與過時的「驢子」，不適合放進高中生字庫。
 第 5 級因此停在 1006／1007。
+
+`w28`（第 2 級 A–C）新增的：`absent` v.（只有反身的 absent yourself from，
+非常正式）、`cartoon` v.（朗文沒有獨立動詞條目）。
 
 以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 

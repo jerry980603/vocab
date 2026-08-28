@@ -99,6 +99,11 @@ SKIP_POS = {
     "nowhere": {"pron."}, "salmon": {"adj."},
     # nutrient adj. 只當名詞修飾語（nutrient solution），不是真形容詞
     "nutrient": {"adj."},
+    # w28（第 2 級 A–C）刻意不收的詞性：
+    # absent v. 只有反身的 absent yourself from，非常正式，高中不考
+    "absent": {"v."},
+    # cartoon v.（畫漫畫）在朗文沒有獨立條目，現代英文罕用
+    "cartoon": {"v."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"
