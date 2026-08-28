@@ -85,6 +85,20 @@ SKIP_POS = {
     "whatsoever": {"pron."},
     # triple n. 是棒球的三壘打（美式），transit v. 與 torch v.（縱火）都罕用
     "triple": {"n."}, "transit": {"v."}, "torch": {"v."},
+    # w27（第 5 級完結）刻意不收的詞性：
+    # canvas v.（用帆布覆蓋）、dome v.、jug v.、ridge v.、rim v.、yacht v. 都極罕用
+    "canvas": {"v."}, "dome": {"v."}, "jug": {"v."},
+    "ridge": {"v."}, "rim": {"v."}, "yacht": {"v."},
+    # constitutional n.（保健散步）是古語，midst prep. 同樣文言
+    "constitutional": {"n."}, "midst": {"prep."},
+    # foul adv. 在朗文沒有獨立義項，只有 foully
+    "foul": {"adv."},
+    # rib v.（取笑）與 tin v.（裝罐）都是口語或英式用法
+    "rib": {"v."}, "tin": {"v."},
+    # nowhere pron. 朗文只列副詞；salmon adj.（鮭魚色）罕用
+    "nowhere": {"pron."}, "salmon": {"adj."},
+    # nutrient adj. 只當名詞修飾語（nutrient solution），不是真形容詞
+    "nutrient": {"adj."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"
