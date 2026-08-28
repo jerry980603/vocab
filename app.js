@@ -319,14 +319,71 @@ function buildQueue(mode) {
   qTotal = queue.length;
 }
 
+/* ============================================================
+   每日自動補新字
+
+   課表本來就把整個字庫排成一天一組了（見 planUnits／dayGroups），
+   但要用得先切到「課表」、找出今天該吃哪一組、再按加入。
+   這裡把那件事收斂成一個動作：照同樣的順序，把今天缺的額度補滿。
+
+   「今天補了幾個」單獨記在 S.auto[日期]，不跟手動加入的混在一起，
+   這樣手動多加幾個字不會害今天的自動額度被吃掉。
+   ============================================================ */
+function loadedToday() { return (S.auto || {})[today()] || 0; }
+function autoLoadOn() { return !!S.autoLoad; }
+
+/* 照課表順序挑出接下來 n 個還沒進清單的字義。
+   跳過快篩標記「我早就會了」的字，那是使用者明確說不用練的。 */
+function nextNewUnits(n) {
+  var out = [], us = planUnits();
+  for (var i = 0; i < us.length && out.length < n; i++) {
+    var u = us[i];
+    if (S.known[u.w] || hasItem(u.w, u.si)) continue;
+    out.push(u);
+  }
+  return out;
+}
+
+/* 把今天還沒補足的新字加進清單，回傳實際加入的數量 */
+function loadTodayNew() {
+  var need = perDay() - loadedToday();
+  if (need <= 0) return 0;
+  var picked = nextNewUnits(need);
+  picked.forEach(function (u) { addItem(u.w, u.si); });
+  if (picked.length) {
+    S.auto = S.auto || {};
+    S.auto[today()] = loadedToday() + picked.length;
+    queue = [];
+    save();
+  }
+  return picked.length;
+}
+
 function drawDrill() {
   var el = $("#v-drill");
+  /* 開自動的話，進練習頁就先把今天的份補上。
+     loadedToday() 會擋住重複執行，所以切頁切來切去也只會補一次。 */
+  if (autoLoadOn()) loadTodayNew();
   if (!allItems().length) {
+    var canLoad = nextNewUnits(1).length;
     el.innerHTML =
       '<div class="empty"><span class="big">📖</span>' +
-      "你的練習清單還是空的。<br>先到「課表」加入 Day 1，或到「查單字」自己挑。</div>" +
-      '<div class="row"><button class="btn" id="goPlan">去看課表</button>' +
+      "你的練習清單還是空的。<br>" +
+      (canLoad ? "按下面那顆按鈕就會照課表順序載入今天的份。" : "字庫裡的字都排完了。") +
+      "</div>" +
+      (canLoad
+        ? '<button class="btn" id="btnFirstLoad">載入今天的新字（' + perDay() + " 個字義）</button>" +
+          '<p style="font-size:13px;color:var(--sub);margin:9px 4px 14px;line-height:1.7">' +
+          "想每天自動載入、不用手動按，到「課表」把<b>每天自動載入</b>打開。</p>"
+        : "") +
+      '<div class="row"><button class="btn ghost" id="goPlan">去看課表</button>' +
       '<button class="btn ghost" id="goFind">自己查單字</button></div>';
+    var bf = $("#btnFirstLoad");
+    if (bf) bf.onclick = function () {
+      var n = loadTodayNew();
+      toast(n ? "已載入 " + n + " 個新字義" : "沒有可以載入的新字了");
+      refreshHeader(); drawDrill();
+    };
     $("#goPlan").onclick = function () { go("plan"); };
     $("#goFind").onclick = function () { go("find"); };
     return;
@@ -363,6 +420,32 @@ function loadForecast() {
     "覺得太多就到「課表」把每天的新字數調低——<b>新字數是唯一能控制複習量的閥門</b>。</p>";
 }
 
+/* 練習頁最上面那塊「今天的新字」。
+   開了自動就只回報結果，沒開就給一顆按鈕，兩種情況都不必再切去課表。 */
+function todayNewHTML() {
+  var done = loadedToday(), quota = perDay(), left = quota - done;
+  var pool = nextNewUnits(left > 0 ? left : 1).length;
+
+  if (!pool) {
+    return '<h2 class="sec">今天的新字</h2>' +
+      '<div class="empty" style="padding:20px 8px">' +
+      "字庫裡已編好例句的字都排進清單了 🎉<br>" +
+      '<span style="font-size:13px">叫 Claude 再補一批，或先把現有的複習到熟。</span></div>';
+  }
+  if (left <= 0) {
+    return '<h2 class="sec">今天的新字</h2>' +
+      '<div class="empty" style="padding:20px 8px">' +
+      "今天的 <b>" + done + "</b> 個新字義已經載入了。<br>" +
+      '<span style="font-size:13px">想多學就按下面的「再多load一組」。</span></div>' +
+      '<button class="btn ghost" id="btnMoreNew">再載入 ' + quota + " 個新字義</button>";
+  }
+  return '<h2 class="sec">今天的新字</h2>' +
+    '<button class="btn" id="btnLoadNew">載入今天的新字（' + left + " 個字義）</button>" +
+    '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
+    "照課表的順序自動挑，快篩標記「已經會了」的字會跳過。<br>" +
+    "不想每天按的話，到「課表」把<b>每天自動載入</b>打開。</p>";
+}
+
 /* 開始畫面：一般練習與錯題練習分開兩個入口 */
 function drawDrillStart(el) {
   var due = normalDue().length, wrong = wrongItems().length, all = allItems().length;
@@ -395,6 +478,8 @@ function drawDrillStart(el) {
     "・<b>" + (all - due - wrong) + "</b> 個還沒到複習時間，最近一批 " + waitTxt +
     "</div></div>" +
 
+    todayNewHTML() +
+
     '<h2 class="sec">一般練習</h2>' +
     (due
       ? '<button class="btn" id="btnNormal">開始（' + due + " 個字到期）</button>"
@@ -418,6 +503,25 @@ function drawDrillStart(el) {
     scrButtons() +
 
     '<h2 class="sec">未來七天的複習量</h2>' + loadForecast();
+
+  var bLoad = $("#btnLoadNew"), bMore = $("#btnMoreNew");
+  if (bLoad) bLoad.onclick = function () {
+    var n = loadTodayNew();
+    toast(n ? "已載入 " + n + " 個新字義" : "沒有可以載入的新字了");
+    refreshHeader(); drawDrill();
+  };
+  if (bMore) bMore.onclick = function () {
+    /* 再來一組：把今天的計數往前推一個額度，等於「多吃一天的份」 */
+    var extra = nextNewUnits(perDay());
+    extra.forEach(function (u) { addItem(u.w, u.si); });
+    if (extra.length) {
+      S.auto = S.auto || {};
+      S.auto[today()] = loadedToday() + extra.length;
+      queue = []; save();
+    }
+    toast(extra.length ? "又載入 " + extra.length + " 個新字義" : "沒有可以載入的新字了");
+    refreshHeader(); drawDrill();
+  };
 
   if (due) $("#btnNormal").onclick = function () { buildQueue("normal"); drawDrill(); };
   if (wrong) $("#btnWrongDrill").onclick = function () { buildQueue("wrong"); drawDrill(); };
@@ -1009,6 +1113,16 @@ function drawPlan() {
     "改這個數字會重新分組。以每天 " + perDay() + " 個字義估算，穩定之後每天大約 " +
     Math.round(perDay() * 6.6) + " 題、" + Math.round(perDay() * 6.6 * 12 / 60) + " 分鐘（含複習）。</p>";
 
+  html += '<h2 class="sec">每天自動載入新字</h2>' +
+    '<div class="seg">' +
+    '<button data-auto="1"' + (autoLoadOn() ? ' class="on"' : "") + ">自動載入</button>" +
+    '<button data-auto="0"' + (autoLoadOn() ? "" : ' class="on"') + ">我自己按</button></div>" +
+    '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
+    "開了之後，每天第一次打開「練習」就會照課表順序自動補上 " + perDay() + " 個新字義，" +
+    "不必再自己來課表一組一組加。<br>" +
+    "<b>不會累積</b>——某天沒練不會隔天補兩倍，只補當天的額度，" +
+    "所以停幾天再回來也不會被一大堆新字淹沒。</p>";
+
   html += '<h2 class="sec">課表怎麼排</h2>' +
     '<div class="seg">' +
     '<button data-mix="1"' + (mixOn() ? ' class="on"' : "") + ">難度平均混合</button>" +
@@ -1086,6 +1200,13 @@ function bindPlanRest() {
     b.onclick = function () {
       S.mixLevels = b.dataset.mix === "1";
       save(); openDay = -1; drawPlan();
+    };
+  });
+  $("#v-plan").querySelectorAll("[data-auto]").forEach(function (b) {
+    b.onclick = function () {
+      S.autoLoad = b.dataset.auto === "1";
+      save(); drawPlan();
+      toast(S.autoLoad ? "已開啟：下次進練習頁會自動補上今天的新字" : "已改回手動");
     };
   });
   $("#perDay").onchange = function () {
