@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：2859 / 6114（4527 個字義）**
+**已編好釋義與例句：2989 / 6114（4739 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -39,32 +39,37 @@
 - `w26`：122 字（第 5 級收尾：S 補遺 ＋ T–Z，做到 `worthy`）
 - `w27`：134 字（第 5 級完結：剩餘冷僻名詞全收，**第 5 級 1006/1007 完成**）
 - `w28`：134 字（**第 2 級起頭** A–C，做到 `cheat`）
+- `w29`：130 字（第 2 級 C–E，做到 `electric`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 2 級**（還缺 743 字）。`w28` 做完 A–C 的前半，
-收在 `cheat`。下一批從 **`check` 接下去做 C–F**：
+**下一批要做**：**繼續第 2 級**（還缺 613 字）。`w29` 做完 C–E，
+收在 `electric`。下一批從 **`electrical` 接下去做 E–H**：
 
-`check`、`cheek`、`cheer`、`chemical`、`chemistry`、`chess`、`chest`、`chew`、
-`chief`、`childhood`、`chill`、`chin`、`chop`、`circle`、`clap`、`classic`、
-`clay`、`clerk`、`click`、`climate`、`closet`、`cloth`、`clothe`、`club`、
-`coach`、`coal`、`coast`、`code`、`coin`、`collar`、`colony`、`comb`、`combine`、
-`comfort`、`command`、`comment`、`commercial`、`committee`、`compare`、
-`complain`、`complete`、`concern`、`conclusion`、`condition`、`confidence`、
-`confuse`、`connect`、`consider`、`contact`、`contain`、`content`、`continue`、
-`contrast`、`control`、`convenient`、`conversation`、`cook`、`copy`、`corner`、
-`correct`、`cost`、`cotton`、`cough`、`count`、`courage`、`court`、`cousin`、
-`cover`、`crash`、`cream`、`create`、`crime`、`cross`、`crowd`、`cruel`、`cry`、
-`cure`、`curious`、`curtain`、`curve`、`custom`、`cycle`、`daily`、`damage`、
-`dare`、`dash`、`data`、`deal`、`dear`、`debate`、`decide`、`declare`、`decrease`、
-`deep`、`defeat`、`defend`、`degree`、`delay`、`delight`、`deliver`、`demand`、
-`dentist`、`deny`、`depend`、`describe`、`desert`、`deserve`、`design`、`desire`
+`electrical`、`emotion`、`employee`、`employer`、`employment`、`empty`、
+`enemy`、`energy`、`engine`、`engineer`、`enjoyment`、`enter`、`entrance`、
+`envelope`、`environment`、`equal`、`error`、`escape`、`especially`、`event`、
+`evening`、`evidence`、`exact`、`examine`、`example`、`excellent`、`except`、
+`exchange`、`excite`、`excuse`、`exercise`、`exist`、`exit`、`expect`、
+`expensive`、`experience`、`experiment`、`expert`、`explain`、`express`、
+`extra`、`fail`、`fair`、`faith`、`fake`、`familiar`、`fashion`、`fasten`、
+`fault`、`favor`、`fear`、`feather`、`fee`、`feed`、`female`、`fever`、`fiction`、
+`figure`、`file`、`fill`、`final`、`finger`、`firm`、`fit`、`fix`、`flag`、
+`flash`、`flat`、`flight`、`float`、`flood`、`flour`、`flow`、`focus`、`fold`、
+`follow`、`fool`、`forecast`、`forgive`、`fork`、`form`、`formal`、`former`、
+`fortune`、`forward`、`frank`、`freedom`、`freeze`、`frequent`、`fresh`、
+`fry`、`fuel`、`function`、`funeral`、`furniture`、`further`、`gain`、`gallon`、
+`garage`、`gas`、`gate`、`gather`、`general`、`generous`、`gentle`、`giant`、
+`glad`、`glove`、`glue`、`goal`、`golden`、`goods`、`government`、`grade`、
+`gradual`、`grain`、`grand`、`grateful`、`greet`、`grocery`、`ground`、`group`、
+`guard`、`guest`、`guide`、`gun`、`habit`、`hall`、`handle`、`hang`、`harm`
 等，一批 120～130 字。
 
-⚠ 第 2 級的多義字密度比第 5 級還高。這批光是 `better`（adj./adv./n./v. 四個詞性）、
-`charge`（5 個義項）、`capital`、`bill`、`board`、`article`、`address`、`base`、
-`bar`、`cell`、`branch`、`channel` 就都要逐一查朗文。下一批的 `check`、`content`、
-`cost`、`court`、`cover`、`cross`、`deal`、`degree`、`desert`（重音不同意思不同）
-同樣要小心。
+⚠ 第 2 級的多義字密度依然很高。下一批要小心的：`fair`（公平的／相當的／
+市集）、`figure`（數字／人物／身材／認為）、`firm`（公司／堅定的）、
+`fit`（合身／健康的／符合）、`flat`（平的／公寓）、`form`（形式／表格／組成）、
+`former`（前者／從前的）、`forward`（向前／轉寄）、`general`（一般的／將軍）、
+`grade`（成績／年級／等級）、`ground`（地面／理由）、`guide`（導遊／指南／引導）、
+`handle`（把手／處理）、`hang`（懸掛／吊死）。
 
 第 2 級做完之後：第 1 級（缺 1008）→ 第 3 級（缺 386）→ 第 6 級（缺 1023）。
 
@@ -129,14 +134,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w28.js` | 補充批次（第 1～23 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w29.js` | 補充批次（第 1～24 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2859 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 2989 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
