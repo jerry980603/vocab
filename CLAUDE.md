@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：3249 / 6114（5145 個字義）**
+**已編好釋義與例句：3379 / 6114（5351 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -42,38 +42,41 @@
 - `w29`：130 字（第 2 級 C–E，做到 `electric`）
 - `w30`：130 字（第 2 級 E–H，做到 `hurry`，**突破官方詞彙表一半**）
 - `w31`：130 字（第 2 級 H–O，做到 `opinion`）
+- `w32`：130 字（第 2 級 O–S，做到 `scared`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 2 級**（還缺 353 字）。`w31` 做完 H–O，
-收在 `opinion`。下一批從 **`opposite` 接下去做 O–S**：
+**下一批要做**：**第 2 級收尾**（只剩 223 字）。`w32` 做完 O–S，
+收在 `scared`。下一批從 **`scarf` 接下去做 S–Z，再一到兩批就能結束第 2 級**：
 
-`opposite`、`orange`、`order`、`organ`、`organize`、`origin`、`original`、
-`otherwise`、`ought`、`ours`、`outdoor`、`outline`、`output`、`overcome`、
-`owe`、`owner`、`pack`、`package`、`page`、`pain`、`painful`、`palace`、`pale`、
-`pan`、`panic`、`paragraph`、`parking`、`particular`、`partner`、`passage`、
-`passenger`、`passport`、`path`、`patient`、`pattern`、`peace`、`peaceful`、
-`peanut`、`pear`、`pearl`、`pedestrian`、`penny`、`pepper`、`per`、`perfect`、
-`perhaps`、`period`、`permit`、`personal`、`persuade`、`pet`、`phrase`、
-`physical`、`pigeon`、`pill`、`pillow`、`pin`、`pine`、`pink`、`pipe`、`pitch`、
-`pity`、`plain`、`plate`、`platform`、`playground`、`pleasant`、`pleasure`、
-`plenty`、`plug`、`pocket`、`poem`、`poet`、`poetry`、`point`、`poison`、`pole`、
-`polite`、`political`、`politics`、`pollute`、`pollution`、`pond`、`pool`、
-`popular`、`population`、`pork`、`port`、`portion`、`position`、`positive`、
-`possibility`、`postpone`、`pot`、`potato`、`pound`、`powder`、`power`、
-`powerful`、`practical`、`praise`、`pray`、`prefer`、`pregnant`、`prepare`、
-`presence`、`present`、`president`、`press`、`pressure`、`pretend`、`prevent`、
-`previous`、`price`、`pride`、`prince`、`princess`、`principal`、`principle`、
-`print`、`prison`、`prisoner`、`private`、`prize`、`probable`、`process`、
-`produce`、`product`、`production`、`professor`、`profit`、`program`、`progress`
-等，一批 120～130 字。
+`scarf`、`scene`、`schedule`、`scientific`、`scissors`、`score`、`screen`、
+`seafood`、`search`、`seaside`、`secretary`、`section`、`seed`、`seldom`、
+`selfish`、`semester`、`senior`、`sense`、`separate`、`series`、`serious`、
+`servant`、`service`、`settle`、`several`、`shall`、`shame`、`shape`、`share`、
+`sharp`、`shave`、`sheet`、`shelf`、`shell`、`shine`、`shock`、`shoot`、
+`shortly`、`shot`、`shoulder`、`shout`、`shower`、`shrimp`、`sidewalk`、`sight`、
+`sign`、`signal`、`silence`、`silent`、`silk`、`silly`、`silver`、`similar`、
+`simple`、`sincere`、`single`、`sink`、`site`、`situation`、`skill`、`skillful`、
+`skin`、`skirt`、`slave`、`slide`、`slim`、`slip`、`slope`、`smooth`、`snake`、
+`sock`、`soda`、`soil`、`soldier`、`solve`、`somebody`、`sorrow`、`soul`、
+`source`、`southern`、`space`、`spare`、`speaker`、`speech`、`speed`、`spell`、
+`spider`、`spirit`、`spoon`、`spot`、`spread`、`square`、`stage`、`stair`、
+`stamp`、`standard`、`state`、`statement`、`steak`、`steel`、`stick`、`stomach`、
+`stone`、`storm`、`straight`、`strange`、`stranger`、`stream`、`strength`、
+`stress`、`strict`、`strike`、`string`、`strong`、`structure`、`struggle`、
+`stupid`、`style`、`subject`、`succeed`、`success`、`sudden`、`suffer`、
+`sugar`、`suggest`、`suitable`、`sunny`、`supply`、`support`、`suppose`、
+`surface`、`surprise`、`survey`、`swallow`、`swear`、`sweat`、`sweep`、`swing`、
+`switch`、`symbol`、`system` 等。
 
-⚠ 下一批要小心的多義字：`order`（順序／命令／訂購）、`organ`（器官／管風琴）、
-`patient`（病人／有耐心的）、`present`（現在的／禮物／出席的／呈現，
-重音位置不同）、`plain`（樸素的／平原／明白的）、`point`（點／要點／指）、
-`pool`（水池／集合資源）、`port`（港口）、`position`（位置／職位／立場）、
-`pound`（英鎊／磅／捶打）、`power`（力量／權力／電力）、`press`（按壓／新聞界）、
-`principal`（校長／主要的，注意與 principle 的區別）、`process`（過程／處理）、
-`produce`（生產／農產品，重音位置不同）、`progress`（進展／前進，同樣重音不同）。
+⚠ 下一批要小心的多義字：`score`（分數／樂譜／得分）、`sense`（感官／意義／
+察覺）、`share`（分享／股份）、`sharp`（銳利的／急遽的／敏銳的）、
+`shoot`（射擊／拍攝／發芽）、`shot`（射擊／注射／鏡頭）、`sign`（標誌／跡象／
+簽名）、`single`（單一的／單身的）、`sink`（水槽／下沉）、`spare`（多餘的／
+騰出／饒恕）、`spell`（拼字／一段時間）、`spot`（地點／斑點／發現）、
+`spread`（散播／塗抹／蔓延）、`square`（正方形／廣場／平方）、`stage`（舞台／
+階段）、`state`（州／狀態／陳述）、`stick`（棍子／黏貼／卡住）、
+`strike`（罷工／打擊／突然想到）、`subject`（主題／科目／使遭受，重音不同）、
+`supply`（供應／補給品）、`support`（支持／支撐）。
 
 第 2 級做完之後：第 1 級（缺 1008）→ 第 3 級（缺 386）→ 第 6 級（缺 1023）。
 
@@ -138,14 +141,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w31.js` | 補充批次（第 1～26 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w32.js` | 補充批次（第 1～27 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3249 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3379 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -224,6 +227,9 @@ certificated）、`overall` n.（英式的工作罩衫）、`prior` n.（修道�
 非常正式）、`cartoon` v.（朗文沒有獨立動詞條目）。
 
 `w30`（第 2 級 E–H）新增的：`fit` adv.（朗文沒有獨立條目，副詞形式是 fittingly）。
+
+`w32`（第 2 級 O–S）新增的：`post` adv.（朗文沒有獨立條目，
+post-1990 那種是構詞前綴而非副詞）。
 
 以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 
