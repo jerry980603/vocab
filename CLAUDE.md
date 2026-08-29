@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：3119 / 6114（4945 個字義）**
+**已編好釋義與例句：3249 / 6114（5145 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -41,36 +41,39 @@
 - `w28`：134 字（**第 2 級起頭** A–C，做到 `cheat`）
 - `w29`：130 字（第 2 級 C–E，做到 `electric`）
 - `w30`：130 字（第 2 級 E–H，做到 `hurry`，**突破官方詞彙表一半**）
+- `w31`：130 字（第 2 級 H–O，做到 `opinion`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 2 級**（還缺 483 字）。`w30` 做完 E–H，
-收在 `hurry`。下一批從 **`identity` 接下去做 I–M**：
+**下一批要做**：**繼續第 2 級**（還缺 353 字）。`w31` 做完 H–O，
+收在 `opinion`。下一批從 **`opposite` 接下去做 O–S**：
 
-`identity`、`ill`、`image`、`imagine`、`importance`、`impossible`、`improve`、
-`increase`、`independence`、`independent`、`indicate`、`individual`、`industry`、
-`influence`、`inform`、`information`、`injure`、`insect`、`inside`、`instance`、
-`instant`、`instead`、`instrument`、`intelligent`、`intend`、`interest`、
-`international`、`interview`、`introduce`、`invent`、`invitation`、`involve`、
-`island`、`item`、`jam`、`jeans`、`jewel`、`journey`、`joy`、`judge`、`juice`、
-`jungle`、`justice`、`keeper`、`kick`、`kilogram`、`kingdom`、`kiss`、`knee`、
-`knowledge`、`labor`、`lack`、`ladder`、`lamb`、`landlady`、`language`、`lately`、
-`latest`、`lawyer`、`lay`、`lead`、`leader`、`league`、`leather`、`lecture`、
-`legal`、`lemon`、`length`、`level`、`liberty`、`library`、`license`、`lifetime`、
-`lighthouse`、`likely`、`limit`、`link`、`lip`、`liquid`、`list`、`literature`、
-`local`、`lock`、`log`、`lonely`、`loose`、`lord`、`loss`、`lung`、`machine`、
-`magic`、`mail`、`main`、`major`、`male`、`mall`、`manager`、`mankind`、`manner`、
-`march`、`mark`、`marriage`、`married`、`mass`、`master`、`match`、`material`、
-`mathematics`、`matter`、`meaning`、`measure`、`medicine`、`medium`、`melon`、
-`member`、`memory`、`mention`、`menu`、`mess`、`message`、`metal`、`method`、
-`meter`、`method` 等，一批 120～130 字。
+`opposite`、`orange`、`order`、`organ`、`organize`、`origin`、`original`、
+`otherwise`、`ought`、`ours`、`outdoor`、`outline`、`output`、`overcome`、
+`owe`、`owner`、`pack`、`package`、`page`、`pain`、`painful`、`palace`、`pale`、
+`pan`、`panic`、`paragraph`、`parking`、`particular`、`partner`、`passage`、
+`passenger`、`passport`、`path`、`patient`、`pattern`、`peace`、`peaceful`、
+`peanut`、`pear`、`pearl`、`pedestrian`、`penny`、`pepper`、`per`、`perfect`、
+`perhaps`、`period`、`permit`、`personal`、`persuade`、`pet`、`phrase`、
+`physical`、`pigeon`、`pill`、`pillow`、`pin`、`pine`、`pink`、`pipe`、`pitch`、
+`pity`、`plain`、`plate`、`platform`、`playground`、`pleasant`、`pleasure`、
+`plenty`、`plug`、`pocket`、`poem`、`poet`、`poetry`、`point`、`poison`、`pole`、
+`polite`、`political`、`politics`、`pollute`、`pollution`、`pond`、`pool`、
+`popular`、`population`、`pork`、`port`、`portion`、`position`、`positive`、
+`possibility`、`postpone`、`pot`、`potato`、`pound`、`powder`、`power`、
+`powerful`、`practical`、`praise`、`pray`、`prefer`、`pregnant`、`prepare`、
+`presence`、`present`、`president`、`press`、`pressure`、`pretend`、`prevent`、
+`previous`、`price`、`pride`、`prince`、`princess`、`principal`、`principle`、
+`print`、`prison`、`prisoner`、`private`、`prize`、`probable`、`process`、
+`produce`、`product`、`production`、`professor`、`profit`、`program`、`progress`
+等，一批 120～130 字。
 
-⚠ 下一批要小心的多義字：`ill`（生病的／惡劣地／禍害）、`interest`（興趣／
-利息／利益）、`judge`（法官／評審／判斷）、`lay`（放置，注意與 lie 的區別）、
-`lead`（帶領／鉛／領先）、`level`（水準／水平的／使平坦）、`limit`（限制／極限）、
-`link`（連結／關聯）、`loose`（鬆的／掙脫的）、`major`（主要的／主修）、
-`mark`（記號／分數／標記）、`mass`（大量／質量／群眾）、`master`（主人／碩士／精通）、
-`match`（比賽／火柴／相配）、`matter`（事情／物質／要緊）、`measure`（測量／措施）、
-`medium`（媒介／中等的）、`mess`（混亂／弄亂）。
+⚠ 下一批要小心的多義字：`order`（順序／命令／訂購）、`organ`（器官／管風琴）、
+`patient`（病人／有耐心的）、`present`（現在的／禮物／出席的／呈現，
+重音位置不同）、`plain`（樸素的／平原／明白的）、`point`（點／要點／指）、
+`pool`（水池／集合資源）、`port`（港口）、`position`（位置／職位／立場）、
+`pound`（英鎊／磅／捶打）、`power`（力量／權力／電力）、`press`（按壓／新聞界）、
+`principal`（校長／主要的，注意與 principle 的區別）、`process`（過程／處理）、
+`produce`（生產／農產品，重音位置不同）、`progress`（進展／前進，同樣重音不同）。
 
 第 2 級做完之後：第 1 級（缺 1008）→ 第 3 級（缺 386）→ 第 6 級（缺 1023）。
 
@@ -135,14 +138,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w30.js` | 補充批次（第 1～25 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w31.js` | 補充批次（第 1～26 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3119 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3249 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
