@@ -113,6 +113,11 @@ SKIP_POS = {
     # w33（第 2 級 S–T）刻意不收的詞性：
     # sour n. 只有調酒名（whisky sour），學測不考
     "sour": {"n."},
+    # w34（第 2 級完結＋第 4 級漏網）刻意不收的詞性：
+    # true adv.（技術用語 aim true）與 true v.（幾乎不存在）現代英文都不用
+    "true": {"adv.", "v."},
+    # intermediate v.（調停）極罕用；scold n.（愛責罵的人）是古語
+    "intermediate": {"v."}, "scold": {"n."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"

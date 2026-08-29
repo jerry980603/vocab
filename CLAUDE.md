@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：3509 / 6114（5573 個字義）**
+**已編好釋義與例句：3620 / 6114（5751 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -44,38 +44,30 @@
 - `w31`：130 字（第 2 級 H–O，做到 `opinion`）
 - `w32`：130 字（第 2 級 O–S，做到 `scared`）
 - `w33`：130 字（第 2 級 S–T，做到 `till`）
+- `w34`：111 字（**第 2 級完結 1033/1033** ＋ 第 4 級漏網 18 字）
 - `p1`：52 個片語
 
-**下一批要做**：**第 2 級最後一批**（只剩 93 字）。`w33` 做完 S–T，
-收在 `till`。下一批把 **T–Z 全部掃完，第 2 級就結束**：
+**下一批要做**：🎉 **第 2 級已完成（1033／1033，一個不漏）**，
+第 5 級也只差刻意跳過的 `ass`。
 
-`title`、`toast`、`tofu`、`tongue`、`tool`、`toothache`、`topic`、`total`、
-`touch`、`tourist`、`towel`、`tower`、`toy`、`track`、`trade`、`tradition`、
-`traditional`、`traffic`、`tragedy`、`trap`、`travel`、`treasure`、`treat`、
-`treatment`、`trial`、`tribe`、`trick`、`trip`、`troop`、`truck`、`trust`、
-`truth`、`tube`、`tunnel`、`type`、`typhoon`、`typical`、`ugly`、`umbrella`、
-`underwear`、`unique`、`unit`、`universe`、`university`、`unless`、`upper`、
-`upstairs`、`usual`、`valley`、`valuable`、`value`、`van`、`variety`、`vast`、
-`vegetable`、`victory`、`video`、`view`、`village`、`violence`、`violent`、
-`violin`、`vision`、`visitor`、`vocabulary`、`voice`、`volleyball`、`volume`、
-`vote`、`wage`、`waist`、`wallet`、`wander`、`warmth`、`warn`、`waste`、`wave`、
-`weapon`、`web`、`weight`、`welcome`、`western`、`whale`、`wheel`、`whisper`、
-`whistle`、`wing`、`wire`、`wisdom`、`wise`、`wolf`、`wooden`、`wound`、`wrap`、
-`youth` 等，約 93 字，一批就能收乾淨。
+**下一個目標是第 1 級**（還缺 1008 字）。這是官方詞彙表最基礎的一級，
+國中程度的高頻字，學測閱讀的骨架。字義單純、寫起來快，
+但**多義字一樣不少**（`back`、`book`、`can`、`change`、`face`、`hand`、
+`head`、`kind`、`last`、`leave`、`light`、`like`、`mean`、`mind`、`play`、
+`right`、`run`、`sound`、`spring`、`watch`、`well` 都要逐一查朗文）。
 
-⚠ 最後一批要小心的多義字：`touch`（觸摸／感動／聯絡）、`track`（軌道／小徑／
-追蹤／曲目）、`trade`（貿易／行業／交換）、`treat`（對待／治療／招待）、
-`trial`（審判／試驗）、`trick`（詭計／把戲／欺騙）、`trip`（旅行／絆倒）、
-`trust`（信任／信託）、`type`（類型／打字）、`unit`（單位／單元）、
-`value`（價值／重視）、`view`（景色／看法／觀看）、`volume`（音量／冊／體積）、
-`wave`（波浪／揮手／風潮）、`welcome`（歡迎／受歡迎的）、`wound`（傷口／使受傷）。
+從 A 開始照字母順序做，一批 120～130 字。先跑：
 
-**第 2 級掃完之後，下一個目標是第 1 級**（缺 1008 字，全是最基礎的高頻字），
-或依使用者指示做第 3 級（缺 386）或第 6 級（缺 1023，完全未動）。
+```bash
+python .claude/skills/add-words/scripts/todo.py 1 130
+```
 
-**第 4 級只剩 96 字**，幾乎全是冷僻具體名詞（aquarium、broom、lobster、pasta、
-raisin 這類），學測不會考，不必回頭補。少數還算有用的（`arch`、`audio`、`facial`、
-`fossil`、`percent`、`physicist`、`skyscraper`、`socket`、`vegetarian`）可以順手夾帶。
+第 1 級做完之後：第 3 級（缺 386，多是冷僻具體名詞）→ 第 6 級（缺 1023，完全未動）。
+
+**第 4 級只剩 78 字**，全是冷僻具體名詞（aquarium、broom、lobster、pasta、
+raisin 這類），學測不會考，不必回頭補。還算有用的那批（`arch`、`audio`、`facial`、
+`fossil`、`percent`、`physicist`、`skyscraper`、`socket`、`vegetarian` 等 18 字）
+已在 `w34` 補完。
 
 **第 3 級剩下的 387 字幾乎全是冷僻具體名詞**（kangaroo、spaghetti、doughnut、
 lollipop、zipper 這類），學測不會考，除非使用者另有要求，否則不必再回頭補。
@@ -134,14 +126,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w33.js` | 補充批次（第 1～28 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w34.js` | 補充批次（第 1～29 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3509 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3620 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -225,6 +217,10 @@ certificated）、`overall` n.（英式的工作罩衫）、`prior` n.（修道�
 post-1990 那種是構詞前綴而非副詞）。
 
 `w33`（第 2 級 S–T）新增的：`sour` n.（只有調酒名 whisky sour，學測不考）。
+
+`w34`（第 2 級完結＋第 4 級漏網）新增的：`true` adv.（技術用語 aim true）
+與 `true` v.（現代英文幾乎不存在）、`intermediate` v.（調停，極罕用）、
+`scold` n.（愛責罵的人，古語）。
 
 以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 
