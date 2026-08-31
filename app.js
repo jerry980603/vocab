@@ -19,9 +19,14 @@ function toast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function () { t.classList.remove("on"); }, 1900);
 }
-function today() {
-  var d = new Date();
+function dateStr(d) {
   return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+function today() { return dateStr(new Date()); }
+/* n 天前的日期字串（0 就是今天）。紀錄頁畫圖表要用。 */
+function daysAgo(n) {
+  var d = new Date(); d.setHours(0, 0, 0, 0);
+  return dateStr(new Date(d.getTime() - n * DAY));
 }
 function shuffle(a) {
   for (var i = a.length - 1; i > 0; i--) {
@@ -37,7 +42,7 @@ var DICT = {};
 BANK.forEach(function (e) { DICT[e.w.toLowerCase()] = e; });
 
 /* 大考中心官方詞彙表索引：6114 個字的分級與詞性（沒有釋義與例句） */
-var OFFICIAL = {}, OFF_COUNT = 0;
+var OFFICIAL = {}, OFF_COUNT = 0, OFF_LV = {};
 (function () {
   var raw = window.OFFICIAL_RAW || {};
   Object.keys(raw).forEach(function (lv) {
@@ -45,12 +50,32 @@ var OFFICIAL = {}, OFF_COUNT = 0;
       var sp = item.lastIndexOf(" ");
       if (sp < 1) return;
       OFFICIAL[item.slice(0, sp)] = { lv: +lv, pos: item.slice(sp + 1) };
+      OFF_LV[+lv] = (OFF_LV[+lv] || 0) + 1;
       OFF_COUNT++;
     });
   });
 })();
+
+/* ---------- 目標範圍 ----------
+   預設只拚 1～5 級（5091 字）。第 6 級那 1023 個字是整張表最冷僻的一批，
+   在有限的時間裡，把 1～5 級做熟的期望報酬比全包高。
+   要全包就到「課表 → 目標範圍」切換，倒數、完成日推算、課表排序會一起跟著改。 */
+function scopeAll() { return S.scope === "all"; }
+function scopeMaxLv() { return scopeAll() ? 6 : 5; }
+function inScope(lv) { return !lv || lv === 9 || lv <= scopeMaxLv(); }
+function scopeName() { return scopeAll() ? "官方全部 6 級" : "官方 1～5 級"; }
+function targetWords() {
+  var n = 0, m = scopeMaxLv();
+  for (var lv = 1; lv <= m; lv++) n += OFF_LV[lv] || 0;
+  return n;
+}
+
 /* 已經編好釋義與例句、真的能拿來練的字 */
 function writtenCount() { return BANK.filter(function (e) { return !e.ph; }).length; }
+/* 其中落在目標範圍內的（超出範圍的級數不列入倒數與完成日推算） */
+function writtenInScope() {
+  return BANK.filter(function (e) { return !e.ph && inScope(e.lv); }).length;
+}
 
 /* 把 running / studies / bigger 之類的變化形，還原成字典裡的原形 */
 function lookup(raw) {
@@ -84,6 +109,7 @@ function load() {
     if (o && o.items) {
       o.todo = o.todo || []; o.bad = o.bad || []; o.log = o.log || {};
       o.known = o.known || {};   /* 快篩標記「我已經會了」的字，不進練習清單 */
+      o.auto = o.auto || {};     /* 每天自動載入了幾個新字 */
       return o;
     }
   } catch (e) { }
@@ -111,6 +137,23 @@ function save() {
 var INT = [0, 10 * 60000, 1 * DAY, 4 * DAY, 14 * DAY, 30 * DAY, 60 * DAY, 120 * DAY];
 var MAXBOX = INT.length - 1;
 
+/* 一個新字義從學到考前，總共要花幾題、幾秒。
+
+   算法：拿 FSRS-4.5 的預設參數當記憶模型（遺忘曲線 R(t)=(1+19t/81S)^-0.5，
+   成功複習後穩定度約成長 3 倍，失敗後掉到 4~5 天），照本 App 的階梯與跳格規則
+   模擬到考試日，含考前十天的總複習。首見答對率取 1~2 級 0.8、3~5 級 0.35~0.55。
+   答對一題 10 秒、答錯一題 28 秒（要看答案與例句，這是實際上最貴的一塊）。
+
+   目前的跳格規則（首次對→30 天、之後每次 +2 格）算出來是 5.1~5.6 題、72~81 秒，
+   下面取中值。⚠ 改動跳格規則或階梯，一定要回來重算這兩個數，
+   否則課表上的題數與分鐘會失真——舊的「6.6 題 × 12 秒」就低估了 20~25%。 */
+var Q_PER_UNIT = 5.4, SEC_PER_UNIT = 76;
+
+/* 每天學 n 個新字義，穩定之後每天要做幾題、幾分鐘（含複習與錯題） */
+function estLoad(n) {
+  return { q: Math.round(n * Q_PER_UNIT), min: Math.round(n * SEC_PER_UNIT / 60) };
+}
+
 function idOf(w, si) { return w + "::" + si; }
 function hasItem(w, si) { return !!S.items[idOf(w, si)]; }
 
@@ -118,6 +161,8 @@ function addItem(w, si) {
   var id = idOf(w, si);
   if (S.items[id]) return false;
   S.items[id] = { w: w, si: si, box: 0, due: Date.now(), seen: 0, right: 0, wrong: 0, st: 0, wb: false };
+  /* 不管是自動載入、課表整組加入還是自己查到加的，都算「今天學的新字」 */
+  var l = dayLog(); l.n = (l.n || 0) + 1;
   save();
   return true;
 }
@@ -137,11 +182,71 @@ function senseOf(it) {
   var e = DICT[it.w.toLowerCase()];
   return e ? e.s[it.si] : null;
 }
-function logAnswer(correct) {
-  var d = today();
+/* ---------- 2b. 每天的紀錄 ----------
+   S.log[日期] 一天一筆：
+     a  答了幾題            c  答對幾題
+     w  練到幾個「不重複」的字義（同一天再考同一個字不重複計）
+     n  今天新加進清單的字義數，也就是「今天學了幾個新字」
+     ms 實際練習時間（毫秒）
+     g  今天排定的題數，用來畫完成度
+   舊存檔只有 a 與 c，其他欄位讀到 undefined 一律當 0，不必轉檔。 */
+function dayLog(d) {
+  d = d || today();
   if (!S.log[d]) S.log[d] = { a: 0, c: 0 };
-  S.log[d].a++;
-  if (correct) S.log[d].c++;
+  return S.log[d];
+}
+function logAnswer(correct, it) {
+  var l = dayLog();
+  l.a++;
+  if (correct) l.c++;
+  /* 「今天練了幾個字」算的是不重複的字義：答錯十分鐘後重考同一個字，
+     題數會加、字數不會。用 it.ld 記住它上次被計入的日期就夠了，
+     不必為了去重把整份清單存進當天的紀錄裡。 */
+  var d = today();
+  if (it && it.ld !== d) { it.ld = d; l.w = (l.w || 0) + 1; }
+}
+
+/* ---------- 2c. 學習時間 ----------
+   只在「練習」與「錯題本」兩頁計時，而且最近 90 秒內要有動作
+   （打字、點擊、按鍵）才算數：把 App 開著去吃飯不算讀書，
+   停在同一題發呆太久也不算。
+
+   每 5 秒累加一次，但 30 秒才真的寫進 localStorage，
+   免得每 5 秒就寫一次檔、順便把雲端同步也一直叫起來。 */
+var TICK_MS = 5000, IDLE_MS = 90000, FLUSH_MS = 30000;
+var lastAct = Date.now(), pendMs = 0, lastFlush = Date.now();
+
+["pointerdown", "keydown", "touchstart", "input"].forEach(function (ev) {
+  document.addEventListener(ev, function () { lastAct = Date.now(); }, true);
+});
+function studyingNow() {
+  return !document.hidden && (cur === "drill" || cur === "wrong") &&
+    Date.now() - lastAct < IDLE_MS;
+}
+function flushTime() {
+  if (!pendMs) return;
+  pendMs = 0; lastFlush = Date.now();
+  save();
+}
+setInterval(function () {
+  if (!studyingNow()) return;
+  var l = dayLog();
+  l.ms = (l.ms || 0) + TICK_MS;
+  pendMs += TICK_MS;
+  if (Date.now() - lastFlush >= FLUSH_MS) flushTime();
+}, TICK_MS);
+/* 切到別的 App 或關掉分頁時，把還沒寫進去的秒數補存。
+   這個監聽比 SYNC.auto() 早註冊，所以會先存檔再同步，不會漏掉。 */
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) flushTime();
+});
+window.addEventListener("pagehide", flushTime);
+
+/* 毫秒 → 「35 分」「1 小時 20 分」 */
+function fmtDur(ms) {
+  var m = Math.round((ms || 0) / 60000);
+  if (m < 60) return m + " 分";
+  return Math.floor(m / 60) + " 小時 " + (m % 60) + " 分";
 }
 
 /* ---------- 3. 例句處理 ---------- */
@@ -261,6 +366,7 @@ function lvText(e) {
 var VIEWS = {
   drill: { t: "練習", r: drawDrill },
   plan: { t: "每日課表", r: drawPlan },
+  stat: { t: "學習紀錄", r: drawStat },
   find: { t: "查單字", r: drawFind },
   mine: { t: "我的字", r: drawMine },
   wrong: { t: "錯題本", r: drawWrong },
@@ -288,7 +394,8 @@ $("#nav").addEventListener("click", function (e) {
 function refreshHeader() {
   var l = S.log[today()] || { a: 0, c: 0 };
   var d = dueItems().length;
-  $("#daily").textContent = "今日 " + l.a + " 題・待複習 " + d;
+  $("#daily").textContent = "今日 " + l.a + " 題・" +
+    Math.round((l.ms || 0) / 60000) + " 分・待複習 " + d;
   var nb = $("#nav").querySelector('button[data-v="wrong"]');
   var old = nb.querySelector(".badge");
   if (old) old.remove();
@@ -314,6 +421,9 @@ function buildQueue(mode) {
   var list;
   if (drillMode === "wrong") list = shuffle(wrongItems().slice());
   else if (drillMode === "extra") list = shuffle(allItems().filter(function (i) { return !i.wb; }));
+  /* 今天的功課：新字與到期複習洗在一起先做，錯題排在最後面。
+     錯題不打散進前段，是為了避免同一輪裡反覆撞同一個不會的字。 */
+  else if (drillMode === "today") list = shuffle(normalDue()).concat(shuffle(wrongItems()));
   else list = shuffle(normalDue());
   queue = list;
   qTotal = queue.length;
@@ -330,7 +440,15 @@ function buildQueue(mode) {
    這樣手動多加幾個字不會害今天的自動額度被吃掉。
    ============================================================ */
 function loadedToday() { return (S.auto || {})[today()] || 0; }
-function autoLoadOn() { return !!S.autoLoad; }
+
+/* 今天總共進來了幾個新字義。自動載入的記在 S.auto，
+   手動加的（課表整組加入、查單字加入、快篩加入）記在當天紀錄的 n。
+   取兩者較大的那個當作「今天已經吃掉的額度」，
+   否則你自己在課表按了一整組之後，自動載入還會再補一整份，那天就變雙倍。 */
+function newToday() { return Math.max(loadedToday(), dayLog().n || 0); }
+/* 預設是開的：使用者要的是「每天自動排好」，不是每天自己按一顆按鈕。
+   關掉之後 S.autoLoad 會存成 false，所以只有明確關過的人才是手動。 */
+function autoLoadOn() { return S.autoLoad !== false; }
 
 /* 照課表順序挑出接下來 n 個還沒進清單的字義。
    跳過快篩標記「我早就會了」的字，那是使用者明確說不用練的。 */
@@ -346,7 +464,7 @@ function nextNewUnits(n) {
 
 /* 把今天還沒補足的新字加進清單，回傳實際加入的數量 */
 function loadTodayNew() {
-  var need = perDay() - loadedToday();
+  var need = perDay() - newToday();
   if (need <= 0) return 0;
   var picked = nextNewUnits(need);
   picked.forEach(function (u) { addItem(u.w, u.si); });
@@ -359,11 +477,27 @@ function loadTodayNew() {
   return picked.length;
 }
 
+/* 今天要做的所有事：新字（已自動載入，本來就在到期清單裡）＋到期複習＋錯題。
+   goal 是「今天總共要做幾題」，第一次開 App 時算出來後只會往上調，
+   不會因為做掉一半就縮水，這樣進度條才有意義。 */
+function todayTask() {
+  var due = normalDue().length, wrong = wrongItems().length, l = dayLog();
+  var left = due + wrong;
+  l.g = Math.max(l.g || 0, (l.a || 0) + left);
+  return { due: due, wrong: wrong, left: left, done: l.a || 0, goal: l.g };
+}
+
+/* 每天第一次開 App 就把當天的功課排好：
+   照課表補上今天的新字，再把今天的題數目標記下來。
+   loadedToday() 擋住重複執行，所以一天之內呼叫幾次都只補一次。 */
+function ensureToday() {
+  if (autoLoadOn()) loadTodayNew();
+  todayTask();
+}
+
 function drawDrill() {
   var el = $("#v-drill");
-  /* 開自動的話，進練習頁就先把今天的份補上。
-     loadedToday() 會擋住重複執行，所以切頁切來切去也只會補一次。 */
-  if (autoLoadOn()) loadTodayNew();
+  ensureToday();
   if (!allItems().length) {
     var canLoad = nextNewUnits(1).length;
     el.innerHTML =
@@ -415,15 +549,16 @@ function loadForecast() {
   }).join("");
   var week = days.reduce(function (a, b) { return a + b; }, 0) + overdue;
   return rows + '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
-    "七天內共 <b>" + week + "</b> 題。抓一題 12 秒，大約是 " +
-    Math.max(1, Math.round(week * 12 / 60)) + " 分鐘。<br>" +
+    "七天內共 <b>" + week + "</b> 題。一題平均 " +
+    Math.round(SEC_PER_UNIT / Q_PER_UNIT) + " 秒（答錯的那幾題最花時間），大約是 " +
+    Math.max(1, Math.round(week * SEC_PER_UNIT / Q_PER_UNIT / 60)) + " 分鐘。<br>" +
     "覺得太多就到「課表」把每天的新字數調低——<b>新字數是唯一能控制複習量的閥門</b>。</p>";
 }
 
 /* 練習頁最上面那塊「今天的新字」。
    開了自動就只回報結果，沒開就給一顆按鈕，兩種情況都不必再切去課表。 */
 function todayNewHTML() {
-  var done = loadedToday(), quota = perDay(), left = quota - done;
+  var done = newToday(), quota = perDay(), left = quota - done;
   var pool = nextNewUnits(left > 0 ? left : 1).length;
 
   if (!pool) {
@@ -449,8 +584,8 @@ function todayNewHTML() {
 /* 開始畫面：一般練習與錯題練習分開兩個入口 */
 function drawDrillStart(el) {
   var due = normalDue().length, wrong = wrongItems().length, all = allItems().length;
-  var doneToday = (S.log[today()] || { a: 0 }).a;
-  var quota = perDay();
+  var t = todayTask(), l = dayLog();
+  var rate = l.a ? Math.round(l.c / l.a * 100) : 0;
 
   var nxt = allItems().sort(function (a, b) { return a.due - b.due; })[0];
   var wait = nxt ? Math.max(0, nxt.due - Date.now()) : 0;
@@ -460,14 +595,32 @@ function drawDrillStart(el) {
     : Math.ceil(wait / DAY) + " 天後";
 
   el.innerHTML =
+    /* 今天的功課：一進來就知道還剩幾題、按一顆按鈕就開始，
+       不必自己去課表挑今天該吃哪一組。 */
     '<div class="plan-head">' +
-    '<div class="big">' + doneToday + ' <span style="font-size:15px;color:var(--sub);font-weight:500">題／今天</span></div>' +
-    '<div class="bar"><i style="width:' + Math.min(100, Math.round(doneToday / quota * 100)) + '%"></i></div>' +
-    '<div class="cap">' +
-    (doneToday >= quota
-      ? "已達成今天設定的最低額度（" + quota + " 題），想繼續練隨時都可以。"
-      : "今天的最低額度是 " + quota + " 題，還差 " + (quota - doneToday) + " 題。") +
-    "</div></div>" +
+    '<div class="big">' +
+    (t.left
+      ? "還有 " + t.left + ' <span style="font-size:15px;color:var(--sub);font-weight:500">題要做</span>'
+      : "今天的功課做完了 🎉") + "</div>" +
+    '<div class="bar"><i style="width:' +
+    (t.goal ? Math.min(100, Math.round(t.done / t.goal * 100)) : 100) + '%"></i></div>' +
+    '<div class="cap">已完成 <b>' + t.done + "</b> 題・練到 <b>" + (l.w || 0) +
+    "</b> 個字義・學習 <b>" + fmtDur(l.ms) + "</b>" +
+    (l.a ? "・正確率 " + rate + "%" : "") + "</div>" +
+    '<div class="cap" style="margin-top:10px;line-height:1.9">' +
+    "・今天的新字 <b>" + newToday() + "</b> 個字義" +
+    (autoLoadOn() ? "（開 App 時已自動排好）" : "（手動模式，要自己按下面那顆）") + "<br>" +
+    "・到期要複習 <b>" + due + "</b> 個<br>" +
+    "・錯題要清 <b>" + wrong + "</b> 個</div></div>" +
+
+    (t.left
+      ? '<button class="btn" id="btnToday">開始今天的功課（' + t.left + " 題）</button>" +
+        '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
+        "新字、到期複習、錯題會照順序排成一輪，做完就是今天的量。<br>" +
+        "中途離開沒關係，回來會接著算，不會從頭來過。</p>"
+      : '<div class="empty" style="padding:20px 8px">今天該練的都練完了，下一批 <b>' +
+        waitTxt + "</b> 到期。<br>" +
+        '<span style="font-size:13px">還想練就往下滑，有加練與快篩。</span></div>') +
 
     /* 把清單的去向攤開來。不然你會看到「清單有 132 個字」
        但一般練習只剩 9 個，以為字不見了。 */
@@ -523,6 +676,7 @@ function drawDrillStart(el) {
     refreshHeader(); drawDrill();
   };
 
+  if ($("#btnToday")) $("#btnToday").onclick = function () { buildQueue("today"); drawDrill(); };
   if (due) $("#btnNormal").onclick = function () { buildQueue("normal"); drawDrill(); };
   if (wrong) $("#btnWrongDrill").onclick = function () { buildQueue("wrong"); drawDrill(); };
   $("#btnExtra").onclick = function () { buildQueue("extra"); drawDrill(); };
@@ -740,14 +894,26 @@ function submit(gaveUp) {
   var ok = !gaveUp && (norm(input) === norm(ans) ||
     (!!fi.suffix && norm(input + fi.suffix) === norm(ans)));
   it.seen++;
-  logAnswer(ok);
+  logAnswer(ok, it);
 
   if (ok) {
     it.right++; it.st++;
     if (hinted === 0) {
-      /* 第一次看到就答對，代表這個字你本來就會 —— 直接跳三級，
-         不要浪費你的時間陪它從頭走一次完整的間隔重複。 */
-      var jump = (it.seen === 1 && it.wrong === 0) ? 3 : 1;
+      /* 跳幾格：第一次看到就答對（沒用提示、沒答錯過）直接跳到 30 天那一格，
+         之後每答對一次跳兩格。
+
+         首次跳到 30 天：Cepeda 等人 2008 的大規模研究指出，最佳複習間隔約是
+         「測驗延遲的 10~20%」。距離學測還有一百多天，20% 就是二十幾天，
+         所以原本的 4 天遠低於最佳值——那不是保險，是把時間花在低效區。
+
+         之後跳兩格：FSRS 的資料顯示一次成功複習會讓記憶穩定度變成大約 3 倍，
+         但這條階梯只有 2 倍。一格一格走，排程會越來越落後於你實際記得的程度，
+         等於在浪費複習次數。改成跳兩格之後，模擬的總題數少 22%，
+         而考試當天的預期保留率只從 98.6% 掉到 97.1%——
+         考前十天的總複習會把差距補回來，那才是真正的保護網。
+
+         跳三格也試過：時間再省 10%，但考試當天掉到 94.2%，不划算。 */
+      var jump = (it.seen === 1 && it.wrong === 0) ? 5 : 2;
       it.box = Math.min(it.box + jump, MAXBOX);
     }
     /* 答對一次就移出錯題本。原本要連續兩次，但那會讓錯題本一直積著，
@@ -932,6 +1098,13 @@ function planUnits() {
     }
     out.push(buckets[best][idx[best]++]);
   }
+  /* 目標範圍設 1～5 級時，第 6 級的字整批推到最後面，
+     每天的份就不會混到它們；把範圍改成全包會重新混回去。 */
+  if (!scopeAll()) {
+    var keep = [], tail = [];
+    out.forEach(function (u) { (inScope(u.lv) ? keep : tail).push(u); });
+    out = keep.concat(tail);
+  }
   return out;
 }
 function unitCount() { return planUnits().length; }
@@ -1003,7 +1176,7 @@ function examInfoHTML(written) {
   var perWord = units / Math.max(written, 1);
   var startedUnits = Object.keys(S.items).length;
   var remainWritten = Math.max(0, units - startedUnits);
-  var remainAll = Math.max(0, Math.round(OFF_COUNT * perWord) - startedUnits);
+  var remainAll = Math.max(0, Math.round(targetWords() * perWord) - startedUnits);
   var needWritten = Math.ceil(remainWritten / learnDays);
   var needAll = Math.ceil(remainAll / learnDays);
   var enough = perDay() >= needAll;
@@ -1014,16 +1187,16 @@ function examInfoHTML(written) {
     '<span style="color:var(--sub);font-size:13px">以下都以「字義」計算，' +
     "因為 42% 的字有兩個以上的意思，一個字平均 " + perWord.toFixed(1) + " 個字義。</span><br>" +
     "把<b>已編好例句的</b>全部吃完 → 每天 <b>" + needWritten + "</b> 個字義<br>" +
-    "把<b>官方 " + OFF_COUNT + " 個字</b>全部吃完 → 每天 <b>" + needAll + "</b> 個字義" +
-    "，預估每天要做 <b>" + Math.round(needAll * 6.6) + "</b> 題、約 <b>" +
-    Math.round(needAll * 6.6 * 12 / 60) + "</b> 分鐘</p>" +
+    "把<b>" + scopeName() + " " + targetWords() + " 個字</b>吃完 → 每天 <b>" + needAll + "</b> 個字義" +
+    "，預估每天要做 <b>" + estLoad(needAll).q + "</b> 題、約 <b>" +
+    estLoad(needAll).min + "</b> 分鐘</p>" +
     '<p style="font-size:13px;margin:10px 4px 0;line-height:1.7;color:' +
     (enough ? "var(--ok)" : "var(--bad)") + '">' +
     (enough
       ? "✓ 你目前設定每天 " + perDay() + " 個字義，來得及。"
       : "⚠ 你目前設定每天 " + perDay() + " 個字義，照這個速度到考前只能學完 " +
         (perDay() * learnDays + startedUnits) + " 個字義（目標 " +
-        Math.round(OFF_COUNT * perWord) + "）。") +
+        Math.round(targetWords() * perWord) + "）。") +
     "</p>" +
     '<button class="btn ghost sm" id="btnSprint" style="width:100%;margin-top:12px">' +
     "啟動考前總複習（把所有字重排進最後 " + Math.min(10, left) + " 天）</button>" +
@@ -1065,38 +1238,60 @@ function phasePlan(written) {
     return v < DAY ? Math.round(v / 60000) + " 分" : Math.round(v / DAY) + " 天";
   }).join(" → ");
 
-  var short = OFF_COUNT - written;
+  var short = targetWords() - writtenInScope();
   return '<h2 class="sec">讀書計畫（依你填的兩個日期分段）</h2>' + rows +
     '<div class="plan-head" style="margin-top:14px">' +
     '<div class="cap" style="line-height:1.9">' +
-    "<b>答對後的複習間隔</b><br>" + ladder + "<br><br>" +
-    "中段之所以跳這麼開，是因為研究顯示最佳間隔取決於你要記多久：" +
-    "目標 70 天與 350 天時，最佳間隔都落在 21 天上下。" +
-    "距離學測還有幾個月的現在，1 天、2 天那種密集複習屬於低效區，" +
-    "花很多時間但長期保留不成比例。" +
+    "<b>複習間隔的階梯</b><br>" + ladder + "<br><br>" +
+    "<b>第一次看到就答對</b>（沒用提示）→ 直接排到 <b>30 天</b>後，不走前面幾格。" +
+    "Cepeda 等人 2008 年的研究指出，最佳間隔約是「測驗延遲的 10～20%」，" +
+    "距離學測還有一百多天，20% 就是二十幾天——" +
+    "原本的 4 天遠低於最佳值，那不是保險，是把時間花在低效區。<br><br>" +
+    "<b>之後每答對一次跳兩格</b>。FSRS 的大規模資料顯示，一次成功複習會讓記憶的" +
+    "穩定度變成大約 3 倍，而這條階梯只有 2 倍；一格一格走，排程會越來越落後於" +
+    "你實際記得的程度。改成跳兩格，總題數少 22%，考試當天的預期保留率" +
+    "只從 98.6% 掉到 97.1%。<br><br>" +
+    "<b>答錯退兩格</b>，十分鐘後重考。答錯的題最花時間（要看答案、讀例句），" +
+    "所以真正省時間的方式是別讓字第一次就答錯——那是「快篩」在做的事。" +
     "</div></div>" +
     (short > 0
       ? '<div class="plan-head" style="margin-top:12px;border-color:var(--warn)">' +
         '<div class="cap" style="line-height:1.9;color:var(--warn)">' +
         "<b>⚠ 目前的瓶頸是字庫，不是你的時間</b><br>" +
-        "官方 " + OFF_COUNT + " 個字裡還有 <b>" + short + "</b> 個沒有例句，不能練。<br>" +
+        scopeName() + " " + targetWords() + " 個字裡還有 <b>" + short + "</b> 個沒有例句，不能練。<br>" +
         "找 Claude Code 說「繼續補單字」，一次可以補一百多個。" +
         "</div></div>"
       : "");
 }
 
+/* 模型估的是「穩定之後」，剛開始複習量還沒長滿，所以再報一次你的實際數字。
+   兩個差很多的時候，相信實際的那個。 */
+function actualLoadHTML() {
+  var q = 0, ms = 0, days = 0;
+  for (var i = 0; i < 7; i++) {
+    var l = S.log[daysAgo(i)];
+    if (!l) continue;
+    if (l.a) days++;
+    q += l.a || 0; ms += l.ms || 0;
+  }
+  if (days < 3) return "";
+  return "<br>你最近七天的<b>實際</b>平均是每天 " + Math.round(q / 7) + " 題、" +
+    Math.round(ms / 7 / 60000) + " 分鐘。";
+}
+
 function drawPlan() {
   var groups = dayGroups();
-  var written = writtenCount();
+  var written = writtenCount(), inSc = writtenInScope(), target = targetWords();
   var doneDays = groups.filter(function (g) { return dayStat(g).added === g.length; }).length;
-  var pct = Math.round(written / OFF_COUNT * 100);
+  var pct = Math.round(inSc / target * 100);
 
   var html =
     '<div class="plan-head">' +
-    '<div class="big">' + written + ' <span style="font-size:15px;color:var(--sub);font-weight:500">/ ' +
-    OFF_COUNT + " 個官方單字</span></div>" +
+    '<div class="big">' + inSc + ' <span style="font-size:15px;color:var(--sub);font-weight:500">/ ' +
+    target + " 個單字（" + scopeName() + "）</span></div>" +
     '<div class="bar"><i style="width:' + Math.max(pct, 1) + '%"></i></div>' +
-    '<div class="cap">已編好釋義與例句、可以練習的有 ' + written + " 個（" + pct + "%）。" +
+    '<div class="cap">目標範圍裡已編好釋義與例句、可以練習的有 ' + inSc + " 個（" + pct + "%）。" +
+    (written > inSc ? "字庫另外還有 " + (written - inSc) + " 個範圍外的字。" : "") +
     "其餘的字在「查單字」查得到分級與詞性，但還沒有例句。</div>" +
     '<div class="cap" style="margin-top:10px">目前的進度：<b>' + doneDays + " / " + groups.length +
     " 天</b>已排入練習清單</div></div>";
@@ -1104,22 +1299,36 @@ function drawPlan() {
   html += '<h2 class="sec">考試日倒數</h2>' + examPlan(written);
   html += '<div id="phaseBox">' + phasePlan(written) + "</div>";
 
-  html += '<h2 class="sec">每天最少學幾個新字</h2>' +
+  html += '<h2 class="sec">目標範圍</h2>' +
+    '<div class="seg">' +
+    '<button data-scope="15"' + (scopeAll() ? "" : ' class="on"') + ">1～5 級（" +
+    (OFF_COUNT - (OFF_LV[6] || 0)) + " 字）</button>" +
+    '<button data-scope="all"' + (scopeAll() ? ' class="on"' : "") + ">全部 6 級（" +
+    OFF_COUNT + " 字）</button></div>" +
+    '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
+    "第 6 級那 " + (OFF_LV[6] || 0) + " 個字是整張表最冷僻的一批，" +
+    "時間有限的話，把 1～5 級做熟比全包划算。<br>" +
+    "選 1～5 級之後，<b>倒數、完成日推算、課表排序</b>都只算這個範圍，" +
+    "第 6 級的字會被排到課表最後面（還是查得到、也可以自己加）。</p>" +
+
+    '<h2 class="sec">每天最少學幾個新字</h2>' +
     '<input class="num" id="perDay" type="number" min="3" max="200" value="' + perDay() + '">' +
     '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
     "這是<b>下限不是上限</b>——練完當天的量還想繼續，隨時可以再加練或直接吃下一個 Day。<br>" +
     "單位是<b>字義</b>不是單字——一個字有幾個常考意思就算幾個，" +
     "目前 " + writtenCount() + " 個字共 " + unitCount() + " 個字義。<br>" +
     "改這個數字會重新分組。以每天 " + perDay() + " 個字義估算，穩定之後每天大約 " +
-    Math.round(perDay() * 6.6) + " 題、" + Math.round(perDay() * 6.6 * 12 / 60) + " 分鐘（含複習）。</p>";
+    estLoad(perDay()).q + " 題、" + estLoad(perDay()).min + " 分鐘（含複習與錯題）。" +
+    actualLoadHTML() + "</p>";
 
   html += '<h2 class="sec">每天自動載入新字</h2>' +
     '<div class="seg">' +
     '<button data-auto="1"' + (autoLoadOn() ? ' class="on"' : "") + ">自動載入</button>" +
     '<button data-auto="0"' + (autoLoadOn() ? "" : ' class="on"') + ">我自己按</button></div>" +
     '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
-    "開了之後，每天第一次打開「練習」就會照課表順序自動補上 " + perDay() + " 個新字義，" +
-    "不必再自己來課表一組一組加。<br>" +
+    "<b>預設是開的。</b>每天第一次開 App 就會照課表順序自動補上 " + perDay() + " 個新字義，" +
+    "不必再自己來課表一組一組加；練習頁最上面的「今天的功課」" +
+    "會把新字、到期複習、錯題排成一輪，按一下就開始。<br>" +
     "<b>不會累積</b>——某天沒練不會隔天補兩倍，只補當天的額度，" +
     "所以停幾天再回來也不會被一大堆新字淹沒。</p>";
 
@@ -1202,11 +1411,18 @@ function bindPlanRest() {
       save(); openDay = -1; drawPlan();
     };
   });
+  $("#v-plan").querySelectorAll("[data-scope]").forEach(function (b) {
+    b.onclick = function () {
+      S.scope = b.dataset.scope === "all" ? "all" : "15";
+      save(); openDay = -1; drawPlan();
+      toast(scopeAll() ? "目標改成官方全部 6114 字" : "目標改成 1～5 級 " + targetWords() + " 字");
+    };
+  });
   $("#v-plan").querySelectorAll("[data-auto]").forEach(function (b) {
     b.onclick = function () {
       S.autoLoad = b.dataset.auto === "1";
       save(); drawPlan();
-      toast(S.autoLoad ? "已開啟：下次進練習頁會自動補上今天的新字" : "已改回手動");
+      toast(S.autoLoad ? "已開啟：每天開 App 就會自動補上今天的新字" : "已改回手動");
     };
   });
   $("#perDay").onchange = function () {
@@ -1228,6 +1444,301 @@ function bindPlanRest() {
       toast(n ? "已加入 " + n + " 個字義，去「練習」開始吧" : "這組都已經在清單裡了");
       refreshHeader(); drawPlan();
     };
+  });
+}
+
+/* ============================================================
+   學習紀錄：每天練了幾個字、花了多少時間
+
+   資料就是 S.log，一天一筆。這一頁只負責把它畫出來，
+   不會回頭改任何進度，所以怎麼看都不會影響複習排程。
+   ============================================================ */
+var statMetric = "ms", statSpan = 14;
+
+var METRICS = {
+  ms: { t: "時間", u: "分鐘", get: function (l) { return Math.round((l.ms || 0) / 60000); } },
+  w: { t: "字數", u: "個字義", get: function (l) { return l.w || 0; } },
+  a: { t: "題數", u: "題", get: function (l) { return l.a || 0; } },
+  n: { t: "新字", u: "個字義", get: function (l) { return l.n || 0; } }
+};
+
+/* 連續練習幾天。今天還沒開始不算斷，從昨天往回數。 */
+function studyStreak() {
+  var n = 0, i = (S.log[daysAgo(0)] || {}).a ? 0 : 1;
+  while ((S.log[daysAgo(i)] || {}).a) { n++; i++; }
+  return n;
+}
+
+function logTotals() {
+  var t = { a: 0, c: 0, w: 0, n: 0, ms: 0, days: 0 };
+  Object.keys(S.log).forEach(function (k) {
+    var l = S.log[k];
+    t.a += l.a || 0; t.c += l.c || 0; t.w += l.w || 0;
+    t.n += l.n || 0; t.ms += l.ms || 0;
+    if (l.a) t.days++;
+  });
+  return t;
+}
+
+function tile(n, label) {
+  return '<div class="stat"><div class="n">' + n + '</div><div class="l">' + label + "</div></div>";
+}
+
+function dayLabelShort(d) {
+  var x = new Date(d + "T00:00:00");
+  return (x.getMonth() + 1) + "/" + x.getDate() +
+    "（" + "日一二三四五六".charAt(x.getDay()) + "）";
+}
+
+/* 最近 statSpan 天的長條圖。沒練的日子留白，一眼就看得出斷過幾天。 */
+function statChart() {
+  var m = METRICS[statMetric], vals = [], max = 1, sum = 0;
+  for (var i = statSpan - 1; i >= 0; i--) {
+    var d = daysAgo(i), v = m.get(S.log[d] || {});
+    vals.push({ d: d, v: v });
+    sum += v;
+    if (v > max) max = v;
+  }
+  var rows = vals.map(function (x, i) {
+    return '<div class="crow' + (i === vals.length - 1 ? " now" : "") + '">' +
+      '<span class="d">' + dayLabelShort(x.d) + "</span>" +
+      '<span class="bar" style="flex:1;margin:0"><i style="width:' +
+      Math.round(x.v / max * 100) + '%"></i></span>' +
+      '<span class="v">' + x.v + "</span></div>";
+  }).join("");
+  return rows +
+    '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
+    "這 " + statSpan + " 天合計 <b>" + sum + "</b> " + m.u +
+    "，平均一天 <b>" + (sum / statSpan).toFixed(1) + "</b> " + m.u + "。</p>";
+}
+
+/* 逐日明細。只列有紀錄的日子，最近的排最上面。 */
+function logTable() {
+  var days = Object.keys(S.log).filter(function (d) {
+    var l = S.log[d];
+    return (l.a || 0) || (l.n || 0) || (l.ms || 0);
+  }).sort().reverse().slice(0, 60);
+
+  if (!days.length) {
+    return '<div class="empty" style="padding:24px 8px">還沒有任何紀錄。<br>' +
+      '<span style="font-size:13px">去「練習」做一輪，這裡就會開始長出來。</span></div>';
+  }
+  var t = today();
+  return '<div style="overflow-x:auto"><table class="logtb">' +
+    "<tr><th>日期</th><th>新字</th><th>練到</th><th>題數</th><th>正確率</th><th>時間</th></tr>" +
+    days.map(function (d) {
+      var l = S.log[d];
+      var rate = l.a ? Math.round((l.c || 0) / l.a * 100) + "%" : "—";
+      return "<tr" + (d === t ? ' class="now"' : "") + "><td>" + dayLabelShort(d) + "</td>" +
+        "<td>" + (l.n || 0) + "</td><td>" + (l.w || 0) + "</td><td>" + (l.a || 0) + "</td>" +
+        "<td>" + rate + "</td><td>" + Math.round((l.ms || 0) / 60000) + " 分</td></tr>";
+    }).join("") + "</table></div>";
+}
+
+/* ---------- 速度與完成日推算 ----------
+   課表那一頁算的是「要來得及的話每天該學幾個」，是目標；
+   這裡算的是「你實際上多快、照這個速度幾天背得完」，是現況。
+   兩個湊在一起才知道要不要調整每日額度。
+
+   「平均一天」一律除以**日曆天數**，沒練的日子也算進去。
+   只除以有練的天數會算出過度樂觀的速度，推出來的完成日就不能信。 */
+function paceInfo() {
+  var its = allItems(), unitsDone = its.length, words = {};
+  its.forEach(function (i) { words[i.w.toLowerCase()] = 1; });
+  /* 快篩標記「早就會了」的字不必再背，算成已經處理掉，
+     否則剩下的量會被高估，完成日看起來比實際晚。 */
+  Object.keys(S.known || {}).forEach(function (w) {
+    var k = w.toLowerCase(), e = DICT[k];
+    if (!words[k]) { words[k] = 1; unitsDone += e ? e.s.length : 1; }
+  });
+  var wordsDone = Object.keys(words).length;
+
+  var days = Object.keys(S.log).sort();
+  var start = days.length ? days[0] : today();
+  var elapsed = Math.max(1, Math.round(
+    (new Date(today() + "T00:00:00") - new Date(start + "T00:00:00")) / DAY) + 1);
+
+  /* 最近 n 個日曆天，某個欄位平均一天多少、其中有幾天真的有紀錄 */
+  var recent = function (f, n) {
+    var s = 0, k = 0;
+    for (var i = 0; i < n; i++) {
+      var l = S.log[daysAgo(i)];
+      if (l && l[f] !== undefined) k++;
+      s += (l || {})[f] || 0;
+    }
+    return { avg: s / n, sum: s, days: k };
+  };
+
+  /* 每天的實際工作量：w 是那天練到的不重複字義，
+     新字、到期複習、錯題全都算在裡面（同一天重複考到同一個字義只算一次）。
+     a 是題數，答錯十分鐘後重考會再算一題。 */
+  var work = recent("w", 14), quiz = recent("a", 14);
+
+  /* n（每天新學幾個字義）是後來才開始記的，資料還不夠時用近期速度會嚴重低估，
+     所以要有一半以上的日子有紀錄才採用，否則退回「從開始到現在」的平均。 */
+  var nw = recent("n", 14);
+  var life = unitsDone / elapsed;
+  var use = nw.days >= 7 ? nw.avg : life;
+  var src = nw.days >= 7 ? "最近 14 天" : "從開始到現在";
+  if (!(use > 0)) { use = perDay(); src = "你設定的每日額度"; }
+
+  /* 目標範圍裡還沒編例句的字，用目前的平均義項數推估，跟課表那頁一致 */
+  var perWord = unitCount() / Math.max(writtenCount(), 1);
+  var writtenUnits = planUnits().filter(function (u) { return inScope(u.lv); }).length;
+  var allUnits = Math.round(targetWords() * perWord);
+  /* 完成日只能用「新字速度」推：複習與錯題再多，也不會讓沒學過的字變少。 */
+  var mk = function (remain) {
+    remain = Math.max(0, remain);
+    var d = Math.ceil(remain / use);
+    return { remain: remain, days: d, at: Date.now() + d * DAY };
+  };
+  return {
+    unitsDone: unitsDone, wordsDone: wordsDone, elapsed: elapsed,
+    life: life, use: use, src: src, work: work, quiz: quiz,
+    perWord: perWord, wordsPerDay: use / perWord,
+    writtenUnits: writtenUnits, allUnits: allUnits,
+    written: mk(writtenUnits - unitsDone),
+    all: mk(allUnits - unitsDone)
+  };
+}
+
+function fmtDate(ms) {
+  var d = new Date(ms);
+  return d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate();
+}
+
+function paceHTML() {
+  var p = paceInfo();
+  var deadline = S.learnEndDate || S.examDate;
+  var leftDays = deadline ? daysTo(deadline) : null;
+  var need = (leftDays && leftDays > 0) ? Math.ceil(p.all.remain / leftDays) : null;
+
+  /* 工作量的平均要有一半以上的日子有紀錄才拿出來報，
+     不然改版第一天會顯示「一天 1.1 個字」這種假數字。 */
+  var wReady = p.work.days >= 7;
+  var l = dayLog();
+
+  var html = '<div class="stats">' +
+    tile(wReady ? p.work.avg.toFixed(1) : (l.w || 0), "一天練幾個字義") +
+    tile(p.use.toFixed(1), "其中新字") +
+    tile(p.all.days, "還要幾天背完") +
+    "</div>" +
+    '<p style="font-size:14px;line-height:1.9;margin:0 4px">' +
+    (wReady
+      ? "最近 14 天平均<b>一天練 " + p.work.avg.toFixed(1) +
+        " 個字義</b>（新字 ＋ 到期複習 ＋ 錯題都算在裡面），" +
+        "平均一天 <b>" + p.quiz.avg.toFixed(0) + "</b> 題。<br>"
+      : "「一天練幾個字義」是這次改版才開始記的，累積 7 天才會出現平均值。" +
+        "今天到目前練了 <b>" + (l.w || 0) + "</b> 個字義、<b>" + (l.a || 0) + "</b> 題。<br>") +
+    "其中<b>新學的</b>一天 <b>" + p.use.toFixed(1) + "</b> 個字義 ≈ <b>" +
+    p.wordsPerDay.toFixed(1) + "</b> 個單字。<br>" +
+    '<span style="color:var(--sub);font-size:13px">' +
+    "從 " + (Object.keys(S.log).sort()[0] || today()) + " 開始，到今天第 " + p.elapsed +
+    " 天，已經處理掉 " + p.wordsDone + " 個單字（" + p.unitsDone + " 個字義，含快篩掉的）。" +
+    "新字速度取自「" + p.src + "」，一個字平均 " + p.perWord.toFixed(1) + " 個字義。</span></p>" +
+
+    '<div class="plan-head" style="margin-top:14px"><div class="cap" style="line-height:1.9">' +
+    "<b>照這個速度幾天背完</b>（目標範圍：" + scopeName() + " " + targetWords() + " 個字）<br>" +
+    "・已編好例句的 " + p.writtenUnits + " 個字義 → 還要 <b>" + p.written.days +
+    " 天</b>，" + fmtDate(p.written.at) + " 背完<br>" +
+    "・目標範圍全部（估 " + p.allUnits + " 個字義）→ 還要 <b>" + p.all.days +
+    " 天</b>，" + fmtDate(p.all.at) + " 背完<br>" +
+    '<span style="font-size:12px">完成日只能用<b>新字速度</b>推算：複習與錯題再多，' +
+    "也不會讓還沒學過的字變少。它們吃掉的是你每天的時間，不是進度。</span>" +
+    "</div></div>";
+
+  if (!deadline) {
+    return html + '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
+      "到「課表」填考試日期與學完日，這裡就會告訴你來不來得及。</p>";
+  }
+  if (leftDays === null || leftDays <= 0) {
+    return html + '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
+      "課表上填的日期已經過了，改個日期才算得出來不來得及。</p>";
+  }
+  var label = S.learnEndDate ? "學完日" : "考試日";
+  var slack = leftDays - p.all.days;
+  return html +
+    '<p style="font-size:14px;margin:12px 4px 0;line-height:1.8;color:' +
+    (slack >= 0 ? "var(--ok)" : "var(--bad)") + '">' +
+    (slack >= 0
+      ? "✓ 距離" + label + "（" + deadline + "）還有 " + leftDays +
+        " 天，照目前的速度會<b>提前 " + slack + " 天</b>背完。"
+      : "⚠ 距離" + label + "（" + deadline + "）只剩 " + leftDays +
+        " 天，照目前的速度會<b>慢 " + (-slack) + " 天</b>。" +
+        "要準時背完，平均一天得提高到 <b>" + need + "</b> 個字義（約 " +
+        Math.round(need / p.perWord) + " 個單字）。") +
+    "</p>" +
+    '<p style="font-size:13px;color:var(--sub);margin:8px 4px 0;line-height:1.7">' +
+    "這裡的「一天」把沒練的日子也算進去了，所以它反映的是<b>實際進度</b>，" +
+    "不是你認真練的那幾天有多猛。想加快就到「課表」把每天的新字數調高，" +
+    "或在「課表 → 目標範圍」確認要不要收第 6 級。</p>";
+}
+
+function drawStat() {
+  var l = dayLog(), t = todayTask(), tot = logTotals();
+  var rate = l.a ? Math.round(l.c / l.a * 100) : 0;
+  var pct = t.goal ? Math.min(100, Math.round(t.done / t.goal * 100)) : 100;
+
+  var html =
+    '<div class="plan-head">' +
+    '<div class="big">' + fmtDur(l.ms) +
+    ' <span style="font-size:15px;color:var(--sub);font-weight:500">／今天</span></div>' +
+    '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+    '<div class="cap">今天的功課完成 <b>' + t.done + " / " + t.goal + "</b> 題（" + pct + "%）" +
+    (t.left ? "，還有 " + t.left + " 題" : "，做完了 🎉") + "</div></div>" +
+
+    '<h2 class="sec">今天</h2>' +
+    '<div class="stats">' +
+    tile((l.w || 0), "練到的字義") +
+    tile((l.n || 0), "新學的字義") +
+    tile(l.a || 0, "答題數") +
+    tile(rate + "%", "正確率") +
+    tile(t.left, "還沒做的題") +
+    tile(studyStreak(), "連續天數") +
+    "</div>" +
+
+    '<h2 class="sec">平均一天幾個字・幾天背完</h2>' + paceHTML() +
+
+    '<h2 class="sec">最近的趨勢</h2>' +
+    '<div class="seg" style="margin-bottom:8px">' +
+    Object.keys(METRICS).map(function (k) {
+      return '<button data-metric="' + k + '"' + (statMetric === k ? ' class="on"' : "") +
+        ">" + METRICS[k].t + "</button>";
+    }).join("") + "</div>" +
+    '<div class="seg" style="margin-bottom:14px">' +
+    [7, 14, 30].map(function (n) {
+      return '<button data-span="' + n + '"' + (statSpan === n ? ' class="on"' : "") +
+        ">最近 " + n + " 天</button>";
+    }).join("") + "</div>" +
+    statChart() +
+
+    '<h2 class="sec">累計</h2>' +
+    '<div class="stats">' +
+    tile((tot.ms / 3600000).toFixed(1) + '<span style="font-size:15px"> 小時</span>', "總學習時間") +
+    /* 這裡用清單的實際大小，不用 log 的 n 累加：
+       這個功能是後來才加的，之前加入的字沒有留下當天的紀錄。 */
+    tile(allItems().length, "學過的字義") +
+    tile(tot.a, "總答題數") +
+    tile(tot.days, "有練習的天數") +
+    tile(tot.days ? Math.round(tot.ms / tot.days / 60000) : 0, "平均每天分鐘") +
+    tile(tot.a ? Math.round(tot.c / tot.a * 100) + "%" : "0%", "總正確率") +
+    "</div>" +
+
+    '<h2 class="sec">逐日明細</h2>' + logTable() +
+
+    '<p style="font-size:13px;color:var(--sub);margin:16px 4px 0;line-height:1.75">' +
+    "<b>時間怎麼算的</b>：只有停在「練習」或「錯題本」頁、而且最近 90 秒內有動作" +
+    "（打字、點畫面）才會累加，每 5 秒記一次。把 App 開著去做別的事不會被算進來。<br>" +
+    "<b>「練到的字義」跟「題數」差在哪</b>：同一個字答錯後隔十分鐘重考，" +
+    "題數會加兩題，字義只算一個。</p>";
+
+  $("#v-stat").innerHTML = html;
+
+  $("#v-stat").querySelectorAll("[data-metric]").forEach(function (b) {
+    b.onclick = function () { statMetric = b.dataset.metric; drawStat(); };
+  });
+  $("#v-stat").querySelectorAll("[data-span]").forEach(function (b) {
+    b.onclick = function () { statSpan = +b.dataset.span; drawStat(); };
   });
 }
 
@@ -1651,7 +2162,7 @@ function drawSet() {
   };
   $("#btnWipe").onclick = function () {
     if (!confirm("確定要清除全部進度嗎？這會刪掉你的練習清單、熟練度與錯題本，無法復原。")) return;
-    S = { v: 1, items: {}, todo: [], bad: [], log: {} };
+    S = { v: 1, items: {}, todo: [], bad: [], log: {}, known: {}, auto: {} };
     save(); queue = []; toast("已清除"); go("drill");
   };
 }
@@ -1733,6 +2244,9 @@ document.addEventListener("keydown", function (e) {
 });
 
 /* ---------- 啟動 ---------- */
+/* 先把今天的功課排好，再畫畫面。順序反過來的話，
+   標題列的「待複習」會少算掉剛自動載入的那批新字。 */
+ensureToday();
 go("drill");
 
 /* 開 App 先跟雲端對一次。沒設 token 的話這行什麼都不做。 */

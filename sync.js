@@ -43,7 +43,8 @@ var SYNC = (function () {
       todo: [],
       bad: [],
       log: {},
-      known: {}
+      known: {},
+      auto: {}
     };
 
     /* items：取「練得比較多」的那一筆。
@@ -79,9 +80,23 @@ var SYNC = (function () {
     Object.keys(a.log || {}).forEach(function (d) { days[d] = 1; });
     Object.keys(b.log || {}).forEach(function (d) { days[d] = 1; });
     Object.keys(days).forEach(function (d) {
-      var x = (a.log || {})[d] || { a: 0, c: 0 };
-      var y = (b.log || {})[d] || { a: 0, c: 0 };
-      out.log[d] = { a: Math.max(x.a || 0, y.a || 0), c: Math.max(x.c || 0, y.c || 0) };
+      var x = (a.log || {})[d] || {}, y = (b.log || {})[d] || {};
+      var o = {};
+      /* a 題數、c 答對、w 練到的字義、n 新學的字義、ms 學習時間、g 當天的題數目標，
+         每一個都取 max，理由同上。 */
+      ["a", "c", "w", "n", "ms", "g"].forEach(function (f) {
+        o[f] = Math.max(x[f] || 0, y[f] || 0);
+      });
+      out.log[d] = o;
+    });
+
+    /* auto：那天自動載入了幾個新字。跟 log 一樣逐日取 max，
+       少了這段的話，同步一次就會讓另一台以為今天還沒載入，重複補一輪新字。 */
+    var adays = {};
+    Object.keys(a.auto || {}).forEach(function (d) { adays[d] = 1; });
+    Object.keys(b.auto || {}).forEach(function (d) { adays[d] = 1; });
+    Object.keys(adays).forEach(function (d) {
+      out.auto[d] = Math.max((a.auto || {})[d] || 0, (b.auto || {})[d] || 0);
     });
 
     /* todo / known：聯集 */
@@ -102,7 +117,8 @@ var SYNC = (function () {
 
     /* 純量設定（每日題數、考試日期…）：取最後修改時間較新的那份 */
     var newer = (a.mtime || 0) >= (b.mtime || 0) ? a : b;
-    ["perDay", "examDate", "learnEndDate", "mixLevels", "finalReview"].forEach(function (k) {
+    ["perDay", "examDate", "learnEndDate", "mixLevels", "finalReview",
+      "autoLoad", "scope"].forEach(function (k) {
       if (newer[k] !== undefined) out[k] = newer[k];
     });
     out.mtime = Math.max(a.mtime || 0, b.mtime || 0);

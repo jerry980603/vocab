@@ -1,5 +1,5 @@
 /* 離線快取：第一次開啟後，之後沒網路也能用 */
-var CACHE = "vocab-v42";
+var CACHE = "vocab-v44";
 var FILES = [
   "./", "./index.html", "./app.js", "./sync.js", "./manifest.json", "./icon.svg",
   "./data/official.js", "./data/bank.js",

@@ -53,7 +53,7 @@ main{padding:16px;max-width:640px;margin:0 auto}
 /* ---------- 底部導覽 ---------- */
 nav{
   position:fixed;left:0;right:0;bottom:0;z-index:30;
-  display:grid;grid-template-columns:repeat(6,1fr);
+  display:grid;grid-template-columns:repeat(7,1fr);
   background:var(--card);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);
 }
@@ -269,6 +269,17 @@ h2.sec:first-child{margin-top:0}
   background:var(--bg);color:var(--text);outline:none;text-align:center;font-size:17px;font-weight:600;
 }
 
+/* ---------- 學習紀錄 ---------- */
+.crow{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.crow .d{width:66px;font-size:12px;color:var(--sub);white-space:nowrap}
+.crow .v{width:38px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--sub)}
+.crow.now .d,.crow.now .v{color:var(--accent);font-weight:600}
+.logtb{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.logtb th{font-size:12px;color:var(--sub);font-weight:600;text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
+.logtb td{padding:9px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.logtb th:first-child,.logtb td:first-child{text-align:left}
+.logtb tr.now td{color:var(--accent);font-weight:600}
+
 /* ---------- 設定 ---------- */
 .setrow{padding:15px 4px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
 .setrow .t{font-weight:500}
@@ -303,6 +314,7 @@ input.tokin{
 <main>
   <section class="view on" id="v-drill"></section>
   <section class="view" id="v-plan"></section>
+  <section class="view" id="v-stat"></section>
   <section class="view" id="v-find"></section>
   <section class="view" id="v-mine"></section>
   <section class="view" id="v-wrong"></section>
@@ -312,6 +324,7 @@ input.tokin{
 <nav id="nav">
   <button data-v="drill" class="on"><span class="ic">✏️</span>練習</button>
   <button data-v="plan"><span class="ic">📅</span>課表</button>
+  <button data-v="stat"><span class="ic">📊</span>紀錄</button>
   <button data-v="find"><span class="ic">🔍</span>查單字</button>
   <button data-v="mine"><span class="ic">📚</span>我的字</button>
   <button data-v="wrong"><span class="ic">🃏</span>錯題本</button>
