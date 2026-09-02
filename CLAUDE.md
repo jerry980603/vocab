@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：3740 / 6114（5948 個字義）**
+**已編好釋義與例句：3860 / 6114（6182 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -46,33 +46,36 @@
 - `w33`：130 字（第 2 級 S–T，做到 `till`）
 - `w34`：111 字（**第 2 級完結 1033/1033** ＋ 第 4 級漏網 18 字）
 - `w35`：120 字（**第 1 級起頭** A–B，做到 `bread`）
+- `w36`：120 字（第 1 級 B–D，做到 `dollar`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 1 級**（還缺 888 字）。`w35` 做完 A–B，
-收在 `bread`。下一批從 **`break` 接下去做 B–C**：
+**下一批要做**：**繼續第 1 級**（還缺 768 字）。`w36` 做完 B–D，
+收在 `dollar`。下一批從 **`door` 接下去做 D–G**：
 
-`break`、`breakfast`、`bridge`、`bright`、`bring`、`brother`、`brown`、`bug`、
-`build`、`bus`、`business`、`busy`、`but`、`butter`、`butterfly`、`button`、
-`buy`、`by`、`cake`、`call`、`camera`、`camp`、`can`、`candy`、`cap`、`car`、
-`card`、`care`、`careful`、`carry`、`case`、`cat`、`catch`、`cause`、`cent`、
-`center`、`chair`、`chance`、`change`、`cheap`、`check`、`cheese`、`chicken`、
-`child`、`chocolate`、`choose`、`church`、`city`、`class`、`classroom`、`clean`、
-`clear`、`clerk`、`climb`、`clock`、`close`、`clothes`、`cloud`、`coat`、
-`coffee`、`cold`、`color`、`come`、`comfortable`、`common`、`computer`、
-`cook`、`cookie`、`cool`、`copy`、`corner`、`correct`、`cost`、`could`、
-`count`、`country`、`course`、`cover`、`cow`、`crazy`、`cross`、`cry`、`cup`、
-`cut`、`cute` 等，一批 120 字左右。
+`door`、`down`、`draw`、`dream`、`dress`、`drink`、`drive`、`driver`、`drop`、
+`dry`、`duck`、`during`、`each`、`ear`、`early`、`earth`、`east`、`easy`、`eat`、
+`egg`、`eight`、`either`、`elephant`、`else`、`end`、`enough`、`enter`、`eraser`、
+`even`、`evening`、`ever`、`every`、`everybody`、`everyone`、`everything`、
+`everywhere`、`example`、`excited`、`exciting`、`exercise`、`expensive`、`eye`、
+`face`、`fact`、`factory`、`fall`、`family`、`famous`、`fan`、`far`、`farm`、
+`farmer`、`fast`、`fat`、`father`、`favorite`、`feel`、`feed`、`few`、`field`、
+`fight`、`fill`、`film`、`find`、`fine`、`finger`、`finish`、`fire`、`first`、
+`fish`、`five`、`fix`、`floor`、`flower`、`fly`、`follow`、`food`、`foot`、
+`football`、`for`、`foreign`、`forget`、`fork`、`four`、`free`、`fresh`、
+`friend`、`friendly`、`from`、`front`、`fruit`、`full`、`fun`、`funny`、`future`、
+`game`、`garden`、`gas`、`get`、`gift`、`girl`、`give`、`glad`、`glass`、`go`、
+`goat`、`gold`、`good`、`grade`、`grass`、`gray`、`great`、`green`、`ground`、
+`group`、`grow`、`guess`、`guitar`、`guy` 等，一批 120 字左右。
 
-⚠ 第 1 級的字看似最簡單，**多義字卻是全部六級裡最密集的**。這批的
-`back`（adv./n./v./adj. 五個義項）、`all`、`both`、`bow`（兩種發音）、
-`bank`（銀行／河岸）、`bear`（熊／忍受）就都要逐一查朗文。下一批的
-`break`、`bright`、`can`、`care`、`case`、`catch`、`cause`、`change`、
-`check`、`class`、`clear`、`close`、`cold`、`come`、`common`、`cook`、
-`corner`、`cost`、`count`、`course`、`cover`、`cross`、`cut` 同樣要小心。
+⚠ 第 1 級的多義字密度最高。下一批要小心的：`down`、`draw`、`dress`、`drive`、
+`drop`、`dry`、`each`、`either`、`else`、`end`、`even`、`ever`、`face`、`fair`、
+`fall`、`fan`、`far`、`fast`、`fat`、`feel`、`few`、`field`、`fight`、`fine`
+（罰款／好的）、`fire`（火／開除）、`first`、`fix`、`fly`（飛／蒼蠅）、
+`follow`、`foot`、`for`、`free`（自由／免費）、`front`、`full`、`fun`、
+`get`、`give`、`glass`（玻璃／杯子／眼鏡）、`go`、`good`、`grade`、`great`、
+`ground`（地面／理由）、`group`、`grow`、`guess`。
 
-第 1 級做完之後：第 3 級（缺 386，多是冷僻具體名詞）→ 第 4 級剩下的 78 字。
-**第 6 級（1023 字，完全未動）先不要做**——使用者 2026/08/31 決定先把 1～5 級做熟。
-除非他明確說要全包，否則不必碰第 6 級。
+第 1 級做完之後：第 3 級（缺 386，多是冷僻具體名詞）→ 第 6 級（缺 1023，完全未動）。
 
 **第 4 級只剩 78 字**，全是冷僻具體名詞（aquarium、broom、lobster、pasta、
 raisin 這類），學測不會考，不必回頭補。還算有用的那批（`arch`、`audio`、`facial`、
@@ -136,14 +139,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w35.js` | 補充批次（第 1～30 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w36.js` | 補充批次（第 1～31 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3740 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3860 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
@@ -233,6 +236,9 @@ post-1990 那種是構詞前綴而非副詞）。
 `scold` n.（愛責罵的人，古語）。
 
 `w35`（第 1 級 A–B）新增的：`best` v.（擊敗，朗文標為 old-fashioned）。
+
+`w36`（第 1 級 B–D）新增的：`but` adv.（＝only，文言）、`dear` adv.（cost dear）、
+`course` v.（液體奔流，罕用）、`clean` n.（英式的 give it a clean）。
 
 以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 

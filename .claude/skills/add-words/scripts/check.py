@@ -121,6 +121,11 @@ SKIP_POS = {
     # w35（第 1 級 A–B）刻意不收的詞性：
     # best v.（擊敗）朗文標為 old-fashioned，現代英文已不用
     "best": {"v."},
+    # w36（第 1 級 B–D）刻意不收的詞性：
+    # but adv.（＝only）與 dear adv.（cost dear）都是文言，現代口語不用
+    "but": {"adv."}, "dear": {"adv."},
+    # course v.（液體奔流）罕用；clean n. 是英式的 give it a clean
+    "course": {"v."}, "clean": {"n."},
 }
 
 SIMPLIFIED = ("学说这个时会来对门车电关开现发应变从让见语问题认觉场长业头网买卖钱边岁点无义医声处备华单双号岛"
