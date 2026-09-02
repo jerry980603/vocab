@@ -6,7 +6,7 @@ var FILES = [
   "./data/w1.js", "./data/w2.js", "./data/w3.js", "./data/w4.js", "./data/w5.js",
   "./data/w6.js", "./data/w7.js", "./data/w8.js", "./data/w9.js",
   "./data/w10.js", "./data/w11.js", "./data/w12.js", "./data/w13.js",
-  "./data/w14.js", "./data/w15.js", "./data/w16.js", "./data/w17.js", "./data/w18.js", "./data/w19.js", "./data/w20.js", "./data/w21.js", "./data/w22.js", "./data/w23.js", "./data/w24.js", "./data/w25.js", "./data/w26.js", "./data/w27.js", "./data/w28.js", "./data/w29.js", "./data/w30.js", "./data/w31.js", "./data/w32.js", "./data/w33.js", "./data/w34.js", "./data/w35.js", "./data/w36.js", "./data/p1.js"
+  "./data/w14.js", "./data/w15.js", "./data/w16.js", "./data/w17.js", "./data/w18.js", "./data/w19.js", "./data/w20.js", "./data/w21.js", "./data/w22.js", "./data/w23.js", "./data/w24.js", "./data/w25.js", "./data/w26.js", "./data/w27.js", "./data/w28.js", "./data/w29.js", "./data/w30.js", "./data/w31.js", "./data/w32.js", "./data/w33.js", "./data/w34.js", "./data/w35.js", "./data/w36.js", "./data/w37.js", "./data/p1.js"
 ];
 
 self.addEventListener("install", function (e) {
