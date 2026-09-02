@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：3980 / 6114（6407 個字義）**
+**已編好釋義與例句：4100 / 6114（6624 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -48,35 +48,37 @@
 - `w35`：120 字（**第 1 級起頭** A–B，做到 `bread`）
 - `w36`：120 字（第 1 級 B–D，做到 `dollar`）
 - `w37`：120 字（第 1 級 D–G，做到 `goddess`）
+- `w38`：120 字（第 1 級 G–L，做到 `learn`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 1 級**（還缺 648 字）。`w37` 做完 D–G，
-收在 `goddess`。下一批從 **`gold` 接下去做 G–L**：
+**下一批要做**：**繼續第 1 級**（還缺 528 字）。`w38` 做完 G–L，
+收在 `learn`。下一批從 **`leave` 接下去做 L–N**：
 
-`gold`、`golf`、`good`、`goodbye`、`grade`、`grand`、`grandfather`、
-`grandmother`、`grape`、`grass`、`gray`、`great`、`green`、`ground`、`group`、
-`grow`、`guess`、`guitar`、`gun`、`guy`、`hair`、`half`、`hall`、`ham`、
-`hamburger`、`hand`、`handsome`、`happen`、`happy`、`hard`、`hat`、`hate`、
-`have`、`he`、`head`、`headache`、`health`、`healthy`、`hear`、`heart`、`heat`、
-`heavy`、`height`、`hello`、`help`、`helpful`、`hen`、`her`、`here`、`hers`、
-`herself`、`hide`、`high`、`hill`、`him`、`himself`、`his`、`history`、`hit`、
-`hobby`、`hold`、`hole`、`holiday`、`home`、`homework`、`honest`、`honey`、
-`hope`、`horse`、`hospital`、`hot`、`hotel`、`hour`、`house`、`how`、`however`、
-`human`、`hundred`、`hungry`、`hurt`、`husband`、`ice`、`idea`、`if`、`ill`、
-`important`、`in`、`inch`、`include`、`increase`、`insect`、`inside`、`interest`、
-`interesting`、`into`、`invite`、`island`、`it`、`its`、`itself`、`jacket`、
-`January`、`job`、`join`、`joke`、`juice`、`jump`、`just`、`keep`、`key`、
-`kid`、`kill`、`kind`、`king`、`kitchen`、`knee`、`knife`、`knock`、`know`、
-`lack`、`lady`、`lake`、`lamp`、`land`、`language`、`large`、`last`、`late`、
-`later`、`laugh` 等，一批 120 字左右。
+`leave`、`left`、`leg`、`lemon`、`lesson`、`let`、`letter`、`level`、`library`、
+`lie`、`life`、`light`、`like`、`line`、`lion`、`lip`、`list`、`listen`、
+`little`、`live`、`living`、`lonely`、`long`、`look`、`lose`、`lot`、`loud`、
+`love`、`lovely`、`low`、`lucky`、`lunch`、`machine`、`mad`、`magic`、`mail`、
+`main`、`make`、`man`、`many`、`map`、`March`、`mark`、`market`、`marry`、
+`math`、`may`、`maybe`、`me`、`meal`、`mean`、`meat`、`medicine`、`meet`、
+`meeting`、`member`、`menu`、`middle`、`might`、`mile`、`milk`、`mind`、
+`minute`、`Miss`、`miss`、`mistake`、`modern`、`moment`、`money`、`monkey`、
+`month`、`moon`、`more`、`morning`、`most`、`mother`、`motorcycle`、`mountain`、
+`mouse`、`mouth`、`move`、`movie`、`much`、`music`、`must`、`name`、`national`、
+`nature`、`near`、`neck`、`need`、`neighbor`、`never`、`new`、`news`、
+`newspaper`、`next`、`nice`、`night`、`no`、`nobody`、`noise`、`noisy`、`none`、
+`noon`、`north`、`nose`、`not`、`note`、`nothing`、`notice`、`now`、`number`、
+`nurse` 等，一批 120 字左右。
 
-⚠ 下一批的多義字一樣密集，要特別小心：`good`、`grade`（成績／年級／等級）、
-`ground`（地面／理由）、`hand`（手／指針／幫忙）、`hard`（硬的／困難的／努力地）、
-`have`、`head`（頭／領導／前往）、`heart`（心臟／內心／核心）、`heat`（熱／加熱）、
-`hide`、`high`、`hit`（打／熱門作品）、`hold`（握住／舉行／容納）、
-`home`、`hope`、`hot`、`how`、`however`、`ill`、`in`、`interest`（興趣／利息）、
-`just`（只是／剛剛／公正的）、`keep`、`key`（鑰匙／關鍵）、`kind`（種類／親切的）、
-`land`（土地／降落）、`last`（最後的／持續）、`late`、`laugh`。
+⚠ 下一批的多義字是全書最難的一段，務必逐一查朗文：
+`leave`（離開／留下／請假）、`left`（左邊／leave 的過去式）、
+`lie`（躺／說謊，兩個完全不同的動詞，過去式也不同）、
+`light`（光／燈／點燃／輕的，四個詞性）、`like`（喜歡／像）、
+`line`（線／隊伍／台詞）、`live`（居住／現場的，動詞與形容詞發音不同）、
+`long`（長的／渴望）、`look`（看／看起來／外表）、`lot`（很多／一塊地）、
+`make`（製作／使成為）、`mark`（記號／分數／標記）、`may`（可能／五月）、
+`mean`（意思是／刻薄的／平均值）、`meet`（見面／符合）、`middle`、
+`mind`（心智／介意）、`miss`（錯過／想念／小姐）、`move`（移動／搬家／感動）、
+`much`、`must`、`near`、`need`、`note`（筆記／紙鈔／注意）、`notice`（注意／公告）。
 
 第 1 級做完之後：第 3 級（缺 386，多是冷僻具體名詞）→ 第 6 級（缺 1023，完全未動）。
 
@@ -142,14 +144,14 @@ python .claude/skills/add-words/scripts/check.py w8.js # 補完之後驗收
 | `data/w3.js` | 單字 G–M |
 | `data/w4.js` | 單字 N–R |
 | `data/w5.js` | 單字 S–Z |
-| `data/w6.js`～`data/w37.js` | 補充批次（第 1～32 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
+| `data/w6.js`～`data/w38.js` | 補充批次（第 1～33 批）。`w6`～`w13` 前半第 3 級，`w13`～`w19` 第 4 級，`w20` 起第 5 級 |
 | `data/p1.js` | 片語 |
 
 **大批擴充時開新檔**（`w7.js`、`w8.js`…），不要用腳本插進既有檔案——
 理由見下面「用腳本批次改資料檔的陷阱」。開新檔記得在 `index.html` 與 `sw.js`
 各加一行，並把 `sw.js` 的 `CACHE` 版本號 +1，否則手機會拿到舊的快取。
 
-目前進度：官方 6114 個字裡，**已編好釋義與例句的有 3980 個**（以上面的「字庫進度」為準）。
+目前進度：官方 6114 個字裡，**已編好釋義與例句的有 4100 個**（以上面的「字庫進度」為準）。
 剩下的字在 App 的「查單字」查得到分級與詞性，但標示為「尚未編寫例句」。
 擴充字庫就是把這些字逐批補成完整詞條——這是本專案接下來最主要的工作。
 
