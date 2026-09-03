@@ -23,6 +23,13 @@ TERM = "`);"
 
 # CLAUDE.md 記錄的「刻意不收」，這裡要同步
 SKIP_POS = {
+    # w41（第 1 級 R–S）刻意不收的詞性：
+    # size v. 只有 size up（打量、評估）這個片語，動詞原形不單用
+    "size": {"v."},
+    # small adv.（chop it small，罕用）與 n.（the small of your back 腰部，解剖用語）
+    "small": {"adv.", "n."},
+    # straight n. 是（跑道的）直線道，賽馬與田徑的專門術語
+    "straight": {"n."},
     # w40（第 1 級 O–R）刻意不收的詞性：
     # out 只收副詞。prep. 是美式口語（look out the window，英式教學視為錯誤）；
     # adj. 朗文只在商業詞典有；n.（藉口／棒球出局）罕用；v. 是「揭露某人是同志」。

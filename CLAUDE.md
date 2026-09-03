@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：4337 / 6114（7093 個字義）**
+**已編好釋義與例句：4458 / 6114（7329 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -51,37 +51,36 @@
 - `w38`：120 字（第 1 級 G–L，做到 `learn`）
 - `w39`：117 字（第 1 級 L–N，`least` 到 `nurse` 全收）
 - `w40`：120 字（第 1 級 O–R，`of` 到 `rich`，**突破 70%**）
+- `w41`：121 字（第 1 級 R–S，`ride` 到 `strong`）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 1 級**（還缺 291 字）。`w40` 做完 O–R，
-收在 `rich`。下一批從 **`ride` 接下去做 R–S**：
+**下一批要做**：**第 1 級最後一批**（還缺 170 字，扣掉刻意跳過的
+`mister`／`nope`／`ok` 就是 **167 字**，一批做完就收尾）。`w41` 收在 `strong`，
+下一批從 **`student` 接下去做 S–Z**：
 
-`ride`、`right`、`ring`、`rise`、`river`、`road`、`robot`、`rock`、`roll`、`room`、
-`root`、`rope`、`rose`、`round`、`row`、`rule`、`ruler`、`run`、`sad`、`safe`、
-`salad`、`sale`、`salt`、`same`、`save`、`say`、`school`、`science`、`sea`、
-`season`、`seat`、`second`、`secretary`、`see`、`seed`、`sell`、`send`、
-`sentence`、`serious`、`service`、`set`、`several`、`shake`、`shall`、`shape`、
-`share`、`sharp`、`she`、`sheep`、`sheet`、`shelf`、`ship`、`shirt`、`shoe`、
-`shop`、`short`、`should`、`shoulder`、`shout`、`show`、`shower`、`shy`、`sick`、
-`side`、`sight`、`sign`、`silent`、`silly`、`silver`、`simple`、`since`、`sing`、
-`single`、`sink`、`sir`、`sister`、`sit`、`size`、`skill`、`skin`、`skirt`、`sky`、
-`sleep`、`slow`、`small`、`smart`、`smell`、`smile`、`smoke`、`snake`、`snow`、
-`so`、`soft`、`soldier`、`some`、`son`、`song`、`soon`、`sorry`、`sound`、`soup`、
-`south`、`space`、`speak`、`special`、`speed`、`spell`、`spend` 等，一批 120 字左右。
+`student`、`study`、`towel`、`town`、`toy`、`traffic`、`train`、`treatment`、
+`tree`、`trip`、`trouble`、`truck`、`try`、`turn`、`tv`、`twice`、`type`、`uncle`、
+`under`、`understand`、`uniform`、`until`、`up`、`use`、`useful`、`usually`、
+`vegetable`、`very`、`video`、`violin`、`visit`、`visitor`、`voice`、`wait`、`wake`、
+`walk`、`wall`、`want`、`warm`、`watch`、`water`、`wave`、`way`、`weak`、`wear`、
+`weather`、`week`、`weekend`、`welcome`、`well`、`west`、`wet`、`what`、`when`、
+`where`、`whether`、`which`、`while`、`white`、`who`、`whose`、`why`、`wide`、
+`wife`、`will`、`win`、`wind`、`window`、`wise`、`wish`、`with`、`without`、
+`woman`、`wonderful`、`word`、`work`、`worker`、`world`、`worry`、`write`、
+`writer`、`wrong`、`yard`、`yeah`、`year`、`yellow`、`yes`、`yesterday`、`yet`、
+`young`、`zero`、`zoo`。
 
-⚠ 這一段的多義字：`right`（右邊／正確的／權利／立刻）、`ring`（戒指／鈴聲／打電話）、
-`rise`（上升／起身／增加）、`rock`（岩石／搖動／搖滾樂）、`roll`（滾動／捲／麵包捲）、
-`room`（房間／空間）、`round`（**官方標了五個詞性**：圓的／一回合／繞著／在附近／繞行）、
-`row`（一排／划船／爭吵）、`rule`（規則／統治）、`run`（跑／經營／運轉）、
-`safe`（安全的／保險箱）、`salt`（鹽／醃／含鹽的，**三個詞性**）、`same`、
-`save`（拯救／節省／儲存）、`say`、`school`（學校／學派／魚群）、`seat`、
-`second`（第二／秒／附議）、`see`（看見／明白／會面）、`sentence`（句子／判刑）、
-`service`（服務／禮拜／維修）、`set`（放置／設定／一組／固定的）、`shake`、
-`share`（分享／股份）、`sharp`（銳利的／急劇的／整點）、`sheet`（床單／一張紙）、
-`ship`（船／運送）、`short`（短的／缺乏的）、`show`（顯示／表演／節目）、
-`side`、`sign`（標誌／跡象／簽名）、`since`（自從／因為）、`single`（單一的／單身的）、
-`sink`（水槽／下沉）、`sound`（聲音／聽起來／健全的）、`space`（空間／太空）、
-`special`、`speed`、`spell`（拼字／一段時間）、`spend`。
+⚠ 這一批全是最高頻的功能詞，官方詞性標得很雜，**務必逐一查朗文**：
+`up`（**五個詞性** adv./prep./adj./v./n.）、`wrong`（adj./adv./n./v.）、
+`where`（conj./adv./pron./n.）、`well`（adv./adj./n.，n. 是「井」）、
+`while`（conj./n./v.，v. 是 while away 消磨）、`will`（aux./n.，n. 是意志／遺囑）、
+`video`（n./v./adj.）、`welcome`（v./adj./n.）、`turn`（轉／輪到／變成）、
+`try`（嘗試／審判）、`type`（類型／打字）、`use`（使用／用途）、
+`watch`（看／手錶）、`water`（水／澆水）、`wave`（波浪／揮手）、
+`way`（路／方法）、`wear`（穿／磨損）、`weather`（天氣／安然度過）、
+`wind`（風／捲繞，兩個不同發音）、`work`（工作／作品／運作）、
+`worry`、`yellow`（v. 變黃）、`young`（n. 幼獸）、`yeah`／`yes`（n. 贊成票）。
+`traffic` v.（非法買賣）、`towel` v.、`weekend` v.、`wet` v. 這幾個要判斷收不收。
 
 第 1 級做完之後：第 3 級（缺 386，多是冷僻具體名詞）→ 第 6 級（缺 1023，完全未動）。
 
@@ -258,6 +257,12 @@ by，文學用法）、`photo` v.（口語，標準用法是 photograph）、`pi
 片語，動詞原形不單用）。
 **整個字跳過的**：`nope`（＝no 的口語）、`mister`（就是 Mr. 的口語稱呼）、
 `ok`（與 `okay` 同一個字，只是拼法不同，已收 `okay` 的四個詞性）。
+
+`w41`（第 1 級 R–S）新增的：`size` v.（只有 size up 這個片語，動詞原形不單用）、
+`small` adv.（chop it small，罕用）與 n.（the small of your back 腰部，解剖用語）、
+`straight` n.（跑道的直線道，賽馬與田徑術語）。
+另外 `row` 只收「一排」與「划船」——「爭吵」那個義項是英式且發音不同（/raʊ/），
+官方只標 n./v.，不必硬收。
 
 以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 
