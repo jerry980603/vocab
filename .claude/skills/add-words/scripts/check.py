@@ -23,6 +23,11 @@ TERM = "`);"
 
 # CLAUDE.md 記錄的「刻意不收」，這裡要同步
 SKIP_POS = {
+    # w39（第 1 級 L–N）刻意不收的詞性：
+    # light adv.（朗文沒有獨立副詞條目，只有 travel light 這個片語，學測不考）
+    "light": {"adv."},
+    # machine v.（用機器加工，是工業術語）
+    "machine": {"v."},
     "unique": {"n."}, "steady": {"adv.", "n."}, "scatter": {"n."},
     "grab": {"n."}, "rough": {"adv.", "n."},
     # 名詞用法罕見或非現代標準，學測不會考

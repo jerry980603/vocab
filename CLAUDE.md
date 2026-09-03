@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：4100 / 6114（6624 個字義）**
+**已編好釋義與例句：4217 / 6114（6851 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -49,36 +49,38 @@
 - `w36`：120 字（第 1 級 B–D，做到 `dollar`）
 - `w37`：120 字（第 1 級 D–G，做到 `goddess`）
 - `w38`：120 字（第 1 級 G–L，做到 `learn`）
+- `w39`：117 字（第 1 級 L–N，`least` 到 `nurse` 全收，**突破 69%**）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 1 級**（還缺 528 字）。`w38` 做完 G–L，
-收在 `learn`。下一批從 **`leave` 接下去做 L–N**：
+**下一批要做**：**繼續第 1 級**（還缺 411 字）。`w39` 做完 L–N，
+收在 `nurse`。下一批從 **`of` 接下去做 O–P**：
 
-`leave`、`left`、`leg`、`lemon`、`lesson`、`let`、`letter`、`level`、`library`、
-`lie`、`life`、`light`、`like`、`line`、`lion`、`lip`、`list`、`listen`、
-`little`、`live`、`living`、`lonely`、`long`、`look`、`lose`、`lot`、`loud`、
-`love`、`lovely`、`low`、`lucky`、`lunch`、`machine`、`mad`、`magic`、`mail`、
-`main`、`make`、`man`、`many`、`map`、`March`、`mark`、`market`、`marry`、
-`math`、`may`、`maybe`、`me`、`meal`、`mean`、`meat`、`medicine`、`meet`、
-`meeting`、`member`、`menu`、`middle`、`might`、`mile`、`milk`、`mind`、
-`minute`、`Miss`、`miss`、`mistake`、`modern`、`moment`、`money`、`monkey`、
-`month`、`moon`、`more`、`morning`、`most`、`mother`、`motorcycle`、`mountain`、
-`mouse`、`mouth`、`move`、`movie`、`much`、`music`、`must`、`name`、`national`、
-`nature`、`near`、`neck`、`need`、`neighbor`、`never`、`new`、`news`、
-`newspaper`、`next`、`nice`、`night`、`no`、`nobody`、`noise`、`noisy`、`none`、
-`noon`、`north`、`nose`、`not`、`note`、`nothing`、`notice`、`now`、`number`、
-`nurse` 等，一批 120 字左右。
+`of`、`off`、`office`、`officer`、`often`、`oil`、`ok`、`okay`、`old`、`on`、
+`once`、`online`、`only`、`open`、`or`、`orange`、`order`、`other`、`out`、
+`outside`、`over`、`own`、`pack`、`package`、`page`、`paint`、`pair`、`pants`、
+`paper`、`parent`、`park`、`part`、`party`、`pass`、`past`、`pay`、`payment`、
+`pen`、`pencil`、`people`、`perhaps`、`person`、`pet`、`phone`、`photo`、
+`photograph`、`piano`、`pick`、`picnic`、`picture`、`pie`、`piece`、`pig`、`pin`、
+`pink`、`pipe`、`place`、`plan`、`plane`、`planet`、`plant`、`plate`、`play`、
+`player`、`please`、`pleasure`、`pocket`、`point`、`police`、`polite`、`pond`、
+`pool`、`poor`、`popular`、`possible`、`pot`、`potato`、`power`、`practice`、
+`prepare`、`present`、`pretty`、`price`、`probably`、`problem`、`program`、
+`proud`、`public`、`pull`、`push`、`put` 等，一批 120 字左右。
 
-⚠ 下一批的多義字是全書最難的一段，務必逐一查朗文：
-`leave`（離開／留下／請假）、`left`（左邊／leave 的過去式）、
-`lie`（躺／說謊，兩個完全不同的動詞，過去式也不同）、
-`light`（光／燈／點燃／輕的，四個詞性）、`like`（喜歡／像）、
-`line`（線／隊伍／台詞）、`live`（居住／現場的，動詞與形容詞發音不同）、
-`long`（長的／渴望）、`look`（看／看起來／外表）、`lot`（很多／一塊地）、
-`make`（製作／使成為）、`mark`（記號／分數／標記）、`may`（可能／五月）、
-`mean`（意思是／刻薄的／平均值）、`meet`（見面／符合）、`middle`、
-`mind`（心智／介意）、`miss`（錯過／想念／小姐）、`move`（移動／搬家／感動）、
-`much`、`must`、`near`、`need`、`note`（筆記／紙鈔／注意）、`notice`（注意／公告）。
+⚠ 這一段的多義字一樣難，務必逐一查朗文：
+`of`、`off`（副詞／介系詞／形容詞，休假的、關掉的）、`once`（一次／曾經／一旦）、
+`only`（只有／唯一的／但是）、`open`（打開／開放的／開業）、`order`（順序／命令／
+訂購）、`other`、`out`（官方標了五個詞性）、`over`、`own`（自己的／擁有）、
+`pack`（打包／一包／一群）、`part`（部分／角色／分開）、`party`（派對／政黨）、
+`pass`（通過／經過／傳遞／及格）、`past`（過去／經過）、`pick`（挑選／採摘）、
+`piece`（一片／作品）、`place`（地方／放置）、`plant`（植物／工廠／種植）、
+`play`（玩／演奏／扮演／劇本）、`please`（請／取悅）、`point`（點／要點／指）、
+`present`（現在的／禮物／出席的／呈現）、`pretty`（漂亮的／相當地）、
+`program`（節目／程式／計畫）、`public`（公共的／大眾）、`pull`、`push`、
+`put`、`power`（力量／電力／權力）、`practice`（練習／慣例／開業）、
+`price`（價格／代價）、`quiet`、`quite`、`raise`、`reach`、`read`、`ready`、
+`real`、`reason`、`relative`、`rest`（休息／其餘）、`ride`、`right`（右邊／正確的／
+權利）、`ring`（戒指／鈴聲／打電話）、`rise`。
 
 第 1 級做完之後：第 3 級（缺 386，多是冷僻具體名詞）→ 第 6 級（缺 1023，完全未動）。
 
@@ -244,6 +246,11 @@ post-1990 那種是構詞前綴而非副詞）。
 
 `w36`（第 1 級 B–D）新增的：`but` adv.（＝only，文言）、`dear` adv.（cost dear）、
 `course` v.（液體奔流，罕用）、`clean` n.（英式的 give it a clean）。
+
+`w39`（第 1 級 L–N）新增的：`light` adv.（朗文沒有獨立副詞條目，只有 travel light
+這個片語）、`machine` v.（用機器加工，是工業術語）。
+**整個字跳過的**：`nope`（＝no 的口語）、`mister`（就是 Mr. 的口語稱呼），兩個都沒有
+獨立的學習價值。
 
 以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 
