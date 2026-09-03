@@ -416,14 +416,23 @@ var queue = [], qTotal = 0, qCur = null, answered = false, hinted = 0, drillMode
    混在一起會讓你在同一輪反覆撞同一個不會的字，很挫折也沒效率。 */
 function normalDue() { return dueItems().filter(function (i) { return !i.wb; }); }
 
-function buildQueue(mode) {
+/* 錯題一次清幾題。錯題本累積幾百個的時候，「全部清」那個數字會嚇死人，
+   分批才做得下去——清 20 題也是清。 */
+var WRONG_BATCH = 20;
+
+function buildQueue(mode, limit) {
   drillMode = mode || "normal";
   var list;
-  if (drillMode === "wrong") list = shuffle(wrongItems().slice());
+  if (drillMode === "wrong") {
+    list = shuffle(wrongItems().slice());
+    if (limit) list = list.slice(0, limit);
+  }
   else if (drillMode === "extra") list = shuffle(allItems().filter(function (i) { return !i.wb; }));
-  /* 今天的功課：新字與到期複習洗在一起先做，錯題排在最後面。
-     錯題不打散進前段，是為了避免同一輪裡反覆撞同一個不會的字。 */
-  else if (drillMode === "today") list = shuffle(normalDue()).concat(shuffle(wrongItems()));
+  /* 今天的進度＝新字＋到期複習，「不含錯題」。
+     錯題是另外一段，做完進度再清，而且可以分批。
+     混在同一輪裡的話，錯題本積了幾百個時，今天的功課會顯示七百題，
+     看起來像不可能的任務——但那其實是舊帳，不是今天的量。 */
+  else if (drillMode === "today") list = shuffle(normalDue());
   else list = shuffle(normalDue());
   queue = list;
   qTotal = queue.length;
@@ -482,9 +491,10 @@ function loadTodayNew() {
    不會因為做掉一半就縮水，這樣進度條才有意義。 */
 function todayTask() {
   var due = normalDue().length, wrong = wrongItems().length, l = dayLog();
-  var left = due + wrong;
-  l.g = Math.max(l.g || 0, (l.a || 0) + left);
-  return { due: due, wrong: wrong, left: left, done: l.a || 0, goal: l.g };
+  /* left 只算「今天的進度」（新字＋到期複習），不含錯題。
+     錯題是可以慢慢還的舊帳，把它算進今天的目標只會讓人放棄。 */
+  l.g = Math.max(l.g || 0, (l.a || 0) + due);
+  return { due: due, wrong: wrong, left: due, done: l.a || 0, goal: l.g };
 }
 
 /* 每天第一次開 App 就把當天的功課排好：
@@ -595,13 +605,13 @@ function drawDrillStart(el) {
     : Math.ceil(wait / DAY) + " 天後";
 
   el.innerHTML =
-    /* 今天的功課：一進來就知道還剩幾題、按一顆按鈕就開始，
-       不必自己去課表挑今天該吃哪一組。 */
+    /* 第一段：今天的進度。新字＋到期複習，按一顆按鈕就開始，
+       不必自己去課表挑今天該吃哪一組。錯題「不算在這裡」。 */
     '<div class="plan-head">' +
     '<div class="big">' +
     (t.left
       ? "還有 " + t.left + ' <span style="font-size:15px;color:var(--sub);font-weight:500">題要做</span>'
-      : "今天的功課做完了 🎉") + "</div>" +
+      : "今天的進度做完了 🎉") + "</div>" +
     '<div class="bar"><i style="width:' +
     (t.goal ? Math.min(100, Math.round(t.done / t.goal * 100)) : 100) + '%"></i></div>' +
     '<div class="cap">已完成 <b>' + t.done + "</b> 題・練到 <b>" + (l.w || 0) +
@@ -610,40 +620,41 @@ function drawDrillStart(el) {
     '<div class="cap" style="margin-top:10px;line-height:1.9">' +
     "・今天的新字 <b>" + newToday() + "</b> 個字義" +
     (autoLoadOn() ? "（開 App 時已自動排好）" : "（手動模式，要自己按下面那顆）") + "<br>" +
-    "・到期要複習 <b>" + due + "</b> 個<br>" +
-    "・錯題要清 <b>" + wrong + "</b> 個</div></div>" +
+    "・到期要複習 <b>" + due + "</b> 個</div></div>" +
 
     (t.left
-      ? '<button class="btn" id="btnToday">開始今天的功課（' + t.left + " 題）</button>" +
+      ? '<button class="btn" id="btnToday">開始今天的進度（' + t.left + " 題）</button>" +
         '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
-        "新字、到期複習、錯題會照順序排成一輪，做完就是今天的量。<br>" +
-        "中途離開沒關係，回來會接著算，不會從頭來過。</p>"
+        "新字與到期複習洗在一起，做完就是今天該做的量。<b>錯題不算在裡面</b>，" +
+        "它在下面獨立一段。<br>中途離開沒關係，回來會接著算。</p>"
       : '<div class="empty" style="padding:20px 8px">今天該練的都練完了，下一批 <b>' +
         waitTxt + "</b> 到期。<br>" +
-        '<span style="font-size:13px">還想練就往下滑，有加練與快篩。</span></div>') +
+        '<span style="font-size:13px">還有力氣就往下清一點錯題。</span></div>') +
+
+    /* 第二段：錯題。分批清，數字再大也不會變成今天的壓力。 */
+    '<h2 class="sec">錯題（進度做完再清，不用一次清完）</h2>' +
+    (wrong
+      ? '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
+        "錯題本裡有 <b>" + wrong + "</b> 個字義。這是<b>累積下來的舊帳，不是今天的量</b>——" +
+        "每天清一點就好，答對一次就畢業。</div></div>" +
+        (wrong > WRONG_BATCH
+          ? '<button class="btn bad" id="btnWrongBatch">清 ' + WRONG_BATCH + " 題錯題</button>" +
+            '<div class="row" style="margin-top:10px">' +
+            '<button class="btn ghost" id="btnWrongDrill">全部清（' + wrong + " 題）</button>" +
+            '<button class="btn ghost" id="goWrongBook">照 Day 分組清</button></div>'
+          : '<button class="btn bad" id="btnWrongDrill">清掉錯題（' + wrong + " 題）</button>")
+      : '<div class="empty" style="padding:20px 8px">錯題本是空的 🎉</div>') +
 
     /* 把清單的去向攤開來。不然你會看到「清單有 132 個字」
-       但一般練習只剩 9 個，以為字不見了。 */
-    '<div class="plan-head"><div class="cap" style="line-height:1.9">' +
+       但今天的進度只剩 9 題，以為字不見了。 */
+    '<div class="plan-head" style="margin-top:18px"><div class="cap" style="line-height:1.9">' +
     "<b>清單裡的 " + all + " 個字義現在在哪</b><br>" +
-    "・<b>" + due + "</b> 個到期，可以現在練<br>" +
-    "・<b>" + wrong + "</b> 個在錯題本（不混進一般練習）<br>" +
+    "・<b>" + due + "</b> 個到期，算在今天的進度裡<br>" +
+    "・<b>" + wrong + "</b> 個在錯題本（不混進進度）<br>" +
     "・<b>" + (all - due - wrong) + "</b> 個還沒到複習時間，最近一批 " + waitTxt +
     "</div></div>" +
 
     todayNewHTML() +
-
-    '<h2 class="sec">一般練習</h2>' +
-    (due
-      ? '<button class="btn" id="btnNormal">開始（' + due + " 個字到期）</button>"
-      : '<div class="empty" style="padding:20px 8px">到期的字都複習完了，下一批 <b>' + waitTxt + "</b> 到期。</div>") +
-
-    '<h2 class="sec">錯題練習（獨立計算）</h2>' +
-    (wrong
-      ? '<button class="btn bad" id="btnWrongDrill">只練錯題（' + wrong + " 個字）</button>" +
-        '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
-        "錯題不會混進一般練習。在這裡答對一次就會移出錯題本。</p>"
-      : '<div class="empty" style="padding:20px 8px">錯題本是空的 🎉</div>') +
 
     '<h2 class="sec">還想多練</h2>' +
     '<button class="btn ghost" id="btnExtra">從清單裡隨機加練（共 ' + all + " 個字）</button>" +
@@ -677,8 +688,13 @@ function drawDrillStart(el) {
   };
 
   if ($("#btnToday")) $("#btnToday").onclick = function () { buildQueue("today"); drawDrill(); };
-  if (due) $("#btnNormal").onclick = function () { buildQueue("normal"); drawDrill(); };
-  if (wrong) $("#btnWrongDrill").onclick = function () { buildQueue("wrong"); drawDrill(); };
+  if ($("#btnWrongBatch")) $("#btnWrongBatch").onclick = function () {
+    buildQueue("wrong", WRONG_BATCH); drawDrill();
+  };
+  if ($("#btnWrongDrill")) $("#btnWrongDrill").onclick = function () {
+    buildQueue("wrong"); drawDrill();
+  };
+  if ($("#goWrongBook")) $("#goWrongBook").onclick = function () { go("wrong"); };
   $("#btnExtra").onclick = function () { buildQueue("extra"); drawDrill(); };
   el.querySelectorAll("[data-scr]").forEach(function (b) {
     b.onclick = function () { startScreen(+b.dataset.scr); };
