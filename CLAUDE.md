@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：4217 / 6114（6851 個字義）**
+**已編好釋義與例句：4337 / 6114（7093 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -49,38 +49,39 @@
 - `w36`：120 字（第 1 級 B–D，做到 `dollar`）
 - `w37`：120 字（第 1 級 D–G，做到 `goddess`）
 - `w38`：120 字（第 1 級 G–L，做到 `learn`）
-- `w39`：117 字（第 1 級 L–N，`least` 到 `nurse` 全收，**突破 69%**）
+- `w39`：117 字（第 1 級 L–N，`least` 到 `nurse` 全收）
+- `w40`：120 字（第 1 級 O–R，`of` 到 `rich`，**突破 70%**）
 - `p1`：52 個片語
 
-**下一批要做**：**繼續第 1 級**（還缺 411 字）。`w39` 做完 L–N，
-收在 `nurse`。下一批從 **`of` 接下去做 O–P**：
+**下一批要做**：**繼續第 1 級**（還缺 291 字）。`w40` 做完 O–R，
+收在 `rich`。下一批從 **`ride` 接下去做 R–S**：
 
-`of`、`off`、`office`、`officer`、`often`、`oil`、`ok`、`okay`、`old`、`on`、
-`once`、`online`、`only`、`open`、`or`、`orange`、`order`、`other`、`out`、
-`outside`、`over`、`own`、`pack`、`package`、`page`、`paint`、`pair`、`pants`、
-`paper`、`parent`、`park`、`part`、`party`、`pass`、`past`、`pay`、`payment`、
-`pen`、`pencil`、`people`、`perhaps`、`person`、`pet`、`phone`、`photo`、
-`photograph`、`piano`、`pick`、`picnic`、`picture`、`pie`、`piece`、`pig`、`pin`、
-`pink`、`pipe`、`place`、`plan`、`plane`、`planet`、`plant`、`plate`、`play`、
-`player`、`please`、`pleasure`、`pocket`、`point`、`police`、`polite`、`pond`、
-`pool`、`poor`、`popular`、`possible`、`pot`、`potato`、`power`、`practice`、
-`prepare`、`present`、`pretty`、`price`、`probably`、`problem`、`program`、
-`proud`、`public`、`pull`、`push`、`put` 等，一批 120 字左右。
+`ride`、`right`、`ring`、`rise`、`river`、`road`、`robot`、`rock`、`roll`、`room`、
+`root`、`rope`、`rose`、`round`、`row`、`rule`、`ruler`、`run`、`sad`、`safe`、
+`salad`、`sale`、`salt`、`same`、`save`、`say`、`school`、`science`、`sea`、
+`season`、`seat`、`second`、`secretary`、`see`、`seed`、`sell`、`send`、
+`sentence`、`serious`、`service`、`set`、`several`、`shake`、`shall`、`shape`、
+`share`、`sharp`、`she`、`sheep`、`sheet`、`shelf`、`ship`、`shirt`、`shoe`、
+`shop`、`short`、`should`、`shoulder`、`shout`、`show`、`shower`、`shy`、`sick`、
+`side`、`sight`、`sign`、`silent`、`silly`、`silver`、`simple`、`since`、`sing`、
+`single`、`sink`、`sir`、`sister`、`sit`、`size`、`skill`、`skin`、`skirt`、`sky`、
+`sleep`、`slow`、`small`、`smart`、`smell`、`smile`、`smoke`、`snake`、`snow`、
+`so`、`soft`、`soldier`、`some`、`son`、`song`、`soon`、`sorry`、`sound`、`soup`、
+`south`、`space`、`speak`、`special`、`speed`、`spell`、`spend` 等，一批 120 字左右。
 
-⚠ 這一段的多義字一樣難，務必逐一查朗文：
-`of`、`off`（副詞／介系詞／形容詞，休假的、關掉的）、`once`（一次／曾經／一旦）、
-`only`（只有／唯一的／但是）、`open`（打開／開放的／開業）、`order`（順序／命令／
-訂購）、`other`、`out`（官方標了五個詞性）、`over`、`own`（自己的／擁有）、
-`pack`（打包／一包／一群）、`part`（部分／角色／分開）、`party`（派對／政黨）、
-`pass`（通過／經過／傳遞／及格）、`past`（過去／經過）、`pick`（挑選／採摘）、
-`piece`（一片／作品）、`place`（地方／放置）、`plant`（植物／工廠／種植）、
-`play`（玩／演奏／扮演／劇本）、`please`（請／取悅）、`point`（點／要點／指）、
-`present`（現在的／禮物／出席的／呈現）、`pretty`（漂亮的／相當地）、
-`program`（節目／程式／計畫）、`public`（公共的／大眾）、`pull`、`push`、
-`put`、`power`（力量／電力／權力）、`practice`（練習／慣例／開業）、
-`price`（價格／代價）、`quiet`、`quite`、`raise`、`reach`、`read`、`ready`、
-`real`、`reason`、`relative`、`rest`（休息／其餘）、`ride`、`right`（右邊／正確的／
-權利）、`ring`（戒指／鈴聲／打電話）、`rise`。
+⚠ 這一段的多義字：`right`（右邊／正確的／權利／立刻）、`ring`（戒指／鈴聲／打電話）、
+`rise`（上升／起身／增加）、`rock`（岩石／搖動／搖滾樂）、`roll`（滾動／捲／麵包捲）、
+`room`（房間／空間）、`round`（**官方標了五個詞性**：圓的／一回合／繞著／在附近／繞行）、
+`row`（一排／划船／爭吵）、`rule`（規則／統治）、`run`（跑／經營／運轉）、
+`safe`（安全的／保險箱）、`salt`（鹽／醃／含鹽的，**三個詞性**）、`same`、
+`save`（拯救／節省／儲存）、`say`、`school`（學校／學派／魚群）、`seat`、
+`second`（第二／秒／附議）、`see`（看見／明白／會面）、`sentence`（句子／判刑）、
+`service`（服務／禮拜／維修）、`set`（放置／設定／一組／固定的）、`shake`、
+`share`（分享／股份）、`sharp`（銳利的／急劇的／整點）、`sheet`（床單／一張紙）、
+`ship`（船／運送）、`short`（短的／缺乏的）、`show`（顯示／表演／節目）、
+`side`、`sign`（標誌／跡象／簽名）、`since`（自從／因為）、`single`（單一的／單身的）、
+`sink`（水槽／下沉）、`sound`（聲音／聽起來／健全的）、`space`（空間／太空）、
+`special`、`speed`、`spell`（拼字／一段時間）、`spend`。
 
 第 1 級做完之後：第 3 級（缺 386，多是冷僻具體名詞）→ 第 6 級（缺 1023，完全未動）。
 
@@ -249,8 +250,14 @@ post-1990 那種是構詞前綴而非副詞）。
 
 `w39`（第 1 級 L–N）新增的：`light` adv.（朗文沒有獨立副詞條目，只有 travel light
 這個片語）、`machine` v.（用機器加工，是工業術語）。
-**整個字跳過的**：`nope`（＝no 的口語）、`mister`（就是 Mr. 的口語稱呼），兩個都沒有
-獨立的學習價值。
+
+`w40`（第 1 級 O–R）新增的：`out` 只收 adv.——prep. 是美式口語（look out the
+window，英式教學視為錯誤）、adj. 朗文只在商業詞典有、n.（藉口／棒球出局）罕用、
+v. 是「揭露某人是同志」不適合放進高中生字庫；`people` v.（只有被動的 be peopled
+by，文學用法）、`photo` v.（口語，標準用法是 photograph）、`pig` v.（pig out 是
+片語，動詞原形不單用）。
+**整個字跳過的**：`nope`（＝no 的口語）、`mister`（就是 Mr. 的口語稱呼）、
+`ok`（與 `okay` 同一個字，只是拼法不同，已收 `okay` 的四個詞性）。
 
 以上都已同步寫進 `check.py` 的 `SKIP_POS`，驗收不會再報這些缺漏。
 

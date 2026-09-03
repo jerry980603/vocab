@@ -23,6 +23,16 @@ TERM = "`);"
 
 # CLAUDE.md 記錄的「刻意不收」，這裡要同步
 SKIP_POS = {
+    # w40（第 1 級 O–R）刻意不收的詞性：
+    # out 只收副詞。prep. 是美式口語（look out the window，英式教學視為錯誤）；
+    # adj. 朗文只在商業詞典有；n.（藉口／棒球出局）罕用；v. 是「揭露某人是同志」。
+    "out": {"prep.", "adj.", "n.", "v."},
+    # people v. 只有被動的 be peopled by，屬文學用法
+    "people": {"v."},
+    # photo v. 是口語，標準用法是 photograph
+    "photo": {"v."},
+    # pig v.（pig out 大吃）是口語片語，動詞原形不單用
+    "pig": {"v."},
     # w39（第 1 級 L–N）刻意不收的詞性：
     # light adv.（朗文沒有獨立副詞條目，只有 travel light 這個片語，學測不考）
     "light": {"adv."},
