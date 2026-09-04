@@ -309,6 +309,29 @@ the whys and wherefores 這種並列說法裡）。
 7. 中文釋義比照學測 7000 單字表的常見譯法，多個意思用全形分號 `；` 隔開。
 8. 內容裡不要出現 `|` 這個符號（它是欄位分隔符）。
 
+### ⚠ 撞題：兩個字不可以共用同一句同一個中譯
+
+寫例句時**不要照抄別的字的句子再換掉那個字**。同義詞尤其危險：
+
+    It took great {{courage}} to admit the mistake in front of everyone.
+    It took great {{bravery}} to admit the mistake in front of everyone.
+
+這兩題長得一模一樣、中譯一模一樣，使用者填 courage 或 bravery 都對，
+系統卻只認一個——等於**填出正確英文還被判錯**，那個字還會被丟進錯題本。
+
+救得回來的情況：練習畫面的底線會顯示答案的**字母數**
+（`renderCard()` 裡的 `"_".repeat(ans.length)`），
+所以 `trash`(5) 與 `garbage`(7) 分得出來。字母數也一樣就完全無解。
+
+`check.py` 的「F 撞題」會擋：**骨架相似 ≥0.97、中譯相似 ≥0.95、答案字母數相同**。
+門檻抓得嚴是故意的——中譯差一兩個字通常正好差在答案上
+（豬肉／牛肉、東半部／西半部），那種中文提示分得出來，不該擋。
+
+2026/09 一次修掉 15 句：courage/bravery、sort/kind、supper/dinner、
+server/waiter、nearly/almost、got/grew/became、but/except、garbage/trash、
+countryside/country、dull/boring、flat/apartment、likelihood/chance、
+marriage/wedding。
+
 ### ⚠ 每做完一批，一定要跑這三項檢查（使用者明確要求）
 
 **1. 有沒有漏掉易考的多義字？**

@@ -84,7 +84,7 @@ addWords(`
 =conj.|但是
 .He tried hard for years, {{but}} the results never really improved.|他努力了多年，成果卻始終沒有真正改善。
 =prep.|除了
-.Everyone {{but}} the youngest child walked the whole way home.|除了最小的孩子，每個人都走完了回家的路。
+.Nobody {{but}} the caretaker has a key to the back gate.|除了管理員，沒有人有後門的鑰匙。
 
 @butter|1
 =n.|奶油
@@ -263,7 +263,7 @@ addWords(`
 =n.|機會
 .This may be your last {{chance}} to see the old building.|這可能是你看到那棟老建築的最後機會。
 =n.|可能性
-.There is little {{chance}} of rain before the end of the week.|本週結束前下雨的可能性很小。
+.There is a good {{chance}} that the flight will leave on time.|這班飛機準時起飛的機會很大。
 =v.|冒險一試
 .He decided to {{chance}} the shorter path through the dark woods.|他決定冒險走那條穿過黑暗樹林的捷徑。
 
@@ -531,7 +531,7 @@ addWords(`
 =n.|國家
 .The whole {{country}} has changed enormously since she left it.|自她離開後，這個國家有了巨大改變。
 =n.|鄉間
-.They moved to the {{country}} to escape the noise of the city.|他們搬到鄉間，逃離城市的喧囂。
+.They spent the whole summer in the {{country}}, far from any traffic.|他們整個夏天都待在鄉間，遠離所有車流。
 
 @course|1
 =n.|課程
@@ -712,7 +712,7 @@ addWords(`
 @dinner|1
 =n.|晚餐；正餐
 .They eat {{dinner}} together at seven almost every single evening.|他們幾乎每晚七點都一起吃晚餐。
-.She invited us to stay for {{dinner}} after the long walk.|走了那麼久之後，她邀我們留下吃晚餐。
+.They eat {{dinner}} together every evening, however busy the day has been.|不管一天多忙，他們每天晚上都一起吃晚餐。
 
 @dirty|1
 =adj.|髒的

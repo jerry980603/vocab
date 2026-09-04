@@ -81,7 +81,7 @@ addWords(`
 =v.|生長；種植
 .These plants {{grow}} well even in fairly poor dry soil.|這些植物即使在相當貧瘠乾燥的土壤也長得好。
 =v.|變得
-.The weather {{grew}} much colder during the second half of November.|十一月下半月天氣冷了許多。
+.The crowd {{grew}} steadily until the square could not hold anyone else.|人群持續增加，直到廣場再也擠不下任何人。
 
 @guess|1
 =v.|猜測
@@ -603,7 +603,7 @@ addWords(`
 =adj.|親切的
 .She was extremely {{kind}} to every new student that year.|那年她對每位新生都極為親切。
 =n.|種類
-.What {{kind}} of music do you usually listen to at home?|你在家通常聽哪一類的音樂？
+.This {{kind}} of bird builds its nest only in very old trees.|這種鳥只在非常老的樹上築巢。
 
 @king|1
 =n.|國王

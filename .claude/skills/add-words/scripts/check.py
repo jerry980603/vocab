@@ -14,7 +14,7 @@
 
 離開碼 0 = 全部通過；1 = 有問題要修。
 """
-import io, os, re, sys, glob
+import io, os, re, sys, glob, difflib
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
@@ -316,6 +316,50 @@ def main():
         elif not is_phrase and key not in off and lv != 0:
             fail("C 詞性覆蓋",
                  "%s 不在官方詞彙表內。刻意要收的話分級標成 |0，否則換一個字。" % w)
+
+    # F 撞題：兩個不同的字共用幾乎一樣的句子與中譯。
+    #   那種題目使用者填出正確的英文也會被判錯——挖空的底線會顯示答案的字母數，
+    #   所以字母數不同時還救得回來，字母數也一樣就完全無解。
+    #   （踩過一批：courage/bravery、sort/kind、supper/dinner、server/waiter、
+    #    nearly/almost 都共用同一句同一個中譯。）
+    pool = []
+    for name, w, lv, senses in entries:
+        for pos, zh, exs in senses:
+            for en, cn in exs:
+                m = re.search(r"\{\{(.+?)\}\}", en)
+                if m:
+                    pool.append((name, w, m.group(1),
+                                 re.sub(r"\{\{.+?\}\}", "@", en), en, cn))
+    bucket = {}
+    for i, e in enumerate(pool):
+        k = tuple(re.findall(r"[A-Za-z]+", e[3])[:2])
+        bucket.setdefault(k, []).append(i)
+    reported = set()
+    for k, idxs in bucket.items():
+        for a in range(len(idxs)):
+            for b in range(a + 1, len(idxs)):
+                i, j = idxs[a], idxs[b]
+                if pool[i][1] == pool[j][1]:
+                    continue
+                if only is not None and only not in (pool[i][0], pool[j][0]):
+                    continue
+                # 門檻抓得嚴一點：句子骨架幾乎一字不差、中譯也幾乎一字不差，
+                # 才算撞題。中譯差一兩個字通常正好差在答案上（豬肉／牛肉、
+                # 東半部／西半部），那種中文提示分得出來，不該擋。
+                if difflib.SequenceMatcher(None, pool[i][3], pool[j][3]).ratio() < 0.97:
+                    continue
+                if difflib.SequenceMatcher(None, pool[i][5], pool[j][5]).ratio() < 0.95:
+                    continue
+                if len(pool[i][2].replace(" ", "")) != len(pool[j][2].replace(" ", "")):
+                    continue      # 字母數不同，底線長度分得出來
+                key = tuple(sorted([pool[i][4], pool[j][4]]))
+                if key in reported:
+                    continue
+                reported.add(key)
+                fail("F 撞題",
+                     "%s 與 %s 共用幾乎相同的句子與中譯，答案字母數也一樣，"
+                     "兩個都填得對：%s ／ %s"
+                     % (pool[i][1], pool[j][1], pool[i][4], pool[j][4]))
 
     words = [e for e in entries if " " not in e[1]]
     print("詞條 %d（單字 %d、片語 %d），義項 %d，例句 %d"

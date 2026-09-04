@@ -154,8 +154,8 @@ addWords(`
 
 @almost|1
 =adv.|幾乎
-.He has worked at the same shop for {{almost}} thirty years.|他在同一家店工作了將近三十年。
-.She {{almost}} missed the train because of the heavy traffic.|因為交通壅塞，她差點錯過火車。
+.The repair will cost {{almost}} as much as a brand new machine.|這次維修的費用幾乎跟買一台全新機器一樣多。
+.She {{almost}} dropped the tray when the door slammed behind her.|門在她身後砰地關上時，她差點摔了托盤。
 
 @along|1
 =prep.|沿著
@@ -245,7 +245,7 @@ addWords(`
 
 @apartment|1
 =n.|公寓
-.They rented a small {{apartment}} above a bakery near the station.|他們在車站附近一家麵包店樓上租了間小公寓。
+.Their {{apartment}} on the fifth floor has a view of the harbor.|他們五樓的公寓看得到港口。
 .The {{apartment}} has two bedrooms and a view of the harbor.|這間公寓有兩間臥室，還看得見港口。
 
 @appear|1
@@ -630,7 +630,7 @@ addWords(`
 
 @boring|1
 =adj.|令人無聊的
-.The lecture was so {{boring}} that half the class fell asleep.|那場演講無聊到半數學生都睡著了。
+.The long journey was {{boring}} until somebody started telling ghost stories.|漫長的旅程很無聊，直到有人開始講鬼故事。
 .She finds the same journey {{boring}} after doing it daily.|每天走同樣的路，她覺得很無聊。
 
 @born|1

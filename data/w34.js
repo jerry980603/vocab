@@ -106,7 +106,7 @@ addWords(`
 
 @trash|2
 =n.|垃圾
-.The {{trash}} is collected early every Tuesday and Friday morning.|垃圾在每週二和週五清晨收運。
+.She emptied the {{trash}} into the large bin behind the restaurant.|她把垃圾倒進餐廳後面的大垃圾桶裡。
 =v.|丟棄；破壞
 .He {{trashed}} the whole first draft and started writing again.|他把整份草稿丟掉，重新開始寫。
 
@@ -306,7 +306,7 @@ addWords(`
 
 @waiter|2
 =n.|服務生
-.The {{waiter}} brought our drinks before we had finished ordering.|我們還沒點完餐，服務生就送來了飲料。
+.The {{waiter}} recommended the fish because the kitchen had just received it.|服務生推薦了魚，因為廚房剛進貨。
 .A young {{waiter}} explained every dish on the long menu.|一位年輕服務生說明了長菜單上的每一道菜。
 
 @waitress|2
@@ -337,7 +337,7 @@ addWords(`
 
 @wedding|2
 =n.|婚禮
-.The {{wedding}} took place in a small church beside the sea.|婚禮在海邊一座小教堂舉行。
+.She wore her grandmother's ring at the {{wedding}} last September.|去年九月的婚禮上她戴了祖母的戒指。
 .She wore her mother's dress to her own {{wedding}} last June.|去年六月她穿著母親的禮服參加自己的婚禮。
 
 @weekday|2

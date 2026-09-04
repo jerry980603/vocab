@@ -52,7 +52,7 @@ addWords(`
 @bravery|3
 =n.|勇敢；英勇
 .The firefighter received a medal for his {{bravery}} during the rescue.|那名消防員因救援時的英勇表現獲頒獎章。
-.It took great {{bravery}} to admit the mistake in front of everyone.|要在眾人面前承認錯誤需要極大的勇氣。
+.The whole village praised her {{bravery}} after she pulled the child out.|她把孩子拉出來之後，全村的人都稱讚她的英勇。
 
 @breath|3
 =n.|呼吸；一口氣

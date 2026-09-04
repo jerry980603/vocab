@@ -674,7 +674,7 @@ addWords(`
 =v.|得到
 .She {{got}} a letter from her old teacher that same morning.|那天早上她收到以前老師寄來的一封信。
 =v.|變得
-.The weather {{got}} much colder during the second half of November.|十一月下半月天氣冷了許多。
+.It {{got}} dark much earlier than we expected on the mountain path.|山路上天黑得比我們預期的早得多。
 =v.|抵達
 .They {{got}} to the station just as the train was leaving.|他們抵達車站時，火車正要開走。
 
