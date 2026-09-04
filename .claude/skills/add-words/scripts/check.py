@@ -246,8 +246,20 @@ def main():
                 fail("B 完整性", "%s 的「%s」沒有例句" % (w, zh))
             for en, cn in exs:
                 n_ex += 1
-                if not re.search(r"\{\{.+?\}\}", en):
+                blanks = re.findall(r"\{\{(.+?)\}\}", en)
+                if not blanks:
                     fail("B 完整性", "%s 的例句沒有挖空：%s" % (w, en))
+                # 一句只能有一個挖空：app.js 的 splitEx() 只處理第一個，
+                # 第二個會原樣印出「{{字}}」在畫面上。
+                if len(blanks) > 1:
+                    fail("B 完整性",
+                         "%s 的例句有 %d 個挖空（只能一個）：%s" % (w, len(blanks), en))
+                # 答案不可以在同一句裡沒挖空地又出現一次——那等於把答案送給作答者。
+                if blanks:
+                    bare = re.sub(r"\{\{.+?\}\}", " \x00 ", en)
+                    if re.search(r"\b" + re.escape(blanks[0]) + r"\b", bare, re.I):
+                        fail("B 完整性",
+                             "%s 的答案在同一句裡又出現一次（洩題）：%s" % (w, en))
                 if not cn:
                     fail("B 完整性", "%s 的例句沒有中譯：%s" % (w, en))
                 # D 句長。舊批次的短句是已知待改善項目，不擋新批次的驗收，

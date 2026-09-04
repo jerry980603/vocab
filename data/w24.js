@@ -241,7 +241,7 @@ addWords(`
 
 @partly|5
 =adv.|部分地；在某種程度上
-.The delay was {{partly}} caused by heavy rain and partly by poor planning.|這次延誤部分是因為大雨，部分是因為規劃不佳。
+.Her success was {{partly}} due to luck, but mostly to years of practice.|她的成功部分靠運氣，但主要來自多年的練習。
 .She agreed with him, though only {{partly}}, and asked several questions.|她同意他的看法，但只是部分同意，並提出幾個問題。
 
 @passionate|5

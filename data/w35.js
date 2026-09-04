@@ -296,7 +296,7 @@ addWords(`
 =prep.|作為；當作
 .He worked {{as}} a village teacher for almost twenty years.|他當了將近二十年的老師。
 =adv.|同樣地（as...as）
-.This box is almost {{as}} heavy as the one beside it.|這個箱子幾乎和旁邊那個一樣重。
+.The new film was not so exciting {{as}} the novel it was based on.|那部新電影不如它所改編的小說精彩。
 
 @ask|1
 =v.|詢問

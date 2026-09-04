@@ -563,7 +563,7 @@ addWords(`
 
 @foreign|1
 =adj.|外國的
-.She speaks three {{foreign}} languages without any obvious foreign accent.|她說三種外語都沒有明顯的口音。
+.She speaks three {{foreign}} languages and reads two others quite fluently.|她會說三種外語，另外兩種也讀得相當流利。
 .The shop sells {{foreign}} newspapers that arrive two days late.|這家店賣晚兩天到貨的外國報紙。
 
 @foreigner|1

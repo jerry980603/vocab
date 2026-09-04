@@ -88,7 +88,7 @@ addWords(`
 
 @grammar|4
 =n.|文法；語法
-.Chinese {{grammar}} is very different from the {{grammar}} of European languages.|中文的文法和歐洲語言的文法非常不同。
+.Chinese {{grammar}} works in a very different way from most European languages.|中文的文法運作方式和大多數歐洲語言非常不同。
 .She checks the {{grammar}} of every sentence before handing in her essay.|她在交出作文前會檢查每個句子的文法。
 
 @gratitude|4
