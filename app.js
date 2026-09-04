@@ -931,6 +931,17 @@ function submit(gaveUp) {
          跳三格也試過：時間再省 10%，但考試當天掉到 94.2%，不划算。 */
       var jump = (it.seen === 1 && it.wrong === 0) ? 5 : 2;
       it.box = Math.min(it.box + jump, MAXBOX);
+    } else {
+      /* 用了字母提示：只升一格，不走上面的大跳。
+
+         原本這裡是「完全不升級」，但那有個很嚴重的副作用：
+         box 停在 0 的話，下面的 INT[0] 是 0，這個字會「立刻又到期」——
+         於是它永遠停在熟練度 0、每一輪重新排隊都再出現一次，
+         而且一直算在「今天的進度」裡，數字永遠降不下去。
+
+         升一格相當於 FSRS 的 Hard：承認你確實想起來了，但只給最小的進展
+         （0→10 分鐘、1→1 天、2→4 天），答錯照樣退兩格。 */
+      it.box = Math.min(it.box + 1, MAXBOX);
     }
     /* 答對一次就移出錯題本。原本要連續兩次，但那會讓錯題本一直積著，
        而且同一個字在一般練習答對了卻還掛在錯題本，看起來像壞掉。 */
@@ -2271,6 +2282,30 @@ document.addEventListener("keydown", function (e) {
    配合這次的跳格調整，每天 70 個新字義約等於 378 題、89 分鐘，
    1～5 級大約在 2026/12/04 學完，留 49 天鞏固期。
    ⚠ 這段是一次性的，等使用者確認過就可以整段刪掉。 */
+/* 一次性修復：把之前卡在「熟練度 0 又立刻到期」的字撈回來。
+
+   成因見 submit() 裡的註解——用字母提示答對時 box 不動，
+   而 INT[0] 是 0，所以那些字每一輪都會再出現、永遠停在 0 級。
+   條件放得很保守：只動「答對過至少一次、box 仍是 0」的字，
+   把它們推到第一格（10 分鐘後），其餘進度完全不碰。 */
+function fixStuckBox0() {
+  if (S.fixBox0) return;
+  S.fixBox0 = 1;
+  var n = 0;
+  Object.keys(S.items).forEach(function (k) {
+    var it = S.items[k];
+    if (it.box === 0 && (it.right || 0) > 0) {
+      it.box = 1;
+      it.due = Date.now() + INT[1];
+      n++;
+    }
+  });
+  save();
+  if (n) setTimeout(function () {
+    toast("已修復 " + n + " 個卡在熟練度 0 的字");
+  }, 800);
+}
+
 function applyPlan2608() {
   if (S.plan2608) return;
   S.plan2608 = 1;
@@ -2282,6 +2317,7 @@ function applyPlan2608() {
   save();
 }
 applyPlan2608();
+fixStuckBox0();
 
 /* 先把今天的功課排好，再畫畫面。順序反過來的話，
    標題列的「待複習」會少算掉剛自動載入的那批新字。 */

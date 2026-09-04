@@ -118,7 +118,7 @@ var SYNC = (function () {
     /* 純量設定（每日題數、考試日期…）：取最後修改時間較新的那份 */
     var newer = (a.mtime || 0) >= (b.mtime || 0) ? a : b;
     ["perDay", "examDate", "learnEndDate", "mixLevels", "finalReview",
-      "autoLoad", "scope", "plan2608"].forEach(function (k) {
+      "autoLoad", "scope", "plan2608", "fixBox0"].forEach(function (k) {
       if (newer[k] !== undefined) out[k] = newer[k];
     });
     out.mtime = Math.max(a.mtime || 0, b.mtime || 0);
