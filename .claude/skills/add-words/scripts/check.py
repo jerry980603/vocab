@@ -23,6 +23,16 @@ TERM = "`);"
 
 # CLAUDE.md 記錄的「刻意不收」，這裡要同步
 SKIP_POS = {
+    # w42／w43（第 1 級 S–Z 收尾）刻意不收的詞性：
+    # 這幾個動詞只活在一個片語或反身用法裡，動詞原形不單用
+    "sun": {"v."},          # sun yourself（曬太陽）
+    "towel": {"v."},        # towel yourself dry，罕用
+    "weekend": {"v."},      # 度週末，英式且罕用
+    "while": {"v."},        # 只有 while away（消磨時間）
+    "without": {"adv."},    # go/do without 是片語，副詞單用罕見
+    # 朗文沒有這兩個名詞條目，只出現在並列的說法裡
+    "where": {"n."},        # the where and the when
+    "why": {"n."},          # the whys and wherefores，古語式
     # w41（第 1 級 R–S）刻意不收的詞性：
     # size v. 只有 size up（打量、評估）這個片語，動詞原形不單用
     "size": {"v."},

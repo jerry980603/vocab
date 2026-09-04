@@ -13,7 +13,7 @@
 
 ### 字庫進度（每寫完一批就更新這一列）
 
-**已編好釋義與例句：4458 / 6114（7329 個字義）**
+**已編好釋義與例句：4624 / 6114（7624 個字義）**
 
 - `w1`～`w5`：440 字（原始批次，涵蓋 1～5 級）
 - `w6`：47 字（第 3 級，動詞為主）
@@ -52,35 +52,27 @@
 - `w39`：117 字（第 1 級 L–N，`least` 到 `nurse` 全收）
 - `w40`：120 字（第 1 級 O–R，`of` 到 `rich`，**突破 70%**）
 - `w41`：121 字（第 1 級 R–S，`ride` 到 `strong`）
+- `w42`：77 字（第 1 級 S–T，`student` 到 `touch`）
+- `w43`：89 字（第 1 級 T–Z，`towel` 到 `zoo`，**第 1 級完結 1010/1014**）
 - `p1`：52 個片語
 
-**下一批要做**：**第 1 級最後一批**（還缺 170 字，扣掉刻意跳過的
-`mister`／`nope`／`ok` 就是 **167 字**，一批做完就收尾）。`w41` 收在 `strong`，
-下一批從 **`student` 接下去做 S–Z**：
+**下一批要做**：**第 1、2、5 級都已完結**，1～5 級只剩下面這些：
 
-`student`、`study`、`towel`、`town`、`toy`、`traffic`、`train`、`treatment`、
-`tree`、`trip`、`trouble`、`truck`、`try`、`turn`、`tv`、`twice`、`type`、`uncle`、
-`under`、`understand`、`uniform`、`until`、`up`、`use`、`useful`、`usually`、
-`vegetable`、`very`、`video`、`violin`、`visit`、`visitor`、`voice`、`wait`、`wake`、
-`walk`、`wall`、`want`、`warm`、`watch`、`water`、`wave`、`way`、`weak`、`wear`、
-`weather`、`week`、`weekend`、`welcome`、`well`、`west`、`wet`、`what`、`when`、
-`where`、`whether`、`which`、`while`、`white`、`who`、`whose`、`why`、`wide`、
-`wife`、`will`、`win`、`wind`、`window`、`wise`、`wish`、`with`、`without`、
-`woman`、`wonderful`、`word`、`work`、`worker`、`world`、`worry`、`write`、
-`writer`、`wrong`、`yard`、`yeah`、`year`、`yellow`、`yes`、`yesterday`、`yet`、
-`young`、`zero`、`zoo`。
+| 分級 | 還缺 | 性質 |
+|---|---|---|
+| 第 3 級 | 386 字 | 幾乎全是冷僻具體名詞（kangaroo、spaghetti、doughnut、lollipop、zipper 這類） |
+| 第 4 級 | 78 字 | 同上（aquarium、broom、lobster、pasta、raisin 這類） |
+| 第 5 級 | 1 字 | `ass`，刻意不收（見下面） |
+| 第 1 級 | 4 字 | `mister`／`nope`／`ok`／`yeah`，刻意不收（口語變體） |
 
-⚠ 這一批全是最高頻的功能詞，官方詞性標得很雜，**務必逐一查朗文**：
-`up`（**五個詞性** adv./prep./adj./v./n.）、`wrong`（adj./adv./n./v.）、
-`where`（conj./adv./pron./n.）、`well`（adv./adj./n.，n. 是「井」）、
-`while`（conj./n./v.，v. 是 while away 消磨）、`will`（aux./n.，n. 是意志／遺囑）、
-`video`（n./v./adj.）、`welcome`（v./adj./n.）、`turn`（轉／輪到／變成）、
-`try`（嘗試／審判）、`type`（類型／打字）、`use`（使用／用途）、
-`watch`（看／手錶）、`water`（水／澆水）、`wave`（波浪／揮手）、
-`way`（路／方法）、`wear`（穿／磨損）、`weather`（天氣／安然度過）、
-`wind`（風／捲繞，兩個不同發音）、`work`（工作／作品／運作）、
-`worry`、`yellow`（v. 變黃）、`young`（n. 幼獸）、`yeah`／`yes`（n. 贊成票）。
-`traffic` v.（非法買賣）、`towel` v.、`weekend` v.、`wet` v. 這幾個要判斷收不收。
+**這 464 個字學測幾乎不會考，補不補由使用者決定。** 目標範圍是 1～5 級的話，
+字庫已經覆蓋 4624／5091 ＝ **91%**，而且剩下的都是最不值得花時間的那批。
+
+要繼續擴充的話，優先序建議是：
+1. **先回頭改善舊批次的例句品質**——`w1`～`w5` 與 `p1` 有 987 句短於 10 字，
+   情境線索不足，那是目前品質上最大的一塊缺口（見下面「已知待改善」）。
+2. 真的要衝數量再做第 3、4 級剩下的具體名詞。
+3. 第 6 級 1023 字在目標範圍外，除非使用者把「課表 → 目標範圍」切成全部 6 級。
 
 第 1 級做完之後：第 3 級（缺 386，多是冷僻具體名詞）→ 第 6 級（缺 1023，完全未動）。
 
@@ -257,6 +249,14 @@ by，文學用法）、`photo` v.（口語，標準用法是 photograph）、`pi
 片語，動詞原形不單用）。
 **整個字跳過的**：`nope`（＝no 的口語）、`mister`（就是 Mr. 的口語稱呼）、
 `ok`（與 `okay` 同一個字，只是拼法不同，已收 `okay` 的四個詞性）。
+
+`w42`／`w43`（第 1 級 S–Z 收尾）新增的：`sun` v.（只有反身的 sun yourself）、
+`towel` v.（towel yourself dry，罕用）、`weekend` v.（度週末，英式且罕用）、
+`while` v.（只有 while away 這個片語）、`without` adv.（go/do without 是片語）、
+`where` n. 與 `why` n.（朗文沒有這兩個名詞條目，只出現在 the where and the when、
+the whys and wherefores 這種並列說法裡）。
+**整個字跳過的**：`yeah`（＝yes 的口語）。第 1 級因此停在 1010／1014，
+另外三個是 `mister`／`nope`／`ok`。
 
 `w41`（第 1 級 R–S）新增的：`size` v.（只有 size up 這個片語，動詞原形不單用）、
 `small` adv.（chop it small，罕用）與 n.（the small of your back 腰部，解剖用語）、
