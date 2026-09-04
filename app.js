@@ -393,7 +393,11 @@ $("#nav").addEventListener("click", function (e) {
 
 function refreshHeader() {
   var l = S.log[today()] || { a: 0, c: 0 };
-  var d = dueItems().length;
+  /* 這裡要跟練習頁那張卡片的「今天的進度」用同一個口徑，也就是不含錯題。
+     用 dueItems() 會把錯題本的舊帳算進來，於是標題列說「待複習 70」、
+     卡片說「還有 40 題」，同一個畫面兩個數字對不起來。
+     錯題的數量在下面導覽列的紅色角標上，不必在這裡重複。 */
+  var d = normalDue().length;
   $("#daily").textContent = "今日 " + l.a + " 題・" +
     Math.round((l.ms || 0) / 60000) + " 分・待複習 " + d;
   var nb = $("#nav").querySelector('button[data-v="wrong"]');
@@ -480,7 +484,12 @@ function loadTodayNew() {
   if (picked.length) {
     S.auto = S.auto || {};
     S.auto[today()] = loadedToday() + picked.length;
-    queue = [];
+    /* 只有在沒有進行中的一輪時才清佇列。
+       正在做題的時候清掉 queue，等於整輪作廢、直接跳回起始畫面——
+       從錯題本按「重練這組」會剛好踩到（go("drill") 會先跑 ensureToday），
+       跨過午夜或在課表把每日額度調高之後回到練習頁也會。
+       新加的字本來就已經在清單裡，下一輪自然會排進去。 */
+    if (!queue.length) queue = [];
     save();
   }
   return picked.length;
@@ -532,6 +541,12 @@ function drawDrill() {
     $("#goFind").onclick = function () { go("find"); };
     return;
   }
+  if (!queue.length) { drawDrillStart(el); return; }
+  /* 答完一題之後切到別的頁再切回來時，那一題還留在佇列最前面。
+     如果照樣把 answered 重設成 false 再問一次，同一次作答會被算兩次：
+     題數 +2、熟練度連跳兩次（實測 box 從 5 直接變成 7＝120 天）。
+     已經答過的就直接讓它出列，從下一題接著做。 */
+  if (answered && qCur === queue[0]) queue.shift();
   if (!queue.length) { drawDrillStart(el); return; }
   qCur = queue[0]; answered = false; hinted = 0;
   renderCard();
