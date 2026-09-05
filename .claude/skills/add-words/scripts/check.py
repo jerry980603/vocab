@@ -131,6 +131,13 @@ SKIP_POS = {
     "nowhere": {"pron."}, "salmon": {"adj."},
     # nutrient adj. 只當名詞修飾語（nutrient solution），不是真形容詞
     "nutrient": {"adj."},
+    # w44（第 3 級 A–M）刻意不收的詞性：
+    # downtown n.（朗文只列副詞與形容詞，downtown Miami 那種是形容詞用法）
+    "downtown": {"n."},
+    # heel v.（給鞋換後跟／緊跟在後）現代英文罕用，學測只考名詞
+    "heel": {"v."},
+    # knit n.（針織衫）朗文沒有獨立名詞條目，名詞是 knitwear
+    "knit": {"n."},
     # w28（第 2 級 A–C）刻意不收的詞性：
     # absent v. 只有反身的 absent yourself from，非常正式，高中不考
     "absent": {"v."},
