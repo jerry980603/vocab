@@ -23,6 +23,13 @@ TERM = "`);"
 
 # CLAUDE.md 記錄的「刻意不收」，這裡要同步
 SKIP_POS = {
+    # w45（第 3 級 N–Z 可考字）刻意不收的詞性：
+    # parcel v. 朗文只有 parcel out／up／off 三個片語動詞，動詞原形不單用
+    "parcel": {"v."},
+    # fairy adj. 朗文沒有形容詞條目，fairy tale 是名詞當修飾語
+    "fairy": {"adj."},
+    # underlying 官方標 v.（underlie 的現在分詞），但朗文只有形容詞條目
+    "underlying": {"v."},
     # w42／w43（第 1 級 S–Z 收尾）刻意不收的詞性：
     # 這幾個動詞只活在一個片語或反身用法裡，動詞原形不單用
     "sun": {"v."},          # sun yourself（曬太陽）
