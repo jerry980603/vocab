@@ -61,7 +61,7 @@ nav button{
   padding:9px 1px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:10px;color:var(--sub);white-space:nowrap;
 }
-nav button .ic{font-size:18px;line-height:1}
+nav button .ic{width:21px;height:21px;display:block;stroke:currentColor}
 nav button.on{color:var(--accent);font-weight:600}
 nav .badge{
   position:absolute;transform:translate(16px,-4px);
@@ -75,6 +75,9 @@ nav .badge{
   display:block;width:100%;padding:14px;border-radius:11px;
   background:var(--accent);color:#fff;font-weight:600;font-size:16px;text-align:center;
 }
+/* 答題卡上的送出鈕刻意做小一號：真正要動作的是上面的輸入框，
+   一顆整寬的飽和藍按鈕會把視線從輸入框搶走。 */
+#btnGo{padding:12px;font-size:15px;border-radius:10px}
 .btn:active{opacity:.82}
 .btn.ghost{background:transparent;color:var(--sub);border:1px solid var(--line);font-weight:500}
 .btn.ok{background:var(--ok)}
@@ -109,19 +112,27 @@ h2.sec:first-child{margin-top:0}
 /* ---------- 練習卡 ---------- */
 .qmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:13px;color:var(--sub)}
 .dots{display:flex;gap:4px}
-.dots i{width:7px;height:7px;border-radius:50%;background:var(--line);display:block}
-.dots i.f{background:var(--accent)}
+.dots i{width:8px;height:8px;border-radius:50%;display:block;
+  background:transparent;border:1.5px solid var(--line)}
+.dots i.f{background:var(--accent);border-color:var(--accent)}
 .zhline{font-size:17px;font-weight:500;margin:0 0 16px;line-height:1.75}
 .enline{
-  font-size:19px;line-height:2.1;margin:0 0 18px;
+  font-size:19px;line-height:1.95;margin:0 0 16px;
   font-family:ui-rounded,"Segoe UI",-apple-system,sans-serif;
 }
 .enline .tk{border-radius:4px;padding:1px 1px;cursor:pointer}
 .enline .tk:active{background:var(--accent-soft)}
 .blank{
-  display:inline-block;min-width:96px;text-align:center;
+  display:inline-block;min-width:58px;text-align:center;white-space:nowrap;
   border-bottom:2.5px solid var(--accent);color:var(--accent);font-weight:700;
-  letter-spacing:.14em;padding:0 6px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  letter-spacing:.26em;padding:0 4px 0 8px;
+}
+/* 答案有幾個字母——這是分辨 trash(5) 與 garbage(7) 這種同義詞的唯一線索，
+   光看底線數不出來，所以直接標一個小數字。 */
+.blank .bn{
+  font-family:system-ui,sans-serif;font-style:normal;font-size:11px;font-weight:600;
+  letter-spacing:0;vertical-align:super;opacity:.55;margin-left:1px;
 }
 .blank.rev{border-color:var(--ok);color:var(--ok)}
 .hintbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;font-size:14px;color:var(--sub)}
@@ -148,11 +159,16 @@ h2.sec:first-child{margin-top:0}
   border:2px dashed var(--accent);white-space:nowrap;
 }
 #ansIn{
-  width:100%;padding:14px 16px;border-radius:11px;border:2px solid var(--line);
-  background:var(--bg);color:var(--text);font-size:18px;letter-spacing:.02em;
+  width:100%;padding:16px;border-radius:12px;border:2px solid var(--line);
+  background:var(--card);color:var(--text);font-size:21px;letter-spacing:.02em;
   outline:none;text-align:center;font-weight:600;
+  border-color:color-mix(in srgb, var(--accent) 34%, var(--line));
+  transition:border-color .12s,box-shadow .12s;
 }
-#ansIn:focus{border-color:var(--accent)}
+#ansIn::placeholder{font-size:15px;font-weight:500;color:var(--sub);letter-spacing:0}
+/* 對焦時給一圈光暈：讓「要打字的地方」比「送出」那顆藍色按鈕更搶眼，
+   原本的層級是反的——最顯眼的是按鈕，但真正要動作的是這裡。 */
+#ansIn:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
 #ansIn.ok{border-color:var(--ok);background:var(--ok-soft)}
 #ansIn.bad{border-color:var(--bad);background:var(--bad-soft)}
 .fb{margin-top:16px;padding:14px;border-radius:11px;font-size:15px}
@@ -322,13 +338,13 @@ input.tokin{
 </main>
 
 <nav id="nav">
-  <button data-v="drill" class="on"><span class="ic">✏️</span>練習</button>
-  <button data-v="plan"><span class="ic">📅</span>課表</button>
-  <button data-v="stat"><span class="ic">📊</span>紀錄</button>
-  <button data-v="find"><span class="ic">🔍</span>查單字</button>
-  <button data-v="mine"><span class="ic">📚</span>我的字</button>
-  <button data-v="wrong"><span class="ic">🃏</span>錯題本</button>
-  <button data-v="set"><span class="ic">⚙️</span>設定</button>
+  <button data-v="drill" class="on"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L20 8a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="M14 6l4 4"/></svg>練習</button>
+  <button data-v="plan"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>課表</button>
+  <button data-v="stat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>紀錄</button>
+  <button data-v="find"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.3-4.3"/></svg>查單字</button>
+  <button data-v="mine"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19v14H5.5A1.5 1.5 0 0 0 4 18.5v-14Z"/><path d="M4 18.5A1.5 1.5 0 0 1 5.5 17H19v4H5.5A1.5 1.5 0 0 1 4 19.5v-1Z"/><path d="M8 7h7"/></svg>我的字</button>
+  <button data-v="wrong"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="12" height="15" rx="1.8"/><path d="M8 3h11a1.8 1.8 0 0 1 1.8 1.8V17"/><path d="M7 12l2.6 2.6L13 10.5"/></svg>錯題本</button>
+  <button data-v="set"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.1"/><circle cx="9" cy="17" r="2.1"/></svg>設定</button>
 </nav>
 
 <div id="sheetBg"></div>

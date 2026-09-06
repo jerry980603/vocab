@@ -7,3 +7,6 @@
 
 # 注意：.claude/ 底下其他東西（skills/、launch.json）要跟著上傳，
 # 這樣換電腦或重新 clone 之後，「繼續補單字」的流程才還在。
+
+# Python 快取
+__pycache__/

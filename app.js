@@ -484,12 +484,11 @@ function loadTodayNew() {
   if (picked.length) {
     S.auto = S.auto || {};
     S.auto[today()] = loadedToday() + picked.length;
-    /* 只有在沒有進行中的一輪時才清佇列。
-       正在做題的時候清掉 queue，等於整輪作廢、直接跳回起始畫面——
-       從錯題本按「重練這組」會剛好踩到（go("drill") 會先跑 ensureToday），
-       跨過午夜或在課表把每日額度調高之後回到練習頁也會。
+    /* ⚠ 這裡「不要」動 queue。以前這行是無條件的 queue = []，
+       結果正在做題時補新字會讓整輪作廢、直接跳回起始畫面——
+       從錯題本按「重練這組」（go("drill") 會先跑 ensureToday）、
+       跨過午夜、或在課表調高每日額度之後回練習頁，都會踩到。
        新加的字本來就已經在清單裡，下一輪自然會排進去。 */
-    if (!queue.length) queue = [];
     save();
   }
   return picked.length;
@@ -610,6 +609,11 @@ function todayNewHTML() {
 function drawDrillStart(el) {
   var due = normalDue().length, wrong = wrongItems().length, all = allItems().length;
   var t = todayTask(), l = dayLog();
+  /* 「新字」與「到期複習」必須是 due 的兩個互斥子集，不然畫面會變成
+     「還有 324 題」底下寫著「新字 70 ＋ 到期複習 324」，看起來像 394 題。
+     新字加進清單時 due 就是「現在」，所以它們本來就在 due 裡面。
+     用 seen === 0（從來沒答過）來認新字，兩個數字必定加起來等於 due。 */
+  var newPend = normalDue().filter(function (i) { return !i.seen; }).length;
   var rate = l.a ? Math.round(l.c / l.a * 100) : 0;
 
   var nxt = allItems().sort(function (a, b) { return a.due - b.due; })[0];
@@ -633,9 +637,11 @@ function drawDrillStart(el) {
     "</b> 個字義・學習 <b>" + fmtDur(l.ms) + "</b>" +
     (l.a ? "・正確率 " + rate + "%" : "") + "</div>" +
     '<div class="cap" style="margin-top:10px;line-height:1.9">' +
-    "・今天的新字 <b>" + newToday() + "</b> 個字義" +
+    "・沒學過的新字 <b>" + newPend + "</b> 個字義" +
     (autoLoadOn() ? "（開 App 時已自動排好）" : "（手動模式，要自己按下面那顆）") + "<br>" +
-    "・到期要複習 <b>" + due + "</b> 個</div></div>" +
+    "・到期要複習 <b>" + (due - newPend) + "</b> 個字義<br>" +
+    '<span style="opacity:.72">兩項加起來就是上面的 ' + due + " 題，沒有重複計算。</span>" +
+    "</div></div>" +
 
     (t.left
       ? '<button class="btn" id="btnToday">開始今天的進度（' + t.left + " 題）</button>" +
@@ -732,10 +738,15 @@ function scrButtons() {
 
 function renderCard() {
   var it = qCur, sn = senseOf(it);
-  if (!sn || !sn.ex.length) { queue.shift(); drawDrill(); return; }
+  /* 這筆指到的義項已經不在字庫裡了（資料檔改過、某個 = 被刪掉）。
+     只把它 shift 掉的話，它會永遠留在 S.items——而 normalDue() 只檢查
+     單字在不在字庫、不檢查義項編號，於是它每一輪都算進「今天的進度」
+     卻永遠答不到，進度數字降不下去。連同清單一起刪掉才乾淨。 */
+  if (!sn || !sn.ex.length) { delItem(it.w, it.si); queue.shift(); drawDrill(); return; }
   var ex = sn.ex[it.seen % sn.ex.length];
   var p = splitEx(ex.en);
   var fi = formInfo(it.w, p.ans);
+  var nLet = p.ans.replace(/\s/g, "").length;
   var done = qTotal - queue.length + 1;
   var dots = "";
   for (var i = 1; i <= MAXBOX; i++) dots += "<i" + (i <= it.box ? ' class="f"' : "") + "></i>";
@@ -748,7 +759,10 @@ function renderCard() {
     '<span class="dots" title="熟練度">' + dots + "</span></div>" +
     '<p class="zhline">' + esc(ex.zh) + "</p>" +
     '<p class="enline" id="enLine">' + clickable(p.pre) +
-    '<span class="blank" id="blank">' + "_".repeat(Math.min(p.ans.replace(/\s/g, "").length, 12)) + "</span>" +
+    '<span class="blank" id="blank">' + "_".repeat(Math.min(nLet, 12)) +
+    /* 片語不標數字：那是「所有單字加起來的字母數」，看了只會誤導。
+       單字才標，它是分辨同義詞（trash 5／garbage 7）唯一的線索。 */
+    (p.ans.indexOf(" ") > -1 ? "" : '<i class="bn">' + nLet + "</i>") + "</span>" +
     clickable(p.post) + "</p>" +
     '<div class="hintbar">' +
     '<span class="posmask" id="posZh">詞性與中文（點一下顯示）<span class="kbd">Shift</span></span>' +
@@ -839,7 +853,7 @@ function alreadyKnow() {
   var it = qCur;
   it.box = MAXBOX - 1;
   it.due = Date.now() + INT[it.box];
-  it.st = 2; it.wb = false;
+  it.wb = false;
   save();
   toast(it.w + " 已跳過，" + Math.round(INT[it.box] / DAY) + " 天後才會再抽查一次");
   queue.shift(); qTotal--;
@@ -890,7 +904,9 @@ function renderScreenCard() {
     '<p class="zhline masked" id="scrZh">想不出來？點一下看中文</p>' +
     '<div class="row" style="margin-top:18px">' +
     '<button class="btn ghost" id="scrKnow">我會，跳過</button>' +
-    '<button class="btn" id="scrLearn">不會，加入練習</button></div>' +
+    '<button class="btn" id="scrLearn">不會，照課表排</button></div>' +
+    '<p style="font-size:12px;color:var(--sub);text-align:center;margin:11px 4px 0;line-height:1.7">' +
+    "「不會」的字會留在課表裡，照順序、照每天的額度排進來，<br>不會一次全部塞進今天的進度。</p>" +
     '<div style="text-align:center;margin-top:14px">' +
     '<button class="minilink" id="scrQuit">結束快篩</button></div>' +
     "</div>";
@@ -901,9 +917,15 @@ function renderScreenCard() {
   $("#scrKnow").onclick = function () {
     S.known[e.w] = 1; save(); scrQueue.shift(); renderScreenCard();
   };
+  /* 「不會」什麼都不做，就讓它留在課表裡等著被排進來。
+
+     以前這裡是 addItem()，那會立刻建立清單項目、due 設成「現在」，
+     於是快篩五百個字、按了一百次「不會」，今天的進度就從 70 題暴增到三百多題——
+     快篩本來是要「減少」負擔的動作，反而製造一次爆量。
+     這個字沒有被標進 S.known，本來就還在 planUnits() 裡，
+     照課表順序與每日額度自然會輪到它。 */
   $("#scrLearn").onclick = function () {
-    e.s.forEach(function (sn, i) { addItem(e.w, i); });
-    scrQueue.shift(); refreshHeader(); renderScreenCard();
+    scrQueue.shift(); renderScreenCard();
   };
   $("#scrQuit").onclick = function () {
     drillMode = "normal"; scrQueue = []; drawDrill();
@@ -928,7 +950,7 @@ function submit(gaveUp) {
   logAnswer(ok, it);
 
   if (ok) {
-    it.right++; it.st++;
+    it.right++;
     if (hinted === 0) {
       /* 跳幾格：第一次看到就答對（沒用提示、沒答錯過）直接跳到 30 天那一格，
          之後每答對一次跳兩格。
@@ -963,7 +985,7 @@ function submit(gaveUp) {
     it.wb = false;
     it.due = Date.now() + INT[it.box];
   } else {
-    it.wrong++; it.st = 0; it.wb = true;
+    it.wrong++; it.wb = true;
     /* 答錯退兩級，不打回原點。
        FSRS 與 Anki 的 relearning steps 都不是全歸零：全歸零會讓一個
        已經複習到 60 天間隔的字重走整條階梯，每日複習量因此暴增。
@@ -1296,12 +1318,25 @@ function phasePlan(written) {
     "<b>答錯退兩格</b>，十分鐘後重考。答錯的題最花時間（要看答案、讀例句），" +
     "所以真正省時間的方式是別讓字第一次就答錯——那是「快篩」在做的事。" +
     "</div></div>" +
-    (short > 0
+    /* 字庫缺口大的時候才提醒去補字。缺不到 5% 的時候，剩下的都是
+       kangaroo／spaghetti 那類不會考的具體名詞，這時候還叫人去補字
+       是把時間花在最沒有效益的地方——所以門檻以上才顯示警告，
+       以下改成報告現況就好。 */
+    (short > targetWords() * 0.05
       ? '<div class="plan-head" style="margin-top:12px;border-color:var(--warn)">' +
         '<div class="cap" style="line-height:1.9;color:var(--warn)">' +
         "<b>⚠ 目前的瓶頸是字庫，不是你的時間</b><br>" +
         scopeName() + " " + targetWords() + " 個字裡還有 <b>" + short + "</b> 個沒有例句，不能練。<br>" +
         "找 Claude Code 說「繼續補單字」，一次可以補一百多個。" +
+        "</div></div>"
+      : short > 0
+      ? '<div class="plan-head" style="margin-top:12px">' +
+        '<div class="cap" style="line-height:1.9">' +
+        "<b>字庫已經夠用了</b><br>" +
+        scopeName() + "裡已編好 <b>" + (targetWords() - short) + "</b> 個字（" +
+        Math.round((targetWords() - short) / targetWords() * 100) + "%）。" +
+        "剩下的 " + short + " 個幾乎都是 kangaroo、spaghetti 那類冷僻具體名詞，學測不會考，<br>" +
+        "<b>不必再補字</b>——現在的瓶頸是你每天的時間，不是內容。" +
         "</div></div>"
       : "");
 }
@@ -2287,16 +2322,6 @@ document.addEventListener("keydown", function (e) {
 
 /* ---------- 啟動 ---------- */
 
-/* 一次性套用 2026/08/31 定案的讀書計畫。
-
-   為什麼要寫在程式裡：每日額度、學完日這些設定存在使用者自己的瀏覽器
-   （localStorage）裡，改程式碼碰不到，只能靠一次性遷移寫進去。
-   S.plan2608 記住已經套用過，之後他在課表自己改的數字不會被蓋回來。
-
-   計畫的由來：目標範圍縮成官方 1～5 級 5091 字（約 8013 個字義），
-   配合這次的跳格調整，每天 70 個新字義約等於 378 題、89 分鐘，
-   1～5 級大約在 2026/12/04 學完，留 49 天鞏固期。
-   ⚠ 這段是一次性的，等使用者確認過就可以整段刪掉。 */
 /* 一次性修復：把之前卡在「熟練度 0 又立刻到期」的字撈回來。
 
    成因見 submit() 裡的註解——用字母提示答對時 box 不動，
@@ -2321,17 +2346,6 @@ function fixStuckBox0() {
   }, 800);
 }
 
-function applyPlan2608() {
-  if (S.plan2608) return;
-  S.plan2608 = 1;
-  S.perDay = 70;
-  S.learnEndDate = "2026-12-04";
-  S.autoLoad = true;
-  if (!S.examDate) S.examDate = "2027-01-22";
-  if (S.scope === undefined) S.scope = "15";
-  save();
-}
-applyPlan2608();
 fixStuckBox0();
 
 /* 先把今天的功課排好，再畫畫面。順序反過來的話，
