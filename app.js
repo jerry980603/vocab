@@ -109,11 +109,12 @@ function load() {
     if (o && o.items) {
       o.todo = o.todo || []; o.bad = o.bad || []; o.log = o.log || {};
       o.known = o.known || {};   /* 快篩標記「我已經會了」的字，不進練習清單 */
+      o.grad = o.grad || {};     /* 「太簡單」兩次確認後畢業的字義，同樣不再排 */
       o.auto = o.auto || {};     /* 每天自動載入了幾個新字 */
       return o;
     }
   } catch (e) { }
-  return { v: 1, items: {}, todo: [], bad: [], log: {}, known: {} };
+  return { v: 1, items: {}, todo: [], bad: [], log: {}, known: {}, grad: {} };
 }
 function save() {
   /* mtime 給雲端同步用：兩台裝置的純量設定（每日題數、考試日期）
@@ -144,10 +145,18 @@ var MAXBOX = INT.length - 1;
    模擬到考試日，含考前十天的總複習。首見答對率取 1~2 級 0.8、3~5 級 0.35~0.55。
    答對一題 10 秒、答錯一題 28 秒（要看答案與例句，這是實際上最貴的一塊）。
 
-   目前的跳格規則（首次對→30 天、之後每次 +2 格）算出來是 5.1~5.6 題、72~81 秒，
-   下面取中值。⚠ 改動跳格規則或階梯，一定要回來重算這兩個數，
+   2026/09/05 改了跳格規則（級數當先驗、錯誤次數當實測難度、「太簡單」兩次畢業），
+   依規定重跑模擬。⚠ 但重跑的那份模型是簡化版，重現不了原本 5.4/76 的絕對值
+   （它算出來舊規則是 4.26 題／52.7 秒）。所以**只取相對變化**套回原始基準：
+
+       新規則 / 舊規則 ＝ 題數 0.924、秒數 0.929
+       5.4 × 0.924 ＝ 4.99 → 5.0     76 × 0.929 ＝ 70.6 → 71
+
+   假設條件：第 1、2 級有七成、第 3 級三成、第 4、5 級一成的字會被按「太簡單」畢業。
+   使用者按得比這少的話，實際值會往舊的 5.4／76 靠回去。
+   ⚠ 改動跳格規則或階梯，一定要回來重算這兩個數，
    否則課表上的題數與分鐘會失真——舊的「6.6 題 × 12 秒」就低估了 20~25%。 */
-var Q_PER_UNIT = 5.4, SEC_PER_UNIT = 76;
+var Q_PER_UNIT = 5.0, SEC_PER_UNIT = 71;
 
 /* 每天學 n 個新字義，穩定之後每天要做幾題、幾分鐘（含複習與錯題） */
 function estLoad(n) {
@@ -157,10 +166,22 @@ function estLoad(n) {
 function idOf(w, si) { return w + "::" + si; }
 function hasItem(w, si) { return !!S.items[idOf(w, si)]; }
 
+/* 「已經確定會了，不用再排」的兩條路，證據強度由弱到強：
+
+   S.known[單字]      快篩：只問「會不會」，零次實際作答  → 整個字排除
+   S.grad[字義 id]    練習中連續兩次無提示答對＋兩次按「太簡單」，中間隔 30 天
+                      並且換了一句例句 → 只排除那一個字義
+
+   後者的證據比前者硬得多（快篩連一次都沒讓你拼），所以兩者同級對待。
+   ⚠ 畢業是字義層級的：bank 的「銀行」畢業不代表「河岸」也畢業。
+      用整個字當 key 會把其他義項一起丟掉，那是錯的。 */
+function isExcluded(w, si) { return !!S.known[w] || !!S.grad[idOf(w, si)]; }
+
 function addItem(w, si) {
   var id = idOf(w, si);
   if (S.items[id]) return false;
-  S.items[id] = { w: w, si: si, box: 0, due: Date.now(), seen: 0, right: 0, wrong: 0, st: 0, wb: false };
+  S.items[id] = { w: w, si: si, box: 0, due: Date.now(), seen: 0, right: 0, wrong: 0,
+                  st: 0, wb: false, wbAt: "", easy: 0 };
   /* 不管是自動載入、課表整組加入還是自己查到加的，都算「今天學的新字」 */
   var l = dayLog(); l.n = (l.n || 0) + 1;
   save();
@@ -415,20 +436,63 @@ function refreshHeader() {
    練習
    ============================================================ */
 var queue = [], qTotal = 0, qCur = null, answered = false, hinted = 0, drillMode = "normal";
+/* 這一題答對了沒有——「太簡單」按鈕只在無提示答對之後才給按 */
+var lastOK = false;
+/* 第 2 次畢業確認時偷看了中文——看了就不算「本來就會」，不給畢業 */
+var zhPeeked = false;
 
 /* 一般練習「不含」錯題本裡的字——錯題有自己獨立的一輪，
    混在一起會讓你在同一輪反覆撞同一個不會的字，很挫折也沒效率。 */
-function normalDue() { return dueItems().filter(function (i) { return !i.wb; }); }
+/* 今天的進度＝到期的字，**含今天剛答錯的**。
+
+   原本這裡是 filter(!i.wb)，也就是「一旦答錯就踢出主線」。那是個嚴重的錯誤：
+   答錯的字 10 分鐘後就到期了，卻再也不會被主線挑到，只能等你手動進錯題本。
+   Karpicke & Roediger (2008, Science) 測過這件事——答對一次後「停止測驗」
+   會讓長期保留率大幅下降，而我們等於對「最不熟的那批字」做了一樣的事。
+
+   但跨天的舊帳仍然排除：錯題本積到幾百個時混進來，今天的功課會顯示七百題，
+   看起來像不可能的任務。舊帳留在下面獨立那一段，分批清。 */
+function normalDue() {
+  var td = today();
+  return dueItems().filter(function (i) { return !i.wb || i.wbAt === td; });
+}
+/* 錯題分兩段：今天錯的記憶還新，答對一次就畢業，優先清；其餘是舊帳。 */
+function todayWrong() {
+  var td = today();
+  return allItems().filter(function (i) { return i.wb && i.wbAt === td; });
+}
+function oldWrong() {
+  var td = today();
+  return allItems().filter(function (i) { return i.wb && i.wbAt !== td; });
+}
 
 /* 錯題一次清幾題。錯題本累積幾百個的時候，「全部清」那個數字會嚇死人，
    分批才做得下去——清 20 題也是清。 */
 var WRONG_BATCH = 20;
 
+/* 出題順序的優先分數。原本是純 shuffle()，等於「難的字跟你早就會的字一樣重要」。
+
+   三個成分，由重到輕：
+     今天錯過的      +1000  最不熟、記憶還新，先修它（你要的「錯題先練」）
+     逾期比例        ×10    逾期越久掉得越多，先救
+     累積錯誤次數    ×5     FSRS 把 Difficulty 與 Lapses 當獨立狀態變數，
+                            錯得多的字本來就該被排前面、練更多次
+   最後加一點抖動，免得每天的順序完全一樣、變成背順序而不是背字。 */
+function priority(it) {
+  var span = INT[it.box] || DAY;
+  var overdue = Math.min((Date.now() - it.due) / span, 10);
+  return (it.wb ? 1000 : 0) + overdue * 10 + (it.wrong || 0) * 5 + Math.random() * 4;
+}
+function byPriority(list) {
+  return list.slice().sort(function (a, b) { return priority(b) - priority(a); });
+}
+
 function buildQueue(mode, limit) {
   drillMode = mode || "normal";
   var list;
   if (drillMode === "wrong") {
-    list = shuffle(wrongItems().slice());
+    /* 錯題本只清跨天的舊帳；今天錯的已經在主線裡了 */
+    list = byPriority(oldWrong());
     if (limit) list = list.slice(0, limit);
   }
   else if (drillMode === "extra") list = shuffle(allItems().filter(function (i) { return !i.wb; }));
@@ -436,8 +500,8 @@ function buildQueue(mode, limit) {
      錯題是另外一段，做完進度再清，而且可以分批。
      混在同一輪裡的話，錯題本積了幾百個時，今天的功課會顯示七百題，
      看起來像不可能的任務——但那其實是舊帳，不是今天的量。 */
-  else if (drillMode === "today") list = shuffle(normalDue());
-  else list = shuffle(normalDue());
+  else if (drillMode === "today") list = byPriority(normalDue());
+  else list = byPriority(normalDue());
   queue = list;
   qTotal = queue.length;
 }
@@ -469,7 +533,7 @@ function nextNewUnits(n) {
   var out = [], us = planUnits();
   for (var i = 0; i < us.length && out.length < n; i++) {
     var u = us[i];
-    if (S.known[u.w] || hasItem(u.w, u.si)) continue;
+    if (isExcluded(u.w, u.si) || hasItem(u.w, u.si)) continue;
     out.push(u);
   }
   return out;
@@ -607,13 +671,15 @@ function todayNewHTML() {
 
 /* 開始畫面：一般練習與錯題練習分開兩個入口 */
 function drawDrillStart(el) {
-  var due = normalDue().length, wrong = wrongItems().length, all = allItems().length;
+  var due = normalDue().length, all = allItems().length;
+  /* 今天錯的已經回到主線（算在 due 裡），這一段只剩跨天的舊帳 */
+  var wrongToday = todayWrong().length, wrong = oldWrong().length;
   var t = todayTask(), l = dayLog();
   /* 「新字」與「到期複習」必須是 due 的兩個互斥子集，不然畫面會變成
      「還有 324 題」底下寫著「新字 70 ＋ 到期複習 324」，看起來像 394 題。
      新字加進清單時 due 就是「現在」，所以它們本來就在 due 裡面。
      用 seen === 0（從來沒答過）來認新字，兩個數字必定加起來等於 due。 */
-  var newPend = normalDue().filter(function (i) { return !i.seen; }).length;
+  var newPend = normalDue().filter(function (i) { return !i.seen && !i.wb; }).length;
   var rate = l.a ? Math.round(l.c / l.a * 100) : 0;
 
   var nxt = allItems().sort(function (a, b) { return a.due - b.due; })[0];
@@ -639,39 +705,45 @@ function drawDrillStart(el) {
     '<div class="cap" style="margin-top:10px;line-height:1.9">' +
     "・沒學過的新字 <b>" + newPend + "</b> 個字義" +
     (autoLoadOn() ? "（開 App 時已自動排好）" : "（手動模式，要自己按下面那顆）") + "<br>" +
-    "・到期要複習 <b>" + (due - newPend) + "</b> 個字義<br>" +
-    '<span style="opacity:.72">兩項加起來就是上面的 ' + due + " 題，沒有重複計算。</span>" +
+    "・到期要複習 <b>" + (due - newPend - wrongToday) + "</b> 個字義<br>" +
+    "・今天答錯要補的 <b>" + wrongToday + "</b> 個字義<br>" +
+    '<span style="opacity:.72">三項加起來就是上面的 ' + due + " 題，沒有重複計算。</span>" +
     "</div></div>" +
 
     (t.left
       ? '<button class="btn" id="btnToday">開始今天的進度（' + t.left + " 題）</button>" +
         '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
-        "新字與到期複習洗在一起，做完就是今天該做的量。<b>錯題不算在裡面</b>，" +
-        "它在下面獨立一段。<br>中途離開沒關係，回來會接著算。</p>"
+        "新字、到期複習與<b>今天答錯的</b>洗在一起，做完就是今天該做的量。" +
+        (wrongToday ? "現在有 <b>" + wrongToday + "</b> 個是今天錯過的，會被排到最前面。" : "") +
+        "<br><b>跨天的舊錯題</b>不算在裡面，它在下面獨立一段。" +
+        "<br>中途離開沒關係，回來會接著算。</p>"
       : '<div class="empty" style="padding:20px 8px">今天該練的都練完了，下一批 <b>' +
         waitTxt + "</b> 到期。<br>" +
         '<span style="font-size:13px">還有力氣就往下清一點錯題。</span></div>') +
 
     /* 第二段：錯題。分批清，數字再大也不會變成今天的壓力。 */
-    '<h2 class="sec">錯題（進度做完再清，不用一次清完）</h2>' +
+    '<h2 class="sec">錯題</h2>' +
+    '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
+    "・<b>今天錯的 " + wrongToday + " 個</b>——記憶還新，已經排在上面的進度裡，答對一次就畢業<br>" +
+    "・<b>舊帳 " + wrong + " 個</b>——之前幾天累積下來的，用下面的按鈕分批清" +
+    "</div></div>" +
     (wrong
       ? '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
-        "錯題本裡有 <b>" + wrong + "</b> 個字義。這是<b>累積下來的舊帳，不是今天的量</b>——" +
-        "每天清一點就好，答對一次就畢業。</div></div>" +
+        "舊帳有 <b>" + wrong + "</b> 個字義。<b>這不是今天的量</b>——每天清一點就好。</div></div>" +
         (wrong > WRONG_BATCH
           ? '<button class="btn bad" id="btnWrongBatch">清 ' + WRONG_BATCH + " 題錯題</button>" +
             '<div class="row" style="margin-top:10px">' +
             '<button class="btn ghost" id="btnWrongDrill">全部清（' + wrong + " 題）</button>" +
             '<button class="btn ghost" id="goWrongBook">照 Day 分組清</button></div>'
           : '<button class="btn bad" id="btnWrongDrill">清掉錯題（' + wrong + " 題）</button>")
-      : '<div class="empty" style="padding:20px 8px">錯題本是空的 🎉</div>') +
+      : '<div class="empty" style="padding:20px 8px">沒有舊帳 🎉</div>') +
 
     /* 把清單的去向攤開來。不然你會看到「清單有 132 個字」
        但今天的進度只剩 9 題，以為字不見了。 */
     '<div class="plan-head" style="margin-top:18px"><div class="cap" style="line-height:1.9">' +
     "<b>清單裡的 " + all + " 個字義現在在哪</b><br>" +
-    "・<b>" + due + "</b> 個到期，算在今天的進度裡<br>" +
-    "・<b>" + wrong + "</b> 個在錯題本（不混進進度）<br>" +
+    "・<b>" + due + "</b> 個到期，算在今天的進度裡（含今天錯的 " + wrongToday + " 個）<br>" +
+    "・<b>" + wrong + "</b> 個是跨天的舊錯題（不混進進度）<br>" +
     "・<b>" + (all - due - wrong) + "</b> 個還沒到複習時間，最近一批 " + waitTxt +
     "</div></div>" +
 
@@ -684,7 +756,9 @@ function drawDrillStart(el) {
     '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.75">' +
     "第 1、2 級大多是國中就會的字，用完整的拼字練習去篩太浪費時間。" +
     "這裡只問你「會不會」，會的直接跳過、永遠不排進練習，" +
-    "<b>不會的才整個字加進清單</b>。已篩掉 <b>" + Object.keys(S.known).length + "</b> 個字。</p>" +
+    "<b>不會的才整個字加進清單</b>。已篩掉 <b>" + Object.keys(S.known).length + "</b> 個字" +
+    "，另外有 <b>" + Object.keys(S.grad).length + "</b> 個字義是在練習中按「太簡單」畢業的。<br>" +
+    "篩的標準是<b>「我拼得出來」</b>，不是「我看得懂」——這個 App 考的是拼字。</p>" +
     scrButtons() +
 
     '<h2 class="sec">未來七天的複習量</h2>' + loadForecast();
@@ -744,6 +818,13 @@ function renderCard() {
      卻永遠答不到，進度數字降不下去。連同清單一起刪掉才乾淨。 */
   if (!sn || !sn.ex.length) { delItem(it.w, it.si); queue.shift(); drawDrill(); return; }
   var ex = sn.ex[it.seen % sn.ex.length];
+  zhPeeked = false;
+  /* 第 2 次畢業確認：正常情況下這裡會自動換下一句例句
+     （sn.ex[it.seen % sn.ex.length]），換了句子還答得出來才算真的會。
+     但全庫有 48.8% 的義項只寫了一句，換不了——那第二次等於重考同一題。
+     這種時候改成把中文蓋起來：同一句、少一個線索，難度接近換句。
+     偷看了就不給畢業（但不影響熟練度，那跟字母提示是兩回事）。 */
+  var maskZh = it.easy === 1 && sn.ex.length < 2;
   var p = splitEx(ex.en);
   var fi = formInfo(it.w, p.ans);
   var nLet = p.ans.replace(/\s/g, "").length;
@@ -757,7 +838,9 @@ function renderCard() {
     (drillMode === "wrong" ? '<span class="lv out">錯題</span> ' : "") +
     "第 " + done + " / " + qTotal + " 題</span>" +
     '<span class="dots" title="熟練度">' + dots + "</span></div>" +
-    '<p class="zhline">' + esc(ex.zh) + "</p>" +
+    (maskZh
+      ? '<p class="zhline masked" id="zhLine">第 2 次確認：中文先蓋著。點一下可以看，但看了就不能畢業</p>'
+      : '<p class="zhline">' + esc(ex.zh) + "</p>") +
     '<p class="enline" id="enLine">' + clickable(p.pre) +
     '<span class="blank" id="blank">' + "_".repeat(Math.min(nLet, 12)) +
     /* 片語不標數字：那是「所有單字加起來的字母數」，看了只會誤導。
@@ -777,8 +860,8 @@ function renderCard() {
     '<button class="btn ghost" id="btnHint">提示</button>' +
     '<button class="btn ghost" id="btnGiveUp">不會<span class="kbd">Alt</span></button></div>' +
     '<div id="fb"></div>' +
-    '<div style="text-align:center;margin-top:14px" id="rowSkip">' +
-    '<button class="minilink" id="btnKnow">這個我早就會了，不用再排複習</button></div>' +
+    '<div style="text-align:center;margin-top:14px;display:none" id="rowSkip">' +
+    '<button class="minilink" id="btnKnow"></button></div>' +
     '<div style="text-align:center;margin-top:10px">' +
     '<button class="minilink" id="btnBad">這句怪怪的，回報給 Claude</button></div>' +
     "</div>";
@@ -786,7 +869,7 @@ function renderCard() {
   $("#btnGo").onclick = function () { submit(); };
   $("#btnHint").onclick = giveHint;
   $("#btnGiveUp").onclick = giveUp;
-  $("#btnKnow").onclick = alreadyKnow;
+  $("#btnKnow").onclick = markEasy;
   $("#btnBad").onclick = reportBad;
   $("#ansIn").addEventListener("keydown", function (e) {
     if (e.key !== "Enter" || e.isComposing) return;
@@ -798,6 +881,10 @@ function renderCard() {
     submit();
   });
   $("#posZh").onclick = function () { revealHint(sn); };
+  if ($("#zhLine")) $("#zhLine").onclick = function () {
+    zhPeeked = true;
+    this.className = "zhline"; this.textContent = ex.zh;
+  };
   $("#enLine").addEventListener("click", onTokenClick);
   refreshHeader();
 }
@@ -846,21 +933,39 @@ function giveUp() {
   submit(true);
 }
 
-/* 「我早就會了」＝把熟練度直接推到接近滿級，只留一次很久以後的抽查。
-   每天七十個字時，簡單字如果照normal排程走，會吃掉大半練習時間。 */
-function alreadyKnow() {
-  if (answered) return;
+/* 「太簡單了」——兩次確認才畢業，畢業＝永久排除，跟快篩同級。
+
+   為什麼放在作答之後：原本這顆按鈕只在作答「前」出現，等於你可以在
+   沒證明自己會的情況下把字標成會了。現在只有「無提示答對」才給按。
+
+   為什麼要兩次：一次答對有可能只是「在那一句的情境下想得起來」。
+   第二次排在 30 天後，而且 renderCard 會自動換下一句例句
+   （sn.ex[it.seen % sn.ex.length]）——隔了 30 天、換了句子還答得出來，
+   那才是「本來就會」而不是剛好記得。
+   停在兩次是因為 Rawson & Dunlosky 的資料顯示再往上加報酬遞減、
+   時間成本卻是線性上升的。
+
+   為什麼敢永久排除：快篩連一次拼字都沒讓你做就永久排除了，
+   這條路徑要你實際拼對兩次＋自己判斷兩次，證據強得多。
+   安全網在考前總複習，那裡會抽一成回來考（見 btnSprint）。 */
+function markEasy() {
+  if (!answered || !lastOK || hinted !== 0 || zhPeeked) return;
   var it = qCur;
-  it.box = MAXBOX - 1;
-  it.due = Date.now() + INT[it.box];
-  it.wb = false;
-  save();
-  toast(it.w + " 已跳過，" + Math.round(INT[it.box] / DAY) + " 天後才會再抽查一次");
-  queue.shift(); qTotal--;
+  if (!it.easy) {
+    it.easy = 1; save();
+    toast("記下了。" + Math.round(INT[it.box] / DAY) + " 天後換一句再考一次，再答對就畢業");
+    var b = $("#btnKnow");
+    if (b) { b.textContent = "已記下，30 天後再確認一次"; b.disabled = true; }
+    return;
+  }
+  /* 第二次確認：畢業。注意是「字義」層級——bank 的「銀行」畢業，
+     不代表「河岸」也畢業，用整個字當 key 會把其他義項一起丟掉。 */
+  S.grad[idOf(it.w, it.si)] = 1;
+  delItem(it.w, it.si);
+  qTotal--;
+  toast(it.w + " 已畢業，不再排進練習（考前總複習會抽考）");
   refreshHeader();
-  if (!queue.length) { drawDrill(); return; }
-  qCur = queue[0]; answered = false; hinted = 0;
-  renderCard();
+  next();
 }
 
 /* ============================================================
@@ -873,7 +978,7 @@ function screenPool(lv) {
   return BANK.filter(function (e) {
     if (e.ph || (e.lv || 9) !== lv) return false;
     if (S.known[e.w]) return false;
-    return !e.s.some(function (sn, i) { return hasItem(e.w, i); });
+    return !e.s.some(function (sn, i) { return hasItem(e.w, i) || S.grad[idOf(e.w, i)]; });
   });
 }
 
@@ -965,8 +1070,20 @@ function submit(gaveUp) {
          而考試當天的預期保留率只從 98.6% 掉到 97.1%——
          考前十天的總複習會把差距補回來，那才是真正的保護網。
 
-         跳三格也試過：時間再省 10%，但考試當天掉到 94.2%，不划算。 */
-      var jump = (it.seen === 1 && it.wrong === 0) ? 5 : 2;
+         跳三格也試過：時間再省 10%，但考試當天掉到 94.2%，不划算。
+
+         級數與錯誤次數怎麼進來：級數只當「難度的先驗」，用在第一次；
+         之後一律改用實測的錯誤次數蓋過它（FSRS 就是這樣把 Difficulty
+         當獨立狀態變數在更新的）。第 1、2 級首見就答對的字多半是本來就會，
+         跳到 60 天；第 5 級保守一點，跳到 14 天。 */
+      var jump;
+      if (it.seen === 1 && it.wrong === 0) {
+        var lv0 = (DICT[it.w.toLowerCase()] || {}).lv || 3;
+        jump = lv0 <= 2 ? 6 : (lv0 >= 5 ? 4 : 5);
+      } else {
+        /* 錯過三次以上的字改成一格一格走＝同一個字要練更多次才畢業 */
+        jump = (it.wrong || 0) >= 3 ? 1 : 2;
+      }
       it.box = Math.min(it.box + jump, MAXBOX);
     } else {
       /* 用了字母提示：只升一格，不走上面的大跳。
@@ -979,28 +1096,40 @@ function submit(gaveUp) {
          升一格相當於 FSRS 的 Hard：承認你確實想起來了，但只給最小的進展
          （0→10 分鐘、1→1 天、2→4 天），答錯照樣退兩格。 */
       it.box = Math.min(it.box + 1, MAXBOX);
+      it.easy = 0;   /* 用了提示就不算「本來就會」，畢業進度歸零 */
     }
     /* 答對一次就移出錯題本。原本要連續兩次，但那會讓錯題本一直積著，
        而且同一個字在一般練習答對了卻還掛在錯題本，看起來像壞掉。 */
-    it.wb = false;
+    it.wb = false; it.wbAt = "";
     it.due = Date.now() + INT[it.box];
   } else {
-    it.wrong++; it.wb = true;
+    it.wrong++; it.wb = true; it.wbAt = today();
+    it.easy = 0;
     /* 答錯退兩級，不打回原點。
        FSRS 與 Anki 的 relearning steps 都不是全歸零：全歸零會讓一個
        已經複習到 60 天間隔的字重走整條階梯，每日複習量因此暴增。
        退兩級 ＋ 10 分鐘後重考，等於「這次答對就回到大約一半的間隔」。 */
-    it.box = Math.max(0, it.box - 2);
+    it.box = Math.max(0, it.box - ((it.wrong >= 5) ? 3 : 2));
     it.due = Date.now() + INT[1];
   }
   save();
 
+  lastOK = ok;
   $("#ansIn").className = ok ? "ok" : "bad";
   $("#ansIn").blur();
   $("#blank").textContent = ans;
   $("#blank").className = "blank rev";
   $("#rowAid").style.display = "none";
-  $("#rowSkip").style.display = "none";
+  /* 只有「無提示答對」才給按「太簡單」——沒證明自己會就不能跳過 */
+  if (ok && hinted === 0 && !zhPeeked) {
+    $("#rowSkip").style.display = "";
+    $("#btnKnow").disabled = false;
+    $("#btnKnow").textContent = it.easy
+      ? "太簡單了，直接畢業（第 2 次確認）"
+      : "太簡單了，不用一直排（第 1 次確認）";
+  } else {
+    $("#rowSkip").style.display = "none";
+  }
   $("#btnGo").textContent = queue.length > 1 ? "下一題" : "完成";
   $("#btnGo").className = "btn " + (ok ? "ok" : "");
 
@@ -1463,15 +1592,41 @@ function drawPlan() {
 function bindSprint() {
   if ($("#btnSprint")) {
     $("#btnSprint").onclick = function () {
+      /* 安全網：快篩與「太簡單」畢業的字永久不排，這裡抽一成回來考一次。
+         真正的價值不是抓回那幾個字，而是**量出你的自我評估準不準**——
+         抽考正確率 95%＋ 代表篩得準；只有 70% 代表篩過頭了，該放更多回來。 */
+      var pool = [];
+      Object.keys(S.grad || {}).forEach(function (id) {
+        var c = id.lastIndexOf("::");
+        pool.push({ w: id.slice(0, c), si: +id.slice(c + 2) });
+      });
+      Object.keys(S.known || {}).forEach(function (w) {
+        var e = DICT[w.toLowerCase()];
+        if (e) e.s.forEach(function (sn, i) { pool.push({ w: e.w, si: i }); });
+      });
+      pool = pool.filter(function (u) { return !hasItem(u.w, u.si) && senseOf(u); });
+      var sample = shuffle(pool).slice(0, Math.round(pool.length * 0.1));
+
       var items = allItems();
-      if (!items.length) return toast("練習清單是空的");
+      if (!items.length && !sample.length) return toast("練習清單是空的");
       var left = Math.max(1, Math.ceil(
         (new Date(S.examDate + "T00:00:00").getTime() - Date.now()) / DAY));
       var span = Math.min(10, left);
-      if (!confirm("這會把清單裡全部 " + items.length +
-        " 個字重新排進未來 " + span + " 天，每天平均 " +
-        Math.ceil(items.length / span) + " 個。熟練度不會被清掉。要繼續嗎？")) return;
-      shuffle(items).forEach(function (it, i) {
+      var total = items.length + sample.length;
+      if (!confirm("這會把清單裡全部 " + items.length + " 個字義，加上從已排除的 " +
+        pool.length + " 個裡抽出的 " + sample.length +
+        " 個（一成，用來檢查你篩得準不準），重新排進未來 " + span +
+        " 天，每天平均 " + Math.ceil(total / span) +
+        " 個。熟練度不會被清掉。要繼續嗎？")) return;
+      /* 抽樣的字直接建 item，不走 addItem——那會把它們算進「今天學了幾個新字」，
+         害紀錄頁的新字速度虛胖。 */
+      sample.forEach(function (u) {
+        S.items[idOf(u.w, u.si)] = {
+          w: u.w, si: u.si, box: 4, due: Date.now(), seen: 0,
+          right: 0, wrong: 0, st: 0, wb: false, wbAt: "", easy: 0
+        };
+      });
+      shuffle(allItems()).forEach(function (it, i) {
         it.due = Date.now() + (i % span) * DAY;
       });
       save(); queue = [];
@@ -1627,6 +1782,14 @@ function paceInfo() {
   Object.keys(S.known || {}).forEach(function (w) {
     var k = w.toLowerCase(), e = DICT[k];
     if (!words[k]) { words[k] = 1; unitsDone += e ? e.s.length : 1; }
+  });
+  /* 練習中按「太簡單」畢業的字義同理——它已經不會再排，算是處理掉了。
+     漏掉這段的話剩餘量會被高估，完成日看起來比實際晚。 */
+  Object.keys(S.grad || {}).forEach(function (id) {
+    var c = id.lastIndexOf("::"), w = id.slice(0, c), k = w.toLowerCase();
+    if (S.known[w]) return;                    /* 整個字已被快篩算過 */
+    if (S.items[id]) return;                   /* 考前抽考把它加回清單了，its 已經算過 */
+    unitsDone++; words[k] = 1;
   });
   var wordsDone = Object.keys(words).length;
 

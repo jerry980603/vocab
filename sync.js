@@ -44,6 +44,7 @@ var SYNC = (function () {
       bad: [],
       log: {},
       known: {},
+      grad: {},
       auto: {}
     };
 
@@ -106,6 +107,11 @@ var SYNC = (function () {
     });
     [a.known || {}, b.known || {}].forEach(function (src) {
       Object.keys(src).forEach(function (w) { out.known[w] = 1; });
+    });
+    /* grad（「太簡單」畢業的字義）同樣取聯集。
+       ⚠ 少了這段，同步一次就會把畢業紀錄整批抹掉，那些字會全部重新排進來。 */
+    [a.grad || {}, b.grad || {}].forEach(function (src) {
+      Object.keys(src).forEach(function (k) { out.grad[k] = 1; });
     });
 
     /* bad：用「單字＋例句」去重的聯集 */
