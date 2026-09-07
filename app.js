@@ -424,7 +424,10 @@ function refreshHeader() {
   var nb = $("#nav").querySelector('button[data-v="wrong"]');
   var old = nb.querySelector(".badge");
   if (old) old.remove();
-  var n = wrongItems().length;
+  /* 徽章只數「舊帳」。今天錯的已經回到今天的進度裡了，
+     把它們也算進來的話，徽章會跟首頁的「舊帳 N 個」與
+     「清掉錯題（N 題）」對不起來——同一畫面兩個數字。 */
+  var n = oldWrong().length;
   if (n) {
     var s = document.createElement("span");
     s.className = "badge"; s.textContent = n > 99 ? "99+" : n;
@@ -479,9 +482,18 @@ var WRONG_BATCH = 20;
                             錯得多的字本來就該被排前面、練更多次
    最後加一點抖動，免得每天的順序完全一樣、變成背順序而不是背字。 */
 function priority(it) {
+  if (it.wb) {
+    /* 錯題一律排最前面。同樣是錯題，**剛錯的排前面**——記憶還新，
+       答對一次就畢業；三週前的舊帳已經衰減到接近零，先清它效率低。
+       所以這裡用「距離答錯過了幾天」而不是逾期比例，
+       用逾期比例會剛好排成相反的順序（越舊越前面）。 */
+    var days = it.wbAt
+      ? (Date.now() - new Date(it.wbAt + "T00:00:00").getTime()) / DAY : 99;
+    return 1000 + Math.max(0, 60 - days) * 2 + (it.wrong || 0) * 2 + Math.random() * 4;
+  }
   var span = INT[it.box] || DAY;
   var overdue = Math.min((Date.now() - it.due) / span, 10);
-  return (it.wb ? 1000 : 0) + overdue * 10 + (it.wrong || 0) * 5 + Math.random() * 4;
+  return overdue * 10 + (it.wrong || 0) * 5 + Math.random() * 4;
 }
 function byPriority(list) {
   return list.slice().sort(function (a, b) { return priority(b) - priority(a); });
@@ -562,7 +574,7 @@ function loadTodayNew() {
    goal 是「今天總共要做幾題」，第一次開 App 時算出來後只會往上調，
    不會因為做掉一半就縮水，這樣進度條才有意義。 */
 function todayTask() {
-  var due = normalDue().length, wrong = wrongItems().length, l = dayLog();
+  var due = normalDue().length, wrong = oldWrong().length, l = dayLog();
   /* left 只算「今天的進度」（新字＋到期複習），不含錯題。
      錯題是可以慢慢還的舊帳，把它算進今天的目標只會讓人放棄。 */
   l.g = Math.max(l.g || 0, (l.a || 0) + due);
@@ -674,6 +686,11 @@ function drawDrillStart(el) {
   var due = normalDue().length, all = allItems().length;
   /* 今天錯的已經回到主線（算在 due 裡），這一段只剩跨天的舊帳 */
   var wrongToday = todayWrong().length, wrong = oldWrong().length;
+  /* ⚠ 今天錯的字 due 是「10 分鐘後」，所以 wrongToday 裡只有一部分已經到期。
+     三項分解一定要用「已到期的那部分」去扣，否則會算出負數
+     （踩過：due 0、wrongToday 4 → 到期要複習 -4）。 */
+  var wrongDue = normalDue().filter(function (i) { return i.wb; }).length;
+  var wrongWait = wrongToday - wrongDue;
   var t = todayTask(), l = dayLog();
   /* 「新字」與「到期複習」必須是 due 的兩個互斥子集，不然畫面會變成
      「還有 324 題」底下寫著「新字 70 ＋ 到期複習 324」，看起來像 394 題。
@@ -705,16 +722,19 @@ function drawDrillStart(el) {
     '<div class="cap" style="margin-top:10px;line-height:1.9">' +
     "・沒學過的新字 <b>" + newPend + "</b> 個字義" +
     (autoLoadOn() ? "（開 App 時已自動排好）" : "（手動模式，要自己按下面那顆）") + "<br>" +
-    "・到期要複習 <b>" + (due - newPend - wrongToday) + "</b> 個字義<br>" +
-    "・今天答錯要補的 <b>" + wrongToday + "</b> 個字義<br>" +
+    "・到期要複習 <b>" + (due - newPend - wrongDue) + "</b> 個字義<br>" +
+    "・今天答錯已經可以重考的 <b>" + wrongDue + "</b> 個字義<br>" +
     '<span style="opacity:.72">三項加起來就是上面的 ' + due + " 題，沒有重複計算。</span>" +
+    (wrongWait ? '<br><span style="opacity:.72">另外有 <b>' + wrongWait +
+      "</b> 個今天錯的字要等 10 分鐘才會回到這裡。</span>" : "") +
     "</div></div>" +
 
     (t.left
       ? '<button class="btn" id="btnToday">開始今天的進度（' + t.left + " 題）</button>" +
         '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
         "新字、到期複習與<b>今天答錯的</b>洗在一起，做完就是今天該做的量。" +
-        (wrongToday ? "現在有 <b>" + wrongToday + "</b> 個是今天錯過的，會被排到最前面。" : "") +
+        (wrongDue ? "現在有 <b>" + wrongDue + "</b> 個是今天錯過的，會被排到最前面。" : "") +
+        (wrongWait ? "另外 <b>" + wrongWait + "</b> 個今天錯的還在 10 分鐘的等待期。" : "") +
         "<br><b>跨天的舊錯題</b>不算在裡面，它在下面獨立一段。" +
         "<br>中途離開沒關係，回來會接著算。</p>"
       : '<div class="empty" style="padding:20px 8px">今天該練的都練完了，下一批 <b>' +
@@ -724,7 +744,8 @@ function drawDrillStart(el) {
     /* 第二段：錯題。分批清，數字再大也不會變成今天的壓力。 */
     '<h2 class="sec">錯題</h2>' +
     '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
-    "・<b>今天錯的 " + wrongToday + " 個</b>——記憶還新，已經排在上面的進度裡，答對一次就畢業<br>" +
+    "・<b>今天錯的 " + wrongToday + " 個</b>——記憶還新，會回到上面的進度裡，答對一次就畢業" +
+    (wrongWait ? "（其中 " + wrongWait + " 個還在 10 分鐘的等待期）" : "") + "<br>" +
     "・<b>舊帳 " + wrong + " 個</b>——之前幾天累積下來的，用下面的按鈕分批清" +
     "</div></div>" +
     (wrong
@@ -742,7 +763,8 @@ function drawDrillStart(el) {
        但今天的進度只剩 9 題，以為字不見了。 */
     '<div class="plan-head" style="margin-top:18px"><div class="cap" style="line-height:1.9">' +
     "<b>清單裡的 " + all + " 個字義現在在哪</b><br>" +
-    "・<b>" + due + "</b> 個到期，算在今天的進度裡（含今天錯的 " + wrongToday + " 個）<br>" +
+    "・<b>" + due + "</b> 個到期，算在今天的進度裡" +
+    (wrongDue ? "（含今天錯的 " + wrongDue + " 個）" : "") + "<br>" +
     "・<b>" + wrong + "</b> 個是跨天的舊錯題（不混進進度）<br>" +
     "・<b>" + (all - due - wrong) + "</b> 個還沒到複習時間，最近一批 " + waitTxt +
     "</div></div>" +
@@ -948,9 +970,17 @@ function giveUp() {
    為什麼敢永久排除：快篩連一次拼字都沒讓你做就永久排除了，
    這條路徑要你實際拼對兩次＋自己判斷兩次，證據強得多。
    安全網在考前總複習，那裡會抽一成回來考（見 btnSprint）。 */
+function canGraduate(it) {
+  /* 錯過三次以上＝實測「這個字對你就是難」，跟「太簡單」自相矛盾。
+     那種字讓它走一格一格的慢階梯（見 submit 的跳格規則），不該永久排除。
+     Anki 的 leech 機制也是同一個想法：一直錯的字要換方法，不是放過它。 */
+  return (it.wrong || 0) < 3;
+}
+
 function markEasy() {
   if (!answered || !lastOK || hinted !== 0 || zhPeeked) return;
   var it = qCur;
+  if (!canGraduate(it)) return;
   if (!it.easy) {
     it.easy = 1; save();
     toast("記下了。" + Math.round(INT[it.box] / DAY) + " 天後換一句再考一次，再答對就畢業");
@@ -1121,7 +1151,7 @@ function submit(gaveUp) {
   $("#blank").className = "blank rev";
   $("#rowAid").style.display = "none";
   /* 只有「無提示答對」才給按「太簡單」——沒證明自己會就不能跳過 */
-  if (ok && hinted === 0 && !zhPeeked) {
+  if (ok && hinted === 0 && !zhPeeked && canGraduate(it)) {
     $("#rowSkip").style.display = "";
     $("#btnKnow").disabled = false;
     $("#btnKnow").textContent = it.easy
@@ -1621,8 +1651,10 @@ function bindSprint() {
       /* 抽樣的字直接建 item，不走 addItem——那會把它們算進「今天學了幾個新字」，
          害紀錄頁的新字速度虛胖。 */
       sample.forEach(function (u) {
+        /* seen 給 1 而不是 0：seen===0 會被 drawDrillStart 當成「沒學過的新字」，
+           而這些是回來抽考的畢業字。順帶讓 renderCard 取下一句例句。 */
         S.items[idOf(u.w, u.si)] = {
-          w: u.w, si: u.si, box: 4, due: Date.now(), seen: 0,
+          w: u.w, si: u.si, box: 4, due: Date.now(), seen: 1,
           right: 0, wrong: 0, st: 0, wb: false, wbAt: "", easy: 0
         };
       });
@@ -2165,12 +2197,17 @@ var flashList = [], flashI = 0, flipped = false;
 var wrongDay = null;   // null = 停在資料夾清單；數字或 "all" = 正在翻該組的卡
 
 function drawWrong() {
-  var all = wrongItems();
+  /* 這一頁專門處理「跨天的舊帳」。今天錯的字已經回到今天的進度裡，
+     列在這裡會跟首頁的數字打架，而且會讓人以為要清兩次。 */
+  var all = oldWrong();
   if (!all.length) {
     wrongDay = null;
+    var td = todayWrong().length;
     $("#v-wrong").innerHTML =
       '<div class="empty"><span class="big">🎉</span>' +
-      "錯題本是空的。<br>答錯的字會自動跑到這裡，<br>再答對一次就會畢業。</div>";
+      "沒有跨天的舊錯題。" +
+      (td ? "<br>今天錯的 " + td + " 個已經排在「練習」的進度裡了。"
+          : "<br>答錯的字當天會回到進度裡，隔天沒答對才會變成舊帳。") + "</div>";
     return;
   }
 

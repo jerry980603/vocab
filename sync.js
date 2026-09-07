@@ -68,7 +68,11 @@ var SYNC = (function () {
       if (!pick.wb && (x.wb || y.wb)) {
         var c = {};
         for (var f in pick) if (Object.prototype.hasOwnProperty.call(pick, f)) c[f] = pick[f];
-        c.wb = true; pick = c;
+        c.wb = true;
+        /* wbAt 要跟著補上，不然「今天錯的」會被歸成「舊帳」。
+           兩台都有就取比較新的那個日期。 */
+        c.wbAt = [x.wbAt || "", y.wbAt || ""].sort().pop() || c.wbAt || "";
+        pick = c;
       }
       out.items[k] = pick;
     });
@@ -124,7 +128,7 @@ var SYNC = (function () {
     /* 純量設定（每日題數、考試日期…）：取最後修改時間較新的那份 */
     var newer = (a.mtime || 0) >= (b.mtime || 0) ? a : b;
     ["perDay", "examDate", "learnEndDate", "mixLevels", "finalReview",
-      "autoLoad", "scope", "plan2608", "fixBox0"].forEach(function (k) {
+      "autoLoad", "scope", "fixBox0"].forEach(function (k) {
       if (newer[k] !== undefined) out[k] = newer[k];
     });
     out.mtime = Math.max(a.mtime || 0, b.mtime || 0);
