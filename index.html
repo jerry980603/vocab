@@ -3,26 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1a1d23">
+<meta name="theme-color" content="#22201d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>單字練習</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{
-  --bg:#f6f7f9; --card:#ffffff; --text:#1a1d23; --sub:#6b7280; --line:#e5e7eb;
-  --accent:#2563eb; --accent-soft:#eff6ff;
-  --ok:#059669; --ok-soft:#ecfdf5; --bad:#dc2626; --bad-soft:#fef2f2;
-  --warn:#d97706;
-  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  /* 紙與墨。原本整套是 Tailwind 預設（blue-600＋冷灰），高彩度的藍在
+     每天看 60~90 分鐘的工具上會累積視覺疲勞，而且那組顏色到處都是。
+     改成偏暖的紙色底＋暖黑墨字：暖色中性底的喚起度比冷灰低，
+     層級改由「明度差」而不是「彩度」承擔——這樣同時也比較好讀。 */
+  --bg:#f4f2ed; --card:#fdfcfa; --text:#22201d; --sub:#726b62; --line:#e2ddd3;
+  /* 單一低彩度墨藍當重點色。孤立效應（von Restorff）要成立，
+     前提是畫面上只有一個東西被強調——原本每張卡都有飽和藍就失效了。 */
+  --accent:#2b4c7e; --accent-soft:#e9ecf3;
+  --ok:#3f7d58; --ok-soft:#e9f0eb; --bad:#a8443a; --bad-soft:#f6ebe9;
+  --warn:#8a6524;
+  /* 卡片不浮起來，只用髮絲線分界。陰影一多就變成「玻璃卡片飄在灰底上」。 */
+  --shadow:none;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#14161a; --card:#1e2127; --text:#e8eaed; --sub:#9aa0a6; --line:#2e323a;
-    --accent:#60a5fa; --accent-soft:#1c2b45;
-    --ok:#34d399; --ok-soft:#13291f; --bad:#f87171; --bad-soft:#331a1a;
-    --warn:#fbbf24;
-    --shadow:0 1px 3px rgba(0,0,0,.4);
+    --bg:#171614; --card:#201f1c; --text:#e6e2da; --sub:#9c958a; --line:#332f2a;
+    --accent:#8fb3d9; --accent-soft:#232c39;
+    --ok:#79b891; --ok-soft:#1b271f; --bad:#d18a80; --bad-soft:#2b1e1c;
+    --warn:#c9a15e;
+    --shadow:none;
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -30,7 +38,7 @@ html,body{margin:0;padding:0}
 body{
   background:var(--bg); color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
-  font-size:16px; line-height:1.65;
+  font-size:16px; line-height:1.6;
   padding-bottom:calc(64px + env(safe-area-inset-bottom));
   -webkit-text-size-adjust:100%;
 }
@@ -63,32 +71,52 @@ nav button{
 }
 nav button .ic{width:21px;height:21px;display:block;stroke:currentColor}
 nav button.on{color:var(--accent);font-weight:600}
+/* 徽章不用紅色。錯題本裝的是「累積下來的舊帳」，照設計上的定位
+   它就不該製造壓力；而且天天亮著、又不需要立刻處理的紅點，
+   看久了會習慣化而失去訊號價值，剩下的只有每天開 App 被嚇一次。
+   紅色留給真正的錯誤回饋（答錯那張卡）。 */
 nav .badge{
   position:absolute;transform:translate(16px,-4px);
-  background:var(--bad);color:#fff;font-size:10px;font-weight:700;
-  min-width:16px;padding:0 4px;border-radius:8px;line-height:16px;text-align:center;
+  background:var(--line);color:var(--sub);font-size:10px;font-weight:700;
+  min-width:16px;padding:0 4px;border-radius:5px;line-height:16px;text-align:center;
 }
 
 /* ---------- 通用元件 ---------- */
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
 .btn{
-  display:block;width:100%;padding:14px;border-radius:11px;
+  display:block;width:100%;padding:14px;border-radius:8px;
   background:var(--accent);color:#fff;font-weight:600;font-size:16px;text-align:center;
 }
-/* 答題卡上的送出鈕刻意做小一號：真正要動作的是上面的輸入框，
-   一顆整寬的飽和藍按鈕會把視線從輸入框搶走。 */
-#btnGo{padding:12px;font-size:15px;border-radius:10px}
+/* 答題卡的送出鈕：改成「色調鈕」（淡底＋主色字），不再是整寬飽和色塊。
+
+   之前只把 padding 從 14 縮到 12px 就想翻轉層級，那沒有用——
+   在畫面上實心色塊永遠壓過線框，縮 2px 完全看不出差別。
+   真正要動作的是輸入框，所以讓輸入框保持唯一的「實」，按鈕退成「虛」。
+   寬度保留整寬是刻意的：Fitts's law，點擊目標大比較好按，
+   安靜不等於難按。 */
+#btnGo{
+  padding:13px;font-size:15px;border-radius:8px;
+  background:color-mix(in srgb, var(--accent) 13%, var(--card));
+  color:var(--accent);border:none;font-weight:700;letter-spacing:.06em;
+}
 .btn:active{opacity:.82}
 .btn.ghost{background:transparent;color:var(--sub);border:1px solid var(--line);font-weight:500}
 .btn.ok{background:var(--ok)}
-.btn.bad{background:var(--bad)}
-.btn.sm{padding:9px 14px;font-size:14px;width:auto;display:inline-block}
+/* 清錯題的按鈕不用飽和紅。它是次要動作——主要動作是上面的「開始今天的進度」，
+   而一個畫面只能有一個最搶眼的東西，否則孤立效應就失效了。
+   而且紅色在介面裡的既定語意是「錯誤／危險」，清舊帳兩者都不是。
+   紅色留給答錯那張卡的回饋。 */
+.btn.bad{
+  background:var(--bad-soft);color:var(--bad);
+  border:1px solid color-mix(in srgb, var(--bad) 20%, transparent);
+}
+.btn.sm{padding:9px 14px;font-size:14px;width:auto;display:inline-block;border-radius:7px}
 .row{display:flex;gap:10px}
 .row>*{flex:1}
 .empty{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}
 .empty .big{font-size:42px;display:block;margin-bottom:14px;opacity:.55}
 .tag{
-  display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600;
+  display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;
   background:var(--accent-soft);color:var(--accent);
 }
 .tag.gray{background:var(--line);color:var(--sub)}
@@ -96,35 +124,50 @@ nav .badge{
   display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;
   vertical-align:2px;background:var(--line);color:var(--sub);
 }
-.lv.l1,.lv.l2{background:#dcfce7;color:#15803d}
-.lv.l3,.lv.l4{background:#dbeafe;color:#1d4ed8}
-.lv.l5,.lv.l6{background:#fef3c7;color:#b45309}
-.lv.out{background:#fee2e2;color:#b91c1c}
+.lv.l1,.lv.l2{background:#e4ebe2;color:#436b4d}
+.lv.l3,.lv.l4{background:#e5e9f0;color:#3d5a80}
+.lv.l5,.lv.l6{background:#f0e8d8;color:#836229}
+.lv.out{background:#f0e2df;color:#8f4038}
 @media (prefers-color-scheme:dark){
-  .lv.l1,.lv.l2{background:#14311f;color:#4ade80}
-  .lv.l3,.lv.l4{background:#16294a;color:#7dabf8}
-  .lv.l5,.lv.l6{background:#3a2a08;color:#fbbf24}
-  .lv.out{background:#3b1616;color:#fca5a5}
+  .lv.l1,.lv.l2{background:#1f2b22;color:#88b697}
+  .lv.l3,.lv.l4{background:#222833;color:#93b0d1}
+  .lv.l5,.lv.l6{background:#2e2718;color:#c6a469}
+  .lv.out{background:#2e211f;color:#c99188}
 }
-h2.sec{font-size:13px;color:var(--sub);font-weight:600;margin:26px 0 10px;letter-spacing:.04em}
+h2.sec{
+  font-size:12px;color:var(--sub);font-weight:700;margin:26px 0 11px;
+  letter-spacing:.08em;display:flex;align-items:center;gap:11px;
+}
+/* 標題後面拉一條細線收邊。這是版面書上的做法，
+   比「一行粗體字浮在空白裡」有結構，也不像預設模板。 */
+h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 h2.sec:first-child{margin-top:0}
 
 /* ---------- 練習卡 ---------- */
 .qmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:13px;color:var(--sub)}
 .dots{display:flex;gap:4px}
-.dots i{width:8px;height:8px;border-radius:50%;display:block;
-  background:transparent;border:1.5px solid var(--line)}
+.dots i{width:6px;height:6px;border-radius:50%;display:block;
+  background:transparent;border:1px solid var(--line)}
 .dots i.f{background:var(--accent);border-color:var(--accent)}
-.zhline{font-size:17px;font-weight:500;margin:0 0 16px;line-height:1.75}
+.zhline{font-size:16px;font-weight:500;margin:0 0 14px;line-height:1.7;color:var(--sub)}
+/* 例句用襯線體，跟介面的無襯線分開。
+
+   兩個理由：
+   一、內容與介面該有不同的「聲音」——這句英文是要讀懂的材料，
+       不是按鈕文字，換一套字體讓它自己成立。ui-rounded 那種圓體
+       讀起來像 App 的裝飾文字，不像要研讀的句子。
+   二、行距從 1.95 收到 1.62。19px 配 1.95 等於 37px 行距，
+       句子換行後上下兩行離太遠，依 Gestalt 的接近性原則
+       會被讀成兩個獨立的東西，而不是一句話。 */
 .enline{
-  font-size:19px;line-height:1.95;margin:0 0 16px;
-  font-family:ui-rounded,"Segoe UI",-apple-system,sans-serif;
+  font-size:19px;line-height:1.62;margin:0 0 18px;
+  font-family:var(--serif);
 }
 .enline .tk{border-radius:4px;padding:1px 1px;cursor:pointer}
 .enline .tk:active{background:var(--accent-soft)}
 .blank{
   display:inline-block;min-width:58px;text-align:center;white-space:nowrap;
-  border-bottom:2.5px solid var(--accent);color:var(--accent);font-weight:700;
+  border-bottom:2px solid var(--accent);color:var(--accent);font-weight:700;
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   letter-spacing:.26em;padding:0 4px 0 8px;
 }
@@ -134,14 +177,19 @@ h2.sec:first-child{margin-top:0}
   font-family:system-ui,sans-serif;font-style:normal;font-size:11px;font-weight:600;
   letter-spacing:0;vertical-align:super;opacity:.55;margin-left:1px;
 }
-.blank.rev{border-color:var(--ok);color:var(--ok)}
+/* 揭曉答案後把字距收回來：作答前的寬字距是為了讓底線一格一格數得出來，
+   答案出現之後那個需求就沒了，寬字距只會讓它讀起來不像一個字。 */
+.blank.rev{border-color:var(--ok);color:var(--ok);letter-spacing:.04em}
 .hintbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;font-size:14px;color:var(--sub)}
 .hintbar .zh{color:var(--text);font-weight:500}
+/* 原本是圓角虛線框，就疊在真正的輸入框正上方、同樣尺寸，
+   第一眼會被當成「另一個要填的欄位」（Norman 講的錯誤指意）。
+   改成帶虛線底線的文字，形狀上不再像輸入元件。 */
 .posmask{
   cursor:pointer;user-select:none;color:var(--sub);
-  border:1px dashed var(--line);border-radius:9px;padding:5px 11px
+  border-bottom:1px dashed var(--sub);padding:1px 0;line-height:1.5
 }
-.posmask:active{background:var(--accent-soft);border-color:var(--accent)}
+.posmask:active{color:var(--accent);border-bottom-color:var(--accent)}
 /* 快捷鍵標籤：只在有實體鍵盤的裝置顯示，手機上藏起來免得占空間 */
 .kbd{display:none}
 @media (hover:hover) and (pointer:fine){
@@ -154,30 +202,46 @@ h2.sec:first-child{margin-top:0}
 .inwrap{display:flex;align-items:stretch;gap:8px}
 .inwrap #ansIn{flex:1}
 .sfx{
-  display:flex;align-items:center;padding:0 15px;border-radius:11px;
+  display:flex;align-items:center;padding:0 15px;border-radius:8px;
   background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:19px;
   border:2px dashed var(--accent);white-space:nowrap;
 }
+/* 輸入框與送出鈕不能長得一樣，否則分不出「哪個要打字、哪個要按」。
+   分工：欄位＝白底＋內凹陰影＋粗邊（凹進去的槽），
+         按鈕＝淡色實底（凸出來的塊）。這是表單元件的既有慣例，
+   靠形狀而不是顏色去區分，比兩個都塗成淡藍可靠。 */
 #ansIn{
-  width:100%;padding:16px;border-radius:12px;border:2px solid var(--line);
-  background:var(--card);color:var(--text);font-size:21px;letter-spacing:.02em;
-  outline:none;text-align:center;font-weight:600;
-  border-color:color-mix(in srgb, var(--accent) 34%, var(--line));
+  width:100%;padding:17px;border-radius:8px;border:2px solid var(--line);
+  background:var(--card);color:var(--text);font-size:22px;letter-spacing:.02em;
+  outline:none;text-align:center;font-weight:650;
+  border-color:color-mix(in srgb, var(--accent) 52%, var(--line));
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.05);
   transition:border-color .12s,box-shadow .12s;
 }
 #ansIn::placeholder{font-size:15px;font-weight:500;color:var(--sub);letter-spacing:0}
+/* 深色模式下白底變不出「凹槽」——內凹陰影在暗色上看不見。
+   改用比卡片更暗的底色來表示凹陷，這是暗色介面的通用做法：
+   亮色模式靠「比背景亮」，暗色模式靠「比背景暗」。 */
+@media (prefers-color-scheme:dark){
+  #ansIn{background:var(--bg);box-shadow:none}
+  #ansIn:focus{box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent)}
+}
 /* 對焦時給一圈光暈：讓「要打字的地方」比「送出」那顆藍色按鈕更搶眼，
    原本的層級是反的——最顯眼的是按鈕，但真正要動作的是這裡。 */
-#ansIn:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+#ansIn:focus{
+  border-color:var(--accent);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.05),
+             0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
 #ansIn.ok{border-color:var(--ok);background:var(--ok-soft)}
 #ansIn.bad{border-color:var(--bad);background:var(--bad-soft)}
-.fb{margin-top:16px;padding:14px;border-radius:11px;font-size:15px}
+.fb{margin-top:16px;padding:14px;border-radius:8px;font-size:15px}
 .fb.ok{background:var(--ok-soft);color:var(--ok)}
 .fb.bad{background:var(--bad-soft);color:var(--bad)}
 .fb b{font-size:19px;letter-spacing:.02em}
 .zhline.masked{
   font-size:15px;font-weight:400;color:var(--sub);cursor:pointer;user-select:none;
-  border:1px dashed var(--line);border-radius:10px;padding:10px 12px;text-align:center
+  border:1px dashed var(--line);border-radius:8px;padding:10px 12px;text-align:center
 }
 .zhline.masked:active{background:var(--accent-soft);border-color:var(--accent)}
 .alleg{margin-top:14px}
@@ -198,7 +262,7 @@ h2.sec:first-child{margin-top:0}
 
 /* ---------- 查單字 ---------- */
 #searchIn{
-  width:100%;padding:13px 16px;border-radius:11px;border:1px solid var(--line);
+  width:100%;padding:13px 16px;border-radius:8px;border:1px solid var(--line);
   background:var(--card);color:var(--text);outline:none;
 }
 #searchIn:focus{border-color:var(--accent)}
@@ -209,17 +273,17 @@ h2.sec:first-child{margin-top:0}
 .hit .w{font-weight:650;font-size:17px}
 .hit .m{font-size:13px;color:var(--sub);margin-top:1px}
 .hit .arrow{color:var(--sub);font-size:15px}
-.sense{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:11px;background:var(--card)}
+.sense{border:1px solid var(--line);border-radius:9px;padding:14px;margin-bottom:11px;background:var(--card)}
 .sense .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
 .sense .zh{font-weight:600;font-size:16px}
 .sense .ex{font-size:14px;color:var(--sub);margin-top:8px;line-height:1.7}
 .sense .ex em{font-style:normal;font-weight:700;color:var(--text)}
-.addbtn{padding:7px 14px;border-radius:20px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;white-space:nowrap}
+.addbtn{padding:7px 14px;border-radius:6px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;white-space:nowrap}
 .addbtn.done{background:var(--line);color:var(--sub)}
 
 /* ---------- 我的字 ---------- */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 8px;text-align:center}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:14px 8px;text-align:center}
 .stat .n{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
 .stat .l{font-size:12px;color:var(--sub);margin-top:2px}
 .li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
@@ -229,9 +293,9 @@ h2.sec:first-child{margin-top:0}
 
 /* ---------- 單字卡 ---------- */
 .flash{
-  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  background:var(--card);border:1px solid var(--line);border-radius:11px;
   min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:28px 20px;text-align:center;box-shadow:var(--shadow);cursor:pointer;
+  padding:28px 20px;text-align:center;cursor:pointer;
 }
 .flash .fw{font-size:32px;font-weight:700;letter-spacing:.01em}
 .flash .fp{color:var(--sub);font-size:14px;margin-top:6px}
@@ -245,7 +309,7 @@ h2.sec:first-child{margin-top:0}
 #sheetBg.on{display:block}
 #sheet{
   position:fixed;left:0;right:0;bottom:0;z-index:41;
-  background:var(--card);border-radius:18px 18px 0 0;
+  background:var(--card);border-radius:14px 14px 0 0;
   padding:20px 18px calc(24px + env(safe-area-inset-bottom));
   max-height:78vh;overflow-y:auto;transform:translateY(100%);transition:transform .22s ease;
   max-width:640px;margin:0 auto;

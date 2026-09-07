@@ -730,13 +730,10 @@ function drawDrillStart(el) {
     "</div></div>" +
 
     (t.left
-      ? '<button class="btn" id="btnToday">開始今天的進度（' + t.left + " 題）</button>" +
-        '<p style="font-size:13px;color:var(--sub);margin:9px 4px 0;line-height:1.7">' +
-        "新字、到期複習與<b>今天答錯的</b>洗在一起，做完就是今天該做的量。" +
-        (wrongDue ? "現在有 <b>" + wrongDue + "</b> 個是今天錯過的，會被排到最前面。" : "") +
-        (wrongWait ? "另外 <b>" + wrongWait + "</b> 個今天錯的還在 10 分鐘的等待期。" : "") +
-        "<br><b>跨天的舊錯題</b>不算在裡面，它在下面獨立一段。" +
-        "<br>中途離開沒關係，回來會接著算。</p>"
+      ? '<button class="btn" id="btnToday">開始今天的進度</button>' +
+        '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
+        (wrongDue ? "今天錯的 <b>" + wrongDue + "</b> 個會排在最前面。" : "") +
+        "跨天的舊錯題不算在裡面。中途離開會接著算。</p>"
       : '<div class="empty" style="padding:20px 8px">今天該練的都練完了，下一批 <b>' +
         waitTxt + "</b> 到期。<br>" +
         '<span style="font-size:13px">還有力氣就往下清一點錯題。</span></div>') +
@@ -744,13 +741,12 @@ function drawDrillStart(el) {
     /* 第二段：錯題。分批清，數字再大也不會變成今天的壓力。 */
     '<h2 class="sec">錯題</h2>' +
     '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
-    "・<b>今天錯的 " + wrongToday + " 個</b>——記憶還新，會回到上面的進度裡，答對一次就畢業" +
-    (wrongWait ? "（其中 " + wrongWait + " 個還在 10 分鐘的等待期）" : "") + "<br>" +
-    "・<b>舊帳 " + wrong + " 個</b>——之前幾天累積下來的，用下面的按鈕分批清" +
+    "・<b>今天錯的 " + wrongToday + " 個</b>——會回到上面的進度裡" +
+    (wrongWait ? "（" + wrongWait + " 個還在 10 分鐘等待期）" : "") + "<br>" +
+    "・<b>舊帳 " + wrong + " 個</b>——累積下來的，<b>不是今天的量</b>，每天清一點就好" +
     "</div></div>" +
     (wrong
-      ? '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
-        "舊帳有 <b>" + wrong + "</b> 個字義。<b>這不是今天的量</b>——每天清一點就好。</div></div>" +
+      ? "" +
         (wrong > WRONG_BATCH
           ? '<button class="btn bad" id="btnWrongBatch">清 ' + WRONG_BATCH + " 題錯題</button>" +
             '<div class="row" style="margin-top:10px">' +
