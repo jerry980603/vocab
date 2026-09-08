@@ -877,9 +877,12 @@ function renderCard() {
     '<div class="row" style="margin-top:9px" id="rowAid">' +
     '<button class="btn ghost" id="btnHint">提示</button>' +
     '<button class="btn ghost" id="btnGiveUp">不會<span class="kbd">Alt</span></button></div>' +
-    '<div id="fb"></div>' +
-    '<div style="text-align:center;margin-top:14px;display:none" id="rowSkip">' +
+    /* ⚠ rowSkip 一定要排在 #fb 前面。#fb 答完之後會塞進整個 allExamplesHTML，
+       實測有 1477px 高；排在它後面的話按鈕會掉到 y≈2769px，
+       手機上永遠看不到，等於這個功能不存在（實際回報過）。 */
+    '<div style="text-align:center;margin-top:12px;display:none" id="rowSkip">' +
     '<button class="minilink" id="btnKnow"></button></div>' +
+    '<div id="fb"></div>' +
     '<div style="text-align:center;margin-top:10px">' +
     '<button class="minilink" id="btnBad">這句怪怪的，回報給 Claude</button></div>' +
     "</div>";
