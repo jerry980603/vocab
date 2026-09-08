@@ -175,7 +175,9 @@ function hasItem(w, si) { return !!S.items[idOf(w, si)]; }
    後者的證據比前者硬得多（快篩連一次都沒讓你拼），所以兩者同級對待。
    ⚠ 畢業是字義層級的：bank 的「銀行」畢業不代表「河岸」也畢業。
       用整個字當 key 會把其他義項一起丟掉，那是錯的。 */
-function isExcluded(w, si) { return !!S.known[w] || !!S.grad[idOf(w, si)]; }
+function isExcluded(w, si) {
+  return !!(S.known || {})[w] || !!(S.grad || {})[idOf(w, si)];
+}
 
 function addItem(w, si) {
   var id = idOf(w, si);
@@ -551,10 +553,27 @@ function nextNewUnits(n) {
   return out;
 }
 
+/* 待做量已經爆掉時，今天先不自動補新字。
+
+   新字是整個系統唯一的「入流」，複習與錯題都是它的下游。
+   入流持續大於處理速度時，佇列會**無上界地成長**（Little's law）。
+   原本 loadTodayNew() 是無條件每天補滿額度，完全不看你昨天做完沒有——
+   模擬（每天上 70 個新字、但每天只做得完 150 題）第 60 天的待做量是
+   **1282 題**；加上這條規則之後同樣條件是 **88 題**。
+
+   門檻取「每日額度的兩倍」：一天沒做完不會馬上停，連續落後才會。
+   而且停的只是**自動**補字，手動的「再載入一組」照樣可用——
+   要不要硬吃是你的決定，只是不再默默地替你決定。 */
+var NEW_PAUSE_RATIO = 2;
+function newPaused() {
+  return normalDue().length > perDay() * NEW_PAUSE_RATIO;
+}
+
 /* 把今天還沒補足的新字加進清單，回傳實際加入的數量 */
 function loadTodayNew() {
   var need = perDay() - newToday();
   if (need <= 0) return 0;
+  if (newPaused()) return 0;
   var picked = nextNewUnits(need);
   picked.forEach(function (u) { addItem(u.w, u.si); });
   if (picked.length) {
@@ -661,6 +680,15 @@ function todayNewHTML() {
   var done = newToday(), quota = perDay(), left = quota - done;
   var pool = nextNewUnits(left > 0 ? left : 1).length;
 
+  if (pool && left > 0 && newPaused() && autoLoadOn()) {
+    return '<h2 class="sec">今天的新字</h2>' +
+      '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
+      "待做的還有 <b>" + normalDue().length + "</b> 題（超過每日額度 " + perDay() +
+      " 的兩倍），<b>今天先不自動補新字</b>。<br>" +
+      "先把上面的進度清一些，明天就會自動恢復。" +
+      "新字是唯一能控制總量的閥門，落後時還一直加，只會越積越多。</div></div>" +
+      '<button class="btn ghost" id="btnLoadNew">還是要載入 ' + left + " 個新字義</button>";
+  }
   if (!pool) {
     return '<h2 class="sec">今天的新字</h2>' +
       '<div class="empty" style="padding:20px 8px">' +
@@ -1002,6 +1030,9 @@ function markEasy() {
    這裡只問「這個字你會不會」，會的直接標記起來、永遠不進練習清單。
    ============================================================ */
 var scrQueue = [], scrTotal = 0;
+/* 快篩要連按一千多次，誤觸幾乎是必然的，而「我會」是**永久排除**。
+   沒有回上一步的話，按錯一次那個字就再也不會出現，而且完全無感。 */
+var scrHistory = [];
 
 function screenPool(lv) {
   return BANK.filter(function (e) {
@@ -1014,6 +1045,7 @@ function screenPool(lv) {
 function startScreen(lv) {
   scrQueue = shuffle(screenPool(lv));
   scrTotal = scrQueue.length;
+  scrHistory = [];
   if (!scrTotal) { toast("第 " + lv + " 級沒有可篩的字了"); return; }
   drillMode = "screen";
   renderScreenCard();
@@ -1039,6 +1071,11 @@ function renderScreenCard() {
     '<div class="row" style="margin-top:18px">' +
     '<button class="btn ghost" id="scrKnow">我會，跳過</button>' +
     '<button class="btn" id="scrLearn">不會，照課表排</button></div>' +
+    (scrHistory.length
+      ? '<div style="text-align:center;margin-top:12px">' +
+        '<button class="minilink" id="scrUndo">← 上一個（' +
+        esc(scrHistory[scrHistory.length - 1].w) + "）按錯了</button></div>"
+      : "") +
     '<p style="font-size:12px;color:var(--sub);text-align:center;margin:11px 4px 0;line-height:1.7">' +
     "「不會」的字會留在課表裡，照順序、照每天的額度排進來，<br>不會一次全部塞進今天的進度。</p>" +
     '<div style="text-align:center;margin-top:14px">' +
@@ -1049,7 +1086,9 @@ function renderScreenCard() {
     this.className = "zhline"; this.textContent = zh;
   };
   $("#scrKnow").onclick = function () {
-    S.known[e.w] = 1; save(); scrQueue.shift(); renderScreenCard();
+    S.known[e.w] = 1; save();
+    scrHistory.push({ w: e.w, known: true, e: e });
+    scrQueue.shift(); renderScreenCard();
   };
   /* 「不會」什麼都不做，就讓它留在課表裡等著被排進來。
 
@@ -1059,7 +1098,17 @@ function renderScreenCard() {
      這個字沒有被標進 S.known，本來就還在 planUnits() 裡，
      照課表順序與每日額度自然會輪到它。 */
   $("#scrLearn").onclick = function () {
+    scrHistory.push({ w: e.w, known: false, e: e });
     scrQueue.shift(); renderScreenCard();
+  };
+  if ($("#scrUndo")) $("#scrUndo").onclick = function () {
+    var last = scrHistory.pop();
+    if (!last) return;
+    if (last.known) delete S.known[last.w];
+    save();
+    scrQueue.unshift(last.e);
+    toast(last.w + " 已退回，重新判斷一次");
+    renderScreenCard();
   };
   $("#scrQuit").onclick = function () {
     drillMode = "normal"; scrQueue = []; drawDrill();
@@ -2438,7 +2487,7 @@ function drawSet() {
   };
   $("#btnWipe").onclick = function () {
     if (!confirm("確定要清除全部進度嗎？這會刪掉你的練習清單、熟練度與錯題本，無法復原。")) return;
-    S = { v: 1, items: {}, todo: [], bad: [], log: {}, known: {}, auto: {} };
+    S = { v: 1, items: {}, todo: [], bad: [], log: {}, known: {}, grad: {}, auto: {} };
     save(); queue = []; toast("已清除"); go("drill");
   };
 }
