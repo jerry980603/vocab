@@ -138,6 +138,13 @@ SKIP_POS = {
     "nowhere": {"pron."}, "salmon": {"adj."},
     # nutrient adj. 只當名詞修飾語（nutrient solution），不是真形容詞
     "nutrient": {"adj."},
+    # w46（第 6 級 A–I）刻意不收的詞性：
+    # conserve n. 是「果醬」，朗文標 formal，現代英文用 jam／preserve
+    "conserve": {"n."},
+    # discard n. 是牌局裡打出的廢牌，撲克術語
+    "discard": {"n."},
+    # hover n. 與 flaw v.：朗文都沒有那個詞性的條目
+    "hover": {"n."}, "flaw": {"v."},
     # w44（第 3 級 A–M）刻意不收的詞性：
     # downtown n.（朗文只列副詞與形容詞，downtown Miami 那種是形容詞用法）
     "downtown": {"n."},
