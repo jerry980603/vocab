@@ -23,6 +23,7 @@
   /* 卡片不浮起來，只用髮絲線分界。陰影一多就變成「玻璃卡片飄在灰底上」。 */
   --shadow:none;
   --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --on-accent:#ffffff;   /* 填滿主色的按鈕上面用什麼顏色的字 */
 }
 @media (prefers-color-scheme:dark){
   :root{
@@ -31,6 +32,10 @@
     --ok:#79b891; --ok-soft:#1b271f; --bad:#d18a80; --bad-soft:#2b1e1c;
     --warn:#c9a15e;
     --shadow:none;
+    /* 深色模式的主色是淺藍（要比背景亮才看得見），
+       所以填滿主色的按鈕上面要放**深色**文字，不是白色——
+       白字配淺藍底的對比只有 2:1 左右，讀起來很吃力。 */
+    --on-accent:#171614;
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -85,7 +90,7 @@ nav .badge{
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
 .btn{
   display:block;width:100%;padding:14px;border-radius:8px;
-  background:var(--accent);color:#fff;font-weight:600;font-size:16px;text-align:center;
+  background:var(--accent);color:var(--on-accent);font-weight:600;font-size:16px;text-align:center;
 }
 /* 答題卡的送出鈕：改成「色調鈕」（淡底＋主色字），不再是整寬飽和色塊。
 
@@ -278,7 +283,7 @@ h2.sec:first-child{margin-top:0}
 .sense .zh{font-weight:600;font-size:16px}
 .sense .ex{font-size:14px;color:var(--sub);margin-top:8px;line-height:1.7}
 .sense .ex em{font-style:normal;font-weight:700;color:var(--text)}
-.addbtn{padding:7px 14px;border-radius:6px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;white-space:nowrap}
+.addbtn{padding:7px 14px;border-radius:6px;background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:600;white-space:nowrap}
 .addbtn.done{background:var(--line);color:var(--sub)}
 
 /* ---------- 我的字 ---------- */
@@ -343,7 +348,7 @@ h2.sec:first-child{margin-top:0}
   border-right:1px solid var(--line);
 }
 .seg button:last-child{border-right:none}
-.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.seg button.on{background:var(--accent);color:var(--on-accent);font-weight:600}
 .num{
   width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);
   background:var(--bg);color:var(--text);outline:none;text-align:center;font-size:17px;font-weight:600;
