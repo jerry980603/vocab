@@ -505,9 +505,23 @@ function buildQueue(mode, limit) {
   drillMode = mode || "normal";
   var list;
   if (drillMode === "wrong") {
-    /* 錯題本只清跨天的舊帳；今天錯的已經在主線裡了 */
-    list = byPriority(oldWrong());
-    if (limit) list = list.slice(0, limit);
+    /* 錯題本只清跨天的舊帳；今天錯的已經在主線裡了。
+
+       ⚠ 不能純照優先序取前 N 名——那會讓排在後面的舊帳**永遠輪不到**
+       （starvation）。實測 60 個舊帳、每批 20 題，連續三次抽到的是
+       **完全相同的 20 個**；而且答錯的隔天又變成最新的舊帳，
+       同一批就這樣一直循環，後面 40 個一次都沒被練到。
+
+       改成分層抽樣：先照優先序排好，取前段當候選池（批量的 3 倍），
+       再從池子裡隨機抽。最近錯的仍然比較容易被抽到，
+       但每一批的內容都不一樣，也不會有人餓死。 */
+    var pool = byPriority(oldWrong());
+    if (limit && pool.length > limit) {
+      var cand = pool.slice(0, Math.min(pool.length, limit * 3));
+      list = shuffle(cand).slice(0, limit);
+    } else {
+      list = pool;
+    }
   }
   else if (drillMode === "extra") list = shuffle(allItems().filter(function (i) { return !i.wb; }));
   /* 今天的進度＝新字＋到期複習，「不含錯題」。
@@ -998,10 +1012,17 @@ function giveUp() {
    這條路徑要你實際拼對兩次＋自己判斷兩次，證據強得多。
    安全網在考前總複習，那裡會抽一成回來考（見 btnSprint）。 */
 function canGraduate(it) {
-  /* 錯過三次以上＝實測「這個字對你就是難」，跟「太簡單」自相矛盾。
-     那種字讓它走一格一格的慢階梯（見 submit 的跳格規則），不該永久排除。
-     Anki 的 leech 機制也是同一個想法：一直錯的字要換方法，不是放過它。 */
-  return (it.wrong || 0) < 3;
+  /* 錯過三次以上＝實測「這個字對你就是難」，原則上不給永久排除
+     （Anki 的 leech 機制也是同一個想法：一直錯的字要換方法，不是放過它）。
+
+     但**如果它已經爬到 box 5 以上**，代表它撐過 30 天的間隔還答得出來——
+     那就是「現在對你已經不難了」的直接證據。
+     舊的錯誤次數是**先驗**，目前的穩定度是**實測**，有實測就該蓋過先驗；
+     這跟跳格規則用級數當先驗、用 wrong 當實測是同一個原則。
+
+     沒有這條放行，實測有 44% 的「答對」都會被擋掉，
+     而且按鈕是無聲消失的，看起來就像壞掉（使用者實際回報過兩次）。 */
+  return (it.wrong || 0) < 3 || (it.box || 0) >= 5;
 }
 
 function markEasy() {
@@ -1205,6 +1226,12 @@ function submit(gaveUp) {
     $("#btnKnow").textContent = it.easy
       ? "太簡單了，直接畢業（第 2 次確認）"
       : "太簡單了，不用一直排（第 1 次確認）";
+  } else if (ok && hinted === 0 && !zhPeeked) {
+    /* 答對了卻不給按，一定要說明理由。無聲消失會被當成 bug。 */
+    $("#rowSkip").style.display = "";
+    $("#btnKnow").disabled = true;
+    $("#btnKnow").textContent =
+      "這個字錯過 " + (it.wrong || 0) + " 次，先練到熟練度 5 才能標「太簡單」";
   } else {
     $("#rowSkip").style.display = "none";
   }
