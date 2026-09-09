@@ -761,6 +761,32 @@ JSON.stringify({
   行為本來就是對的（永遠不清空進行中的那輪），只是留著修 bug 的痕跡，已改成註解。
 - `fixStuckBox0()` **保留**：它是資料修復，任何還沒跑過的裝置同步進來時仍需要它。
 
+## 拿掉「我的字」與「錯題本」兩頁（2026/09/09）
+
+使用者說用不到，導覽列從 7 格改成 5 格（練習／課表／紀錄／查單字／設定）。
+
+**刪掉的東西**：`drawMine`、`drawWrong`，以及只有它們在用的
+`groupByDay`／`dayLabel`／`openMineDay`／`wrongDay`／`flashList`（共 202 行）。
+
+**牽連到、必須一起改的地方**（下次刪頁照這張清單走）：
+
+| 位置 | 為什麼 |
+|---|---|
+| `VIEWS` 路由表 | 不刪的話 `go()` 還找得到，但 `#v-xxx` 已經不在 → 炸 |
+| `index.html` 的 `<section id="v-mine">`／`v-wrong` | 容器 |
+| `index.html` 的兩顆 `nav button[data-v]` | 導覽列 |
+| `nav` 的 `grid-template-columns` 7 → 5 | 不改的話會留兩個空格 |
+| **`refreshHeader()` 的徽章** | 它抓 `button[data-v="wrong"]` 再 `.querySelector`，**按鈕沒了會 null 炸**，而 refreshHeader 幾乎每個動作都會呼叫 |
+| 練習頁的「照 Day 分組清」按鈕 | 指向已刪的頁 |
+| 查單字裡的 `if (cur === "mine") drawMine()` | 函式沒了 |
+| 匯入成功後的 `go("mine")` | 改成 `go("drill")` |
+
+另外給 `go()` 加了退路：`if (!VIEWS[v] || !$("#v-" + v)) v = "drill";`
+——舊路由被誰呼叫到時退回練習頁，不要整個白掉。
+
+⚠ **沒有跟著消失的功能**：移除單一字義還是做得到，在「查單字」點
+已加入的那顆按鈕就會 `delItem`。錯題的打字練習本來就在練習頁，不受影響。
+
 ## 不要動的東西
 
 - `app.js` 的 localStorage key 是 `vocabApp_v1`。改動存檔結構會**清掉使用者的學習進度**，

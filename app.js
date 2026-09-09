@@ -391,13 +391,14 @@ var VIEWS = {
   plan: { t: "每日課表", r: drawPlan },
   stat: { t: "學習紀錄", r: drawStat },
   find: { t: "查單字", r: drawFind },
-  mine: { t: "我的字", r: drawMine },
-  wrong: { t: "錯題本", r: drawWrong },
   set: { t: "設定", r: drawSet }
 };
 var cur = "drill";
 
 function go(v) {
+  /* 移除過的頁面（例如 2026/09/09 拿掉的「我的字」與「錯題本」）
+     如果還被誰呼叫到，退回練習頁而不是整個炸掉。 */
+  if (!VIEWS[v] || !$("#v-" + v)) v = "drill";
   cur = v;
   document.querySelectorAll(".view").forEach(function (s) { s.classList.remove("on"); });
   $("#v-" + v).classList.add("on");
@@ -423,7 +424,10 @@ function refreshHeader() {
   var d = normalDue().length;
   $("#daily").textContent = "今日 " + l.a + " 題・" +
     Math.round((l.ms || 0) / 60000) + " 分・待複習 " + d;
+  /* 錯題本那一頁已經移除，這顆按鈕不存在了。舊帳的數字在練習頁的
+     「錯題」那一段本來就有，不必再放一個徽章。 */
   var nb = $("#nav").querySelector('button[data-v="wrong"]');
+  if (!nb) return;
   var old = nb.querySelector(".badge");
   if (old) old.remove();
   /* 徽章只數「舊帳」。今天錯的已經回到今天的進度裡了，
@@ -810,8 +814,7 @@ function drawDrillStart(el) {
         (wrong > wrongBatch()
           ? '<button class="btn bad" id="btnWrongBatch">清 ' + wrongBatch() + " 題錯題</button>" +
             '<div class="row" style="margin-top:10px">' +
-            '<button class="btn ghost" id="btnWrongDrill">全部清（' + wrong + " 題）</button>" +
-            '<button class="btn ghost" id="goWrongBook">照 Day 分組清</button></div>'
+            '<button class="btn ghost" id="btnWrongDrill">全部清（' + wrong + " 題）</button></div>"
           : '<button class="btn bad" id="btnWrongDrill">清掉錯題（' + wrong + " 題）</button>")
       : '<div class="empty" style="padding:20px 8px">沒有舊帳 🎉</div>') +
 
@@ -872,7 +875,6 @@ function drawDrillStart(el) {
   if ($("#btnWrongDrill")) $("#btnWrongDrill").onclick = function () {
     buildQueue("wrong"); drawDrill();
   };
-  if ($("#goWrongBook")) $("#goWrongBook").onclick = function () { go("wrong"); };
   $("#btnExtra").onclick = function () { buildQueue("extra"); drawDrill(); };
   el.querySelectorAll("[data-scr]").forEach(function (b) {
     b.onclick = function () { startScreen(+b.dataset.scr); };
@@ -1369,7 +1371,6 @@ function bindAdd(e) {
         toast("已加入練習清單");
       }
       refreshHeader();
-      if (cur === "mine") drawMine();
     };
   });
 }
@@ -2194,208 +2195,6 @@ function bindHits() {
 /* ============================================================
    我的字
    ============================================================ */
-var openMineDay = null;   // 目前展開的是哪一個 Day 資料夾
-
-/* 把一堆練習項目依課表的 Day 分組。
-   -1 代表不屬於任何 Day（自己從查單字加的）。
-   分組依據是課表當下的排法，所以改「每天幾個」或切換排序方式，資料夾也會跟著重分。 */
-function groupByDay(items) {
-  var dayOf = {};
-  dayGroups().forEach(function (g, i) {
-    g.forEach(function (u) { dayOf[idOf(u.w, u.si)] = i; });
-  });
-  var folders = {};
-  items.forEach(function (it) {
-    var d = dayOf[idOf(it.w, it.si)];
-    d = (d === undefined) ? -1 : d;
-    (folders[d] = folders[d] || []).push(it);
-  });
-  return folders;
-}
-function dayLabel(d) { return d < 0 ? "自己加的" : "Day " + (d + 1); }
-
-function drawMine() {
-  var items = allItems();
-  var l = S.log[today()] || { a: 0, c: 0 };
-  var rate = l.a ? Math.round(l.c / l.a * 100) : 0;
-  var mastered = items.filter(function (i) { return i.box >= 5; }).length;
-
-  var html =
-    '<div class="stats">' +
-    '<div class="stat"><div class="n">' + items.length + '</div><div class="l">練習中</div></div>' +
-    '<div class="stat"><div class="n">' + mastered + '</div><div class="l">已熟練</div></div>' +
-    '<div class="stat"><div class="n">' + rate + '%</div><div class="l">今日正確率</div></div>' +
-    "</div>";
-
-  if (!items.length) {
-    $("#v-mine").innerHTML = html + '<div class="empty">還沒有加任何單字</div>';
-    return;
-  }
-
-  /* 依課表的 Day 分組，一天一個資料夾。
-     分組依據就是課表當下的排法，所以改了「每天幾個字」或切換排序方式，
-     這裡的資料夾也會跟著重新分。 */
-  var folders = groupByDay(items);
-
-  var now = Date.now();
-  var keys = Object.keys(folders).map(Number).sort(function (a, b) { return a - b; });
-  html += '<h2 class="sec">練習清單（' + items.length + " 個字義，分 " + keys.length + " 個資料夾）</h2>";
-
-  html += keys.map(function (d) {
-    var list = folders[d].slice().sort(function (a, b) { return a.due - b.due; });
-    var due = list.filter(function (it) { return it.due <= now; }).length;
-    var mastered = list.filter(function (it) { return it.box >= 5; }).length;
-    var title = dayLabel(d);
-    var open = openMineDay === d;
-    return '<div class="day' + (open ? " open" : "") + '" data-m="' + d + '">' +
-      '<div class="top"><span class="n">' + title + "</span>" +
-      '<span class="st">' + list.length + " 個・熟練 " + mastered +
-      (due ? "・<b style=\"color:var(--accent)\">待複習 " + due + "</b>" : "") + "</span></div>" +
-      '<div class="words" style="padding-top:4px">' +
-      list.map(function (it) {
-        var e = DICT[it.w.toLowerCase()], sn = e.s[it.si];
-        var t = it.due <= now ? "待複習" : fmtDue(it.due - now);
-        return '<div class="li" style="padding:10px 0"><div><div class="w">' +
-          esc(e.w) + " " + lvTag(e) +
-          ' <span class="tag gray">' + esc(sn.p) + "</span></div>" +
-          '<div class="m">' + esc(sn.zh) + " ・ 熟練度 " + it.box + " ・ " + t + "</div></div>" +
-          '<button class="del" data-del="' + esc(it.w) + "::" + it.si + '">✕</button></div>';
-      }).join("") + "</div></div>";
-  }).join("");
-
-  $("#v-mine").innerHTML = html;
-
-  $("#v-mine").querySelectorAll("[data-m]").forEach(function (f) {
-    f.onclick = function (e) {
-      if (e.target.closest("[data-del]")) return;
-      openMineDay = openMineDay === +f.dataset.m ? null : +f.dataset.m;
-      drawMine();
-    };
-  });
-  $("#v-mine").querySelectorAll("[data-del]").forEach(function (b) {
-    b.onclick = function () {
-      var p = b.dataset.del.split("::");
-      delItem(p[0], +p[1]);
-      queue = queue.filter(function (q) { return !(q.w === p[0] && q.si === +p[1]); });
-      drawMine(); refreshHeader(); toast("已移除");
-    };
-  });
-}
-function fmtDue(ms) {
-  if (ms < 3600000) return Math.ceil(ms / 60000) + " 分後";
-  if (ms < DAY) return Math.ceil(ms / 3600000) + " 小時後";
-  return Math.ceil(ms / DAY) + " 天後";
-}
-
-/* ============================================================
-   錯題本（單字卡）
-   ============================================================ */
-var flashList = [], flashI = 0, flipped = false;
-
-var wrongDay = null;   // null = 停在資料夾清單；數字或 "all" = 正在翻該組的卡
-
-function drawWrong() {
-  /* 這一頁專門處理「跨天的舊帳」。今天錯的字已經回到今天的進度裡，
-     列在這裡會跟首頁的數字打架，而且會讓人以為要清兩次。 */
-  var all = oldWrong();
-  if (!all.length) {
-    wrongDay = null;
-    var td = todayWrong().length;
-    $("#v-wrong").innerHTML =
-      '<div class="empty"><span class="big">🎉</span>' +
-      "沒有跨天的舊錯題。" +
-      (td ? "<br>今天錯的 " + td + " 個已經排在「練習」的進度裡了。"
-          : "<br>答錯的字當天會回到進度裡，隔天沒答對才會變成舊帳。") + "</div>";
-    return;
-  }
-
-  /* 先給資料夾清單，選一組才進卡片模式。
-     一次翻三十幾張沒有段落感，分成一天一疊比較容易做完。 */
-  if (wrongDay === null) {
-    var folders = groupByDay(all);
-    var keys = Object.keys(folders).map(Number).sort(function (a, b) { return a - b; });
-    $("#v-wrong").innerHTML =
-      '<div class="plan-head"><div class="big">' + all.length +
-      ' <span style="font-size:15px;color:var(--sub);font-weight:500">個字義還沒過關</span></div>' +
-      '<div class="cap">卡片只用來翻閱複習，不會改動熟練度。' +
-      "要讓字離開錯題本，用「重練這組」把它答對一次。</div></div>" +
-      '<button class="btn bad" data-wd="all">全部一起翻（' + all.length + " 張）</button>" +
-      '<h2 class="sec">依課表分組</h2>' +
-      keys.map(function (d) {
-        var n = folders[d].length;
-        return '<div class="day" data-wd="' + d + '"><div class="top">' +
-          '<span class="n">' + dayLabel(d) + "</span>" +
-          '<span class="st">' + n + " 張 ›</span></div></div>";
-      }).join("");
-    $("#v-wrong").querySelectorAll("[data-wd]").forEach(function (b) {
-      b.onclick = function () {
-        wrongDay = b.dataset.wd === "all" ? "all" : +b.dataset.wd;
-        flashI = 0; flipped = false; drawWrong();
-      };
-    });
-    return;
-  }
-
-  flashList = wrongDay === "all" ? all : (groupByDay(all)[wrongDay] || []);
-  if (!flashList.length) { wrongDay = null; drawWrong(); return; }
-  if (flashI >= flashList.length) flashI = 0;
-  flipped = false;
-  renderFlash();
-}
-
-function renderFlash() {
-  var it = flashList[flashI];
-  var e = DICT[it.w.toLowerCase()], sn = e.s[it.si];
-  var ex = sn.ex[it.seen % sn.ex.length] || sn.ex[0];
-
-  /* 正面只給中文與挖空句子，逼你把英文回想出來（跟練習模式同方向）；
-     翻面才看到答案。看著英文想中文太簡單，練不到真正要考的能力。 */
-  var face = flipped
-    ? '<div class="fw">' + esc(e.w) + "</div>" +
-      '<div class="fp">' + esc(sn.p) + "　" + esc(sn.zh) + "</div>" +
-      (ex ? '<div class="fe" style="margin-top:16px">' + boldEx(ex.en) + "<br>" + esc(ex.zh) + "</div>" : "")
-    : '<div class="fz">' + esc(sn.zh) + "</div>" +
-      '<div class="fp">' + esc(sn.p) + "・答錯 " + it.wrong + " 次</div>" +
-      (ex ? '<div class="fe" style="margin-top:14px">' +
-        esc(splitEx(ex.en).pre) + "________" + esc(splitEx(ex.en).post) + "</div>" : "") +
-      '<div class="tip">先在心裡拼出英文，再點卡片對答案</div>';
-
-  $("#v-wrong").innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
-    '<button class="btn sm ghost" id="fBack">‹ ' +
-    (wrongDay === "all" ? "全部" : dayLabel(wrongDay)) + "</button>" +
-    '<span style="color:var(--sub);font-size:13px">' + (flashI + 1) + " / " + flashList.length + " 張</span>" +
-    '<button class="btn sm ghost" id="fDrill">重練這組</button></div>' +
-    '<div class="flash" id="flash">' + face + "</div>" +
-    /* 卡片就是單純翻閱用的，不會改動熟練度。
-       真正把字移出錯題本的方式是去「練習」把它答對一次。 */
-    '<div class="row" style="margin-top:16px">' +
-    '<button class="btn ghost" id="fPrev">‹ 上一張</button>' +
-    '<button class="btn ghost" id="fNext">下一張 ›</button></div>' +
-    '<p style="font-size:13px;color:var(--sub);margin:12px 4px 0;line-height:1.7;text-align:center">' +
-    "翻卡片只是複習，不會改變熟練度。<br>要讓字離開錯題本，去「重練這組」把它答對一次。</p>";
-
-  $("#flash").onclick = function () { flipped = !flipped; renderFlash(); };
-  $("#fBack").onclick = function () { wrongDay = null; drawWrong(); };
-  $("#fDrill").onclick = function () {
-    queue = shuffle(flashList.slice());
-    qTotal = queue.length;
-    drillMode = "wrong";
-    toast("這一輪只考這組的 " + qTotal + " 個字義");
-    go("drill");
-  };
-  $("#fPrev").onclick = function () {
-    flashI = (flashI - 1 + flashList.length) % flashList.length;
-    flipped = false; renderFlash();
-  };
-  $("#fNext").onclick = nextFlash;
-}
-function nextFlash() {
-  flashI = (flashI + 1) % flashList.length;
-  flipped = false;
-  renderFlash();
-}
-
 /* ============================================================
    設定
    ============================================================ */
@@ -2532,7 +2331,7 @@ function drawSet() {
       var o = JSON.parse($("#io").value);
       if (!o.items) throw 0;
       S = o; S.todo = S.todo || []; S.bad = S.bad || []; S.log = S.log || {};
-      save(); queue = []; toast("匯入成功"); go("mine");
+      save(); queue = []; toast("匯入成功"); go("drill");
     } catch (e) { toast("格式不對，請確認貼上的是完整備份"); }
   };
   $("#btnWipe").onclick = function () {
