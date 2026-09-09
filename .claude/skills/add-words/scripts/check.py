@@ -138,6 +138,14 @@ SKIP_POS = {
     "nowhere": {"pron."}, "salmon": {"adj."},
     # nutrient adj. 只當名詞修飾語（nutrient solution），不是真形容詞
     "nutrient": {"adj."},
+    # w47（第 6 級 J–Z）刻意不收的詞性：
+    # 朗文沒有這些詞性的條目
+    "radiate": {"adj."}, "skim": {"n."}, "subjective": {"n."},
+    "notable": {"n."}, "peril": {"v."},
+    # savage n. 朗文標「a very offensive word」且 old-fashioned，不放進高中生字庫
+    "savage": {"n."},
+    # solitary n. 是監獄術語（單獨監禁）與英式文學用法，罕用
+    "solitary": {"n."},
     # w46（第 6 級 A–I）刻意不收的詞性：
     # conserve n. 是「果醬」，朗文標 formal，現代英文用 jam／preserve
     "conserve": {"n."},
