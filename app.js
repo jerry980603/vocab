@@ -473,7 +473,18 @@ function oldWrong() {
 
 /* 錯題一次清幾題。錯題本累積幾百個的時候，「全部清」那個數字會嚇死人，
    分批才做得下去——清 20 題也是清。 */
-var WRONG_BATCH = 20;
+/* 一批清幾題錯題，可調。
+
+   為什麼值得調大：錯題本的組成**嚴重偏向難字**——用各級的實際答對率
+   （1 級 .85 到 5 級 .35）模擬 1400 個字義，舊帳的分級分布是
+   L1 10%、L2 14%、L3 20%、L4 24%、L5 32%，**3～5 級占 76%**。
+   所以「每天多清一點錯題」是增加難字曝光最直接的閥門，
+   比在排序上動手腳有效得多（排序只換順序，不換組成）。 */
+var WRONG_BATCH_OPTS = [20, 40, 60];
+function wrongBatch() {
+  var n = S.wrongBatch;
+  return WRONG_BATCH_OPTS.indexOf(n) > -1 ? n : 20;
+}
 
 /* 出題順序的優先分數。原本是純 shuffle()，等於「難的字跟你早就會的字一樣重要」。
 
@@ -788,9 +799,16 @@ function drawDrillStart(el) {
     "・<b>舊帳 " + wrong + " 個</b>——累積下來的，<b>不是今天的量</b>，每天清一點就好" +
     "</div></div>" +
     (wrong
-      ? "" +
-        (wrong > WRONG_BATCH
-          ? '<button class="btn bad" id="btnWrongBatch">清 ' + WRONG_BATCH + " 題錯題</button>" +
+      ? '<div class="seg" style="margin-bottom:10px">' +
+        WRONG_BATCH_OPTS.map(function (n) {
+          return '<button data-wb="' + n + '"' +
+            (wrongBatch() === n ? ' class="on"' : "") + ">一批 " + n + " 題</button>";
+        }).join("") + "</div>" +
+        '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.7">' +
+        "錯題本裡 <b>3～5 級大約占七成半</b>——想多碰難字，" +
+        "把這個調大比改排序有效，排序只換順序、不換組成。</p>" +
+        (wrong > wrongBatch()
+          ? '<button class="btn bad" id="btnWrongBatch">清 ' + wrongBatch() + " 題錯題</button>" +
             '<div class="row" style="margin-top:10px">' +
             '<button class="btn ghost" id="btnWrongDrill">全部清（' + wrong + " 題）</button>" +
             '<button class="btn ghost" id="goWrongBook">照 Day 分組清</button></div>'
@@ -824,6 +842,11 @@ function drawDrillStart(el) {
     '<h2 class="sec">未來七天的複習量</h2>' + loadForecast();
 
   var bLoad = $("#btnLoadNew"), bMore = $("#btnMoreNew");
+  el.querySelectorAll("[data-wb]").forEach(function (b) {
+    b.onclick = function () {
+      S.wrongBatch = +b.dataset.wb; save(); drawDrill();
+    };
+  });
   if (bLoad) bLoad.onclick = function () {
     var n = loadTodayNew();
     toast(n ? "已載入 " + n + " 個新字義" : "沒有可以載入的新字了");
@@ -844,7 +867,7 @@ function drawDrillStart(el) {
 
   if ($("#btnToday")) $("#btnToday").onclick = function () { buildQueue("today"); drawDrill(); };
   if ($("#btnWrongBatch")) $("#btnWrongBatch").onclick = function () {
-    buildQueue("wrong", WRONG_BATCH); drawDrill();
+    buildQueue("wrong", wrongBatch()); drawDrill();
   };
   if ($("#btnWrongDrill")) $("#btnWrongDrill").onclick = function () {
     buildQueue("wrong"); drawDrill();
