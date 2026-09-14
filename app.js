@@ -482,8 +482,13 @@ var zhPeeked = false;
    但跨天的舊帳仍然排除：錯題本積到幾百個時混進來，今天的功課會顯示七百題，
    看起來像不可能的任務。舊帳留在下面獨立那一段，分批清。 */
 function normalDue() {
-  var td = today();
-  return dueItems().filter(function (i) { return !i.wb || i.wbAt === td; });
+  var td = today(), now = Date.now();
+  return allItems().filter(function (i) {
+    /* 今天錯的不看 due，一律算到期——答錯不用等（2026/09/14 使用者要求）。
+       這樣改版前已經排在「10 分鐘後」的那批也會馬上回來。 */
+    if (i.wb) return i.wbAt === td;
+    return i.due <= now;
+  });
 }
 /* 錯題分兩段：今天錯的記憶還新，答對一次就畢業，優先清；其餘是舊帳。 */
 function todayWrong() {
@@ -763,11 +768,11 @@ function drawDrillStart(el) {
   var due = normalDue().length, all = allItems().length;
   /* 今天錯的已經回到主線（算在 due 裡），這一段只剩跨天的舊帳 */
   var wrongToday = todayWrong().length, wrong = oldWrong().length;
-  /* ⚠ 今天錯的字 due 是「10 分鐘後」，所以 wrongToday 裡只有一部分已經到期。
-     三項分解一定要用「已到期的那部分」去扣，否則會算出負數
-     （踩過：due 0、wrongToday 4 → 到期要複習 -4）。 */
+  /* 三項分解要用「在 due 裡的那部分」去扣，否則會算出負數
+     （踩過：due 0、wrongToday 4 → 到期要複習 -4）。
+     2026/09/14 起今天錯的一律立刻到期（見 normalDue），所以兩者相等，
+     但照樣從 normalDue 算，口徑才不會分岔。 */
   var wrongDue = normalDue().filter(function (i) { return i.wb; }).length;
-  var wrongWait = wrongToday - wrongDue;
   var t = todayTask(), l = dayLog();
   /* 「新字」與「到期複習」必須是 due 的兩個互斥子集，不然畫面會變成
      「還有 324 題」底下寫著「新字 70 ＋ 到期複習 324」，看起來像 394 題。
@@ -802,8 +807,6 @@ function drawDrillStart(el) {
     "・到期要複習 <b>" + (due - newPend - wrongDue) + "</b> 個字義<br>" +
     "・今天答錯已經可以重考的 <b>" + wrongDue + "</b> 個字義<br>" +
     '<span style="opacity:.72">三項加起來就是上面的 ' + due + " 題，沒有重複計算。</span>" +
-    (wrongWait ? '<br><span style="opacity:.72">另外有 <b>' + wrongWait +
-      "</b> 個今天錯的字要等 10 分鐘才會回到這裡。</span>" : "") +
     "</div></div>" +
 
     (t.left
@@ -818,8 +821,7 @@ function drawDrillStart(el) {
     /* 第二段：錯題。分批清，數字再大也不會變成今天的壓力。 */
     '<h2 class="sec">錯題</h2>' +
     '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
-    "・<b>今天錯的 " + wrongToday + " 個</b>——會回到上面的進度裡" +
-    (wrongWait ? "（" + wrongWait + " 個還在 10 分鐘等待期）" : "") + "<br>" +
+    "・<b>今天錯的 " + wrongToday + " 個</b>——已經在上面的進度裡，不用等<br>" +
     "・<b>舊帳 " + wrong + " 個</b>——累積下來的，<b>不是今天的量</b>，每天清一點就好" +
     "</div></div>" +
     (wrong
@@ -1185,6 +1187,9 @@ function renderScreenCard() {
   refreshHeader();
 }
 
+/* 答錯的字隔幾題回來再考一次 */
+var WRONG_GAP = 3;
+
 function submit(gaveUp) {
   if (answered) { next(); return; }
   var it = qCur, sn = senseOf(it);
@@ -1255,9 +1260,16 @@ function submit(gaveUp) {
     /* 答錯退兩級，不打回原點。
        FSRS 與 Anki 的 relearning steps 都不是全歸零：全歸零會讓一個
        已經複習到 60 天間隔的字重走整條階梯，每日複習量因此暴增。
-       退兩級 ＋ 10 分鐘後重考，等於「這次答對就回到大約一半的間隔」。 */
+       退兩級 ＋ 馬上重考，等於「這次答對就回到大約一半的間隔」。 */
     it.box = Math.max(0, it.box - ((it.wrong >= 5) ? 3 : 2));
-    it.due = Date.now() + INT[1];
+    /* 2026/09/14 使用者要求：答錯不用等 10 分鐘，直接回到練習裡。
+       due 設成「現在」，中途離開再回來也會立刻排在最前面（priority 的 +1000）。 */
+    it.due = Date.now();
+    /* 插回這一輪，隔 WRONG_GAP 題再考。不是塞到最尾巴——一輪七十題的話
+       尾巴要十幾分鐘後才輪到，比原本等 10 分鐘還久；也不是下一題馬上考，
+       答案才剛看完，那只是在考短期記憶。 */
+    queue.splice(Math.min(queue.length, WRONG_GAP + 1), 0, it);
+    qTotal++;
   }
   save();
 
@@ -1298,9 +1310,6 @@ function submit(gaveUp) {
   var egBox = $("#allEg");
   if (egBox) egBox.addEventListener("click", onTokenClick);
 
-  // 一般練習答錯就交給錯題本處理，不在本回合重複糾纏；
-  // 錯題練習模式才把它留在尾巴再考一次。
-  if (!ok && drillMode === "wrong") { queue.push(it); qTotal++; }
   refreshHeader();
 }
 
@@ -1598,7 +1607,7 @@ function phasePlan(written) {
     "穩定度變成大約 3 倍，而這條階梯只有 2 倍；一格一格走，排程會越來越落後於" +
     "你實際記得的程度。改成跳兩格，總題數少 22%，考試當天的預期保留率" +
     "只從 98.6% 掉到 97.1%。<br><br>" +
-    "<b>答錯退兩格</b>，十分鐘後重考。答錯的題最花時間（要看答案、讀例句），" +
+    "<b>答錯退兩格</b>，隔 " + WRONG_GAP + " 題就回來重考。答錯的題最花時間（要看答案、讀例句），" +
     "所以真正省時間的方式是別讓字第一次就答錯——那是「快篩」在做的事。" +
     "</div></div>" +
     /* 字庫缺口大的時候才提醒去補字。缺不到 5% 的時候，剩下的都是
@@ -2126,7 +2135,7 @@ function drawStat() {
     '<p style="font-size:13px;color:var(--sub);margin:16px 4px 0;line-height:1.75">' +
     "<b>時間怎麼算的</b>：只有停在「練習」或「錯題本」頁、而且最近 90 秒內有動作" +
     "（打字、點畫面）才會累加，每 5 秒記一次。把 App 開著去做別的事不會被算進來。<br>" +
-    "<b>「練到的字義」跟「題數」差在哪</b>：同一個字答錯後隔十分鐘重考，" +
+    "<b>「練到的字義」跟「題數」差在哪</b>：同一個字答錯後隔幾題重考，" +
     "題數會加兩題，字義只算一個。</p>";
 
   $("#v-stat").innerHTML = html;
