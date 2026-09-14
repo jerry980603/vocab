@@ -103,18 +103,27 @@ function lookup(raw) {
 var LS = "vocabApp_v1";
 var S = load();
 
+/* 把缺的欄位補齊。load()、匯入備份、清除進度三處都走這裡——
+   以前只有 load() 會補，匯入一份舊備份之後 S.known 是 undefined，
+   screenPool() 一讀就 TypeError，練習頁整個白掉，要重新整理才會好。 */
+function normalize(o) {
+  o = o || {};
+  o.v = o.v || 1;
+  o.items = o.items || {};
+  o.todo = o.todo || []; o.bad = o.bad || []; o.log = o.log || {};
+  o.known = o.known || {};   /* 快篩標記「我已經會了」的字，不進練習清單 */
+  o.grad = o.grad || {};     /* 「太簡單」兩次確認後畢業的字義，同樣不再排 */
+  o.auto = o.auto || {};     /* 每天自動載入了幾個新字 */
+  o.gone = o.gone || {};     /* 從清單刪掉的字義 → 刪除時間，給雲端同步用（見 delItem） */
+  o.cards = o.cards || {};   /* 單字卡（見「單字卡」那一節） */
+  return o;
+}
 function load() {
   try {
     var o = JSON.parse(localStorage.getItem(LS));
-    if (o && o.items) {
-      o.todo = o.todo || []; o.bad = o.bad || []; o.log = o.log || {};
-      o.known = o.known || {};   /* 快篩標記「我已經會了」的字，不進練習清單 */
-      o.grad = o.grad || {};     /* 「太簡單」兩次確認後畢業的字義，同樣不再排 */
-      o.auto = o.auto || {};     /* 每天自動載入了幾個新字 */
-      return o;
-    }
+    if (o && o.items) return normalize(o);
   } catch (e) { }
-  return { v: 1, items: {}, todo: [], bad: [], log: {}, known: {}, grad: {} };
+  return normalize({});
 }
 function save() {
   /* mtime 給雲端同步用：兩台裝置的純量設定（每日題數、考試日期）
@@ -182,14 +191,24 @@ function isExcluded(w, si) {
 function addItem(w, si) {
   var id = idOf(w, si);
   if (S.items[id]) return false;
+  /* at＝加入時間。同步時拿它跟 S.gone 的刪除時間比，決定「刪掉之後又加回來」的字要不要留 */
   S.items[id] = { w: w, si: si, box: 0, due: Date.now(), seen: 0, right: 0, wrong: 0,
-                  st: 0, wb: false, wbAt: "", easy: 0 };
+                  wb: false, wbAt: "", easy: 0, at: Date.now() };
+  delete S.gone[id];
   /* 不管是自動載入、課表整組加入還是自己查到加的，都算「今天學的新字」 */
   var l = dayLog(); l.n = (l.n || 0) + 1;
   save();
   return true;
 }
-function delItem(w, si) { delete S.items[idOf(w, si)]; save(); }
+/* ⚠ 刪除一定要留下墓碑（S.gone）。雲端同步是「兩邊取聯集」，
+   只把本機那筆 delete 掉的話，雲端那份還在，下一次同步就被合併回來——
+   在查單字移除的字、按「太簡單」畢業的字，重開 App 之後全部復活。 */
+function delItem(w, si) {
+  var id = idOf(w, si);
+  delete S.items[id];
+  S.gone[id] = Date.now();
+  save();
+}
 
 function allItems() {
   return Object.keys(S.items).map(function (k) { return S.items[k]; })
@@ -388,6 +407,7 @@ function lvText(e) {
 /* ---------- 4. 頁面切換 ---------- */
 var VIEWS = {
   drill: { t: "練習", r: drawDrill },
+  card: { t: "單字卡", r: drawCard },
   plan: { t: "每日課表", r: drawPlan },
   stat: { t: "學習紀錄", r: drawStat },
   find: { t: "查單字", r: drawFind },
@@ -944,6 +964,9 @@ function renderCard() {
     '<div class="row" style="margin-top:9px" id="rowAid">' +
     '<button class="btn ghost" id="btnHint">提示</button>' +
     '<button class="btn ghost" id="btnGiveUp">不會<span class="kbd">Alt</span></button></div>' +
+    /* 答完之後才出現，放在 rowAid 原本的位置——同樣要排在 #fb 前面，理由見下 */
+    '<div class="row" style="margin-top:9px;display:none" id="rowCard">' +
+    '<button class="btn ghost" id="btnCard"></button></div>' +
     /* ⚠ rowSkip 一定要排在 #fb 前面。#fb 答完之後會塞進整個 allExamplesHTML，
        實測有 1477px 高；排在它後面的話按鈕會掉到 y≈2769px，
        手機上永遠看不到，等於這個功能不存在（實際回報過）。 */
@@ -1244,6 +1267,8 @@ function submit(gaveUp) {
   $("#blank").textContent = ans;
   $("#blank").className = "blank rev";
   $("#rowAid").style.display = "none";
+  $("#rowCard").style.display = "";
+  setCardBtn(it);
   /* 只有「無提示答對」才給按「太簡單」——沒證明自己會就不能跳過 */
   if (ok && hinted === 0 && !zhPeeked && canGraduate(it)) {
     $("#rowSkip").style.display = "";
@@ -1754,8 +1779,9 @@ function bindSprint() {
            而這些是回來抽考的畢業字。順帶讓 renderCard 取下一句例句。 */
         S.items[idOf(u.w, u.si)] = {
           w: u.w, si: u.si, box: 4, due: Date.now(), seen: 1,
-          right: 0, wrong: 0, st: 0, wb: false, wbAt: "", easy: 0
+          right: 0, wrong: 0, wb: false, wbAt: "", easy: 0, at: Date.now()
         };
+        delete S.gone[idOf(u.w, u.si)];
       });
       shuffle(allItems()).forEach(function (it, i) {
         it.due = Date.now() + (i % span) * DAY;
@@ -2193,8 +2219,307 @@ function bindHits() {
 }
 
 /* ============================================================
-   我的字
+   單字卡（2026/09/14）
+
+   跟練習清單完全分開的一疊卡片：想多看幾眼的字自己收進來，
+   翻面看意思就好，不打字、不計分、不影響複習排程。
+
+   S.cards[id] 一張一筆：
+     id  "b:單字::義項"（字庫的字義）或 "u:亂數"（自己輸入的）
+     w   英文       zh  中文       p  詞性（字庫的才有）
+     si  義項編號（字庫的才有，例句從 DICT 即時讀，字庫改了會跟著更新）
+     d   加入的日期（用來分「每日」）
+     t   最後修改時間（同步時比新舊）
+   ⚠ 刪除不是 delete，而是換成 { id, del: 1, t } 的墓碑，
+      否則另一台裝置還有那張卡，同步一次又長回來。
    ============================================================ */
+function bankCardId(w, si) { return "b:" + idOf(w, si); }
+function cardOn(id) { var c = S.cards[id]; return !!(c && !c.del); }
+function cardList() {
+  return Object.keys(S.cards).map(function (k) { return S.cards[k]; })
+    .filter(function (c) { return c && !c.del; })
+    .sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+}
+function addBankCard(w, si) {
+  var e = DICT[String(w).toLowerCase()], sn = e && e.s[si];
+  if (!sn) return false;
+  var id = bankCardId(e.w, si), now = Date.now();
+  S.cards[id] = { id: id, w: e.w, si: si, p: sn.p, zh: sn.zh, d: today(), t: now };
+  save();
+  return true;
+}
+function addOwnCard(en, zh) {
+  var dup = cardList().some(function (c) {
+    return c.w.toLowerCase() === en.toLowerCase() && c.zh === zh;
+  });
+  if (dup) return false;
+  var id = "u:" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  S.cards[id] = { id: id, w: en, zh: zh, d: today(), t: Date.now() };
+  save();
+  return true;
+}
+function delCard(id) {
+  S.cards[id] = { id: id, del: 1, t: Date.now() };
+  save();
+}
+/* 字庫的卡片即時對回字庫：拿得到就用最新的詞性、中文與例句 */
+function cardSense(c) {
+  if (c.si === undefined) return null;
+  var e = DICT[c.w.toLowerCase()];
+  return e ? e.s[c.si] || null : null;
+}
+
+var cardTab = "pick";     /* 加卡片那一段：pick 從字庫挑／own 自己輸入 */
+var cardQuery = "";
+var flip = null;          /* 翻卡中：{ ids, i, back } */
+
+function cardFront() { return S.cardFront === "zh" ? "zh" : "en"; }
+
+function drawCard() {
+  if (flip) { renderFlip(); return; }
+  var all = cardList(), td = today();
+  var todays = all.filter(function (c) { return c.d === td; });
+
+  var html =
+    '<div class="plan-head">' +
+    '<div class="big">' + todays.length +
+    ' <span style="font-size:15px;color:var(--sub);font-weight:500">張是今天加的・全部 ' +
+    all.length + " 張</span></div>" +
+    '<div class="cap" style="line-height:1.8">練習時答完一題，按「加入單字卡」就會收到這裡；' +
+    "也可以在下面從字庫挑，或自己輸入。翻卡不計分，也不影響複習排程。</div></div>" +
+
+    (all.length
+      ? (todays.length
+          ? '<button class="btn" data-flip="today">翻今天的卡（' + todays.length + " 張）</button>" +
+            '<div class="row" style="margin-top:10px">' +
+            '<button class="btn ghost" data-flip="all">全部隨機翻（' + all.length + " 張）</button></div>"
+          : '<button class="btn" data-flip="all">全部隨機翻（' + all.length + " 張）</button>") +
+        '<div class="seg" style="margin-top:12px">' +
+        '<button data-front="en"' + (cardFront() === "en" ? ' class="on"' : "") + ">正面是英文</button>" +
+        '<button data-front="zh"' + (cardFront() === "zh" ? ' class="on"' : "") + ">正面是中文</button></div>"
+      : "") +
+
+    '<h2 class="sec">加卡片</h2>' +
+    '<div class="seg" style="margin-bottom:12px">' +
+    '<button data-ctab="pick"' + (cardTab === "pick" ? ' class="on"' : "") + ">從字庫挑</button>" +
+    '<button data-ctab="own"' + (cardTab === "own" ? ' class="on"' : "") + ">自己輸入</button></div>" +
+    (cardTab === "pick"
+      ? '<input id="cardSearch" class="cardin" placeholder="輸入英文或中文，例如 abandon、放棄" ' +
+        'autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" value="' +
+        esc(cardQuery) + '"><div id="cardHits"></div>'
+      : '<input id="ownEn" class="cardin" placeholder="英文，例如 take for granted" ' +
+        'autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">' +
+        '<div id="ownHint" class="cardhint"></div>' +
+        '<input id="ownZh" class="cardin" style="margin-top:8px" placeholder="中文，例如 視為理所當然" ' +
+        'autocomplete="off">' +
+        '<button class="btn" id="btnOwn" style="margin-top:10px">加入單字卡</button>') +
+
+    '<h2 class="sec">我的單字卡</h2>' + cardDaysHTML(all);
+
+  $("#v-card").innerHTML = html;
+
+  $("#v-card").querySelectorAll("[data-flip]").forEach(function (b) {
+    b.onclick = function () {
+      var list = b.dataset.flip === "today" ? todays
+        : b.dataset.flip === "all" ? shuffle(all.slice())
+        : all.filter(function (c) { return c.d === b.dataset.flip; });
+      startFlip(list);
+    };
+  });
+  $("#v-card").querySelectorAll("[data-front]").forEach(function (b) {
+    b.onclick = function () { S.cardFront = b.dataset.front; save(); drawCard(); };
+  });
+  $("#v-card").querySelectorAll("[data-ctab]").forEach(function (b) {
+    b.onclick = function () { cardTab = b.dataset.ctab; drawCard(); };
+  });
+  $("#v-card").querySelectorAll("[data-delcard]").forEach(function (b) {
+    b.onclick = function () {
+      var c = S.cards[b.dataset.delcard];
+      delCard(b.dataset.delcard);
+      toast((c && c.w ? c.w + " " : "") + "已從單字卡移除");
+      drawCard();
+    };
+  });
+
+  if (cardTab === "pick") {
+    $("#cardSearch").oninput = function () { cardQuery = this.value; cardHits(); };
+    cardHits();
+  } else {
+    $("#ownEn").oninput = function () {
+      var e = DICT[norm(this.value)];
+      $("#ownHint").innerHTML = e
+        ? "字庫裡有 <b>" + esc(e.w) + "</b>，" +
+          '<button class="minilink" id="ownToPick">改從字庫挑</button>會附上詞性與例句'
+        : "";
+      if ($("#ownToPick")) $("#ownToPick").onclick = function () {
+        cardTab = "pick"; cardQuery = e.w; drawCard();
+      };
+    };
+    var addOwn = function () {
+      var en = $("#ownEn").value.replace(/\s+/g, " ").trim();
+      var zh = $("#ownZh").value.replace(/\s+/g, " ").trim();
+      if (!en) { $("#ownEn").focus(); return toast("先填英文"); }
+      if (!zh) { $("#ownZh").focus(); return toast("再填中文"); }
+      /* | 是字庫的欄位分隔符，卡片雖然不走那個格式，擋掉免得哪天匯出出事 */
+      en = en.replace(/\|/g, "／"); zh = zh.replace(/\|/g, "／");
+      if (!addOwnCard(en, zh)) return toast("已經有這張卡了");
+      toast("已加入單字卡：" + en);
+      drawCard();
+      if ($("#ownEn")) $("#ownEn").focus();
+    };
+    $("#btnOwn").onclick = addOwn;
+    $("#ownEn").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); $("#ownZh").focus(); }
+    });
+    $("#ownZh").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); addOwn(); }
+    });
+  }
+}
+
+/* 從字庫挑：跟查單字同一套搜尋，但每個字義旁邊直接是「＋ 單字卡」 */
+function cardHits() {
+  var q = cardQuery.trim().toLowerCase(), box = $("#cardHits");
+  if (!box) return;
+  if (!q) {
+    box.innerHTML = '<p class="cardhint" style="margin:10px 4px">' +
+      "英文、中文都能搜。一個字有好幾個意思時，挑你要的那一個加。</p>";
+    return;
+  }
+  var hits = BANK.filter(function (e) {
+    if (e.w.toLowerCase().indexOf(q) > -1) return true;
+    return e.s.some(function (sn) { return sn.zh.indexOf(q) > -1; });
+  }).sort(function (a, b) {
+    /* 完全相符 → 開頭相符 → 其他。不然搜 bank 會先列出 bankrupt */
+    var r = function (e) { var w = e.w.toLowerCase(); return w === q ? 0 : w.indexOf(q) === 0 ? 1 : 2; };
+    return r(a) - r(b);
+  }).slice(0, 20);
+  if (!hits.length) {
+    box.innerHTML = '<p class="cardhint" style="margin:10px 4px">字庫裡找不到「' + esc(q) +
+      "」，可以切到「自己輸入」。</p>";
+    return;
+  }
+  box.innerHTML = hits.map(function (e) {
+    return '<div class="pickw"><div class="w">' + esc(e.w) + " " + lvTag(e) + "</div>" +
+      e.s.map(function (sn, i) {
+        var on = cardOn(bankCardId(e.w, i));
+        return '<div class="picks"><div><span class="tag gray">' + esc(sn.p) + "</span> " +
+          esc(sn.zh) + "</div>" +
+          '<button class="addbtn' + (on ? " done" : "") + '" data-pw="' + esc(e.w) +
+          '" data-psi="' + i + '">' + (on ? "已加入" : "＋ 單字卡") + "</button></div>";
+      }).join("") + "</div>";
+  }).join("");
+  box.querySelectorAll("[data-pw]").forEach(function (b) {
+    b.onclick = function () {
+      var w = b.dataset.pw, si = +b.dataset.psi, id = bankCardId(w, si);
+      if (cardOn(id)) { delCard(id); toast("已從單字卡移除"); }
+      else { addBankCard(w, si); toast("已加入單字卡：" + w); }
+      /* 整頁重畫沒關係：點按鈕的當下搜尋框本來就已經失焦了，
+         而上面的張數與下面的清單都要跟著更新 */
+      drawCard();
+    };
+  });
+}
+
+/* 「每日」單字卡：照加入的日期分組，最近的在上面，每一天都能單獨翻 */
+function cardDaysHTML(all) {
+  if (!all.length) {
+    return '<div id="cardDays" class="empty" style="padding:24px 8px">還沒有單字卡。<br>' +
+      '<span style="font-size:13px">練習答完一題時按「加入單字卡」，或用上面的方式加。</span></div>';
+  }
+  var byDay = {};
+  all.forEach(function (c) { (byDay[c.d] = byDay[c.d] || []).push(c); });
+  var td = today(), yd = daysAgo(1);
+  return '<div id="cardDays">' + Object.keys(byDay).sort().reverse().map(function (d) {
+    var list = byDay[d];
+    var name = d === td ? "今天" : d === yd ? "昨天" : dayLabelShort(d);
+    return '<div class="cardday"><span><b>' + name + "</b>　" + list.length + " 張</span>" +
+      '<button class="btn ghost sm" data-flip="' + d + '">翻這天</button></div>' +
+      list.map(function (c) {
+        var sn = cardSense(c);
+        return '<div class="li"><div><div class="w">' + esc(c.w) +
+          (c.si === undefined ? ' <span class="lv out">自訂</span>' : "") + "</div>" +
+          '<div class="m">' + (sn ? esc(sn.p) + " " + esc(sn.zh) : esc(c.zh)) + "</div></div>" +
+          '<button class="del" data-delcard="' + esc(c.id) + '" aria-label="移除">×</button></div>';
+      }).join("");
+  }).join("") + "</div>";
+}
+function startFlip(list) {
+  if (!list.length) return toast("沒有卡片可以翻");
+  flip = { ids: list.map(function (c) { return c.id; }), i: 0, back: false };
+  window.scrollTo(0, 0);
+  renderFlip();
+}
+function endFlip() { flip = null; drawCard(); }
+
+function renderFlip() {
+  /* 翻到一半時卡片被刪掉（例如另一台同步進來），跳過它 */
+  while (flip.i < flip.ids.length && !cardOn(flip.ids[flip.i])) flip.ids.splice(flip.i, 1);
+  if (!flip.ids.length) { toast("沒有卡片了"); endFlip(); return; }
+  if (flip.i >= flip.ids.length) flip.i = flip.ids.length - 1;
+
+  var c = S.cards[flip.ids[flip.i]], sn = cardSense(c);
+  var p = sn ? sn.p : (c.p || ""), zh = sn ? sn.zh : c.zh;
+  var enFirst = cardFront() === "en";
+  var wordHTML = '<div class="fw">' + esc(c.w) + "</div>";
+  var zhHTML = (p ? '<div class="fp">' + esc(p) + "</div>" : "") + '<div class="fz">' + esc(zh) + "</div>";
+  var exHTML = sn ? sn.ex.slice(0, 2).map(function (x) {
+    return '<div class="fe">' + boldEx(x.en) + "<br>" + esc(x.zh) + "</div>";
+  }).join("") : "";
+
+  var face = !flip.back
+    ? (enFirst ? wordHTML : zhHTML) + '<div class="tip">點一下翻面</div>'
+    : (enFirst ? wordHTML + zhHTML : zhHTML + wordHTML) + exHTML;
+
+  var last = flip.i === flip.ids.length - 1;
+  $("#v-card").innerHTML =
+    '<div class="qmeta"><span>單字卡 ' + (flip.i + 1) + " / " + flip.ids.length + "</span>" +
+    '<button class="minilink" id="flipQuit">結束</button></div>' +
+    '<div class="bar" style="margin:0 0 14px"><i style="width:' +
+    Math.round((flip.i + 1) / flip.ids.length * 100) + '%"></i></div>' +
+    '<div class="flash' + (flip.back ? " back" : "") + '" id="flash">' + face + "</div>" +
+    '<div class="row" style="margin-top:12px">' +
+    '<button class="btn ghost" id="flipPrev"' + (flip.i ? "" : " disabled") + ">← 上一張</button>" +
+    '<button class="btn" id="flipNext">' + (last ? "翻完了" : "下一張 →") + "</button></div>" +
+    '<div style="text-align:center;margin-top:12px">' +
+    '<button class="minilink" id="flipDel">從單字卡移除這張</button></div>' +
+    '<p class="cardhint kbdline" style="text-align:center;margin-top:6px">' +
+    '<span class="kbd">空白鍵</span> 翻面　<span class="kbd">←</span><span class="kbd">→</span> 換卡</p>';
+
+  $("#flash").onclick = flipTurn;
+  $("#flipPrev").onclick = flipPrev;
+  $("#flipNext").onclick = flipNext;
+  $("#flipQuit").onclick = endFlip;
+  $("#flipDel").onclick = function () {
+    var w = c.w;
+    delCard(c.id);
+    flip.ids.splice(flip.i, 1);
+    flip.back = false;
+    toast(w + " 已從單字卡移除");
+    renderFlip();
+  };
+}
+function flipTurn() { flip.back = !flip.back; renderFlip(); }
+function flipPrev() { if (flip.i > 0) { flip.i--; flip.back = false; renderFlip(); } }
+function flipNext() {
+  if (flip.i >= flip.ids.length - 1) { toast("這一疊翻完了"); endFlip(); return; }
+  flip.i++; flip.back = false; renderFlip();
+}
+
+/* 練習頁答完一題之後的「加入單字卡」按鈕 */
+function setCardBtn(it) {
+  var b = $("#btnCard");
+  if (!b) return;
+  var on = cardOn(bankCardId(it.w, it.si));
+  b.textContent = on ? "✓ 已在單字卡（再按一下移除）" : "＋ 加入單字卡";
+  b.onclick = function () {
+    var id = bankCardId(it.w, it.si);
+    if (cardOn(id)) { delCard(id); toast("已從單字卡移除"); }
+    else if (addBankCard(it.w, it.si)) toast("已加入今天的單字卡");
+    setCardBtn(it);
+  };
+}
+
 /* ============================================================
    設定
    ============================================================ */
@@ -2330,13 +2655,13 @@ function drawSet() {
     try {
       var o = JSON.parse($("#io").value);
       if (!o.items) throw 0;
-      S = o; S.todo = S.todo || []; S.bad = S.bad || []; S.log = S.log || {};
+      S = normalize(o);
       save(); queue = []; toast("匯入成功"); go("drill");
     } catch (e) { toast("格式不對，請確認貼上的是完整備份"); }
   };
   $("#btnWipe").onclick = function () {
     if (!confirm("確定要清除全部進度嗎？這會刪掉你的練習清單、熟練度與錯題本，無法復原。")) return;
-    S = { v: 1, items: {}, todo: [], bad: [], log: {}, known: {}, grad: {}, auto: {} };
+    S = normalize({});
     save(); queue = []; toast("已清除"); go("drill");
   };
 }
@@ -2415,6 +2740,17 @@ document.addEventListener("keydown", function (e) {
             (t.tagName === "INPUT" && t.id !== "ansIn"))) return;
   e.preventDefault();
   submit();          /* answered 為真時 submit() 會轉呼叫 next() */
+});
+
+/* 單字卡翻卡時：空白鍵／Enter 翻面，左右鍵換卡 */
+document.addEventListener("keydown", function (e) {
+  if (cur !== "card" || !flip || e.isComposing) return;
+  if ($("#sheetBg").classList.contains("on")) return;
+  var t = e.target;
+  if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+  if (e.key === " " || e.key === "Enter") { e.preventDefault(); flipTurn(); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); flipNext(); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); flipPrev(); }
 });
 
 /* ---------- 啟動 ---------- */

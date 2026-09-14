@@ -21,6 +21,8 @@ var SYNC = (function () {
   /* 同步完成要把結果寫回本機，那會呼叫 save()，而 save() 又會呼叫 touch()。
      沒有這個旗標的話就變成「同步 → 存檔 → 排下一次同步」的無限迴圈。 */
   var applying = false;
+  /* 同步進行到一半時本機又有變動（例如上傳途中又答了一題） */
+  var dirtyWhileBusy = false;
 
   function loadCfg() {
     try { return JSON.parse(localStorage.getItem(LSK)) || {}; }
@@ -45,8 +47,17 @@ var SYNC = (function () {
       log: {},
       known: {},
       grad: {},
-      auto: {}
+      auto: {},
+      gone: {},
+      cards: {}
     };
+
+    /* gone（刪除墓碑）：同一個字義兩邊都刪過就取比較晚的時間 */
+    [a.gone || {}, b.gone || {}].forEach(function (src) {
+      Object.keys(src).forEach(function (k) {
+        out.gone[k] = Math.max(out.gone[k] || 0, src[k] || 0);
+      });
+    });
 
     /* items：取「練得比較多」的那一筆。
        seen 只增不減，所以它可以當作「這筆狀態有多新」的判準。
@@ -56,6 +67,19 @@ var SYNC = (function () {
     Object.keys(b.items).forEach(function (k) { keys[k] = 1; });
     Object.keys(keys).forEach(function (k) {
       var x = a.items[k], y = b.items[k];
+      /* 有刪除墓碑、而且這筆是在刪除「之前」加入的 → 不收。
+         刪掉之後又重新加入的（at 比墓碑晚）照樣保留。
+         少了這段，查單字移除的字、「太簡單」畢業的字，同步一次就全部復活。 */
+      var g = out.gone[k];
+      if (g && x && (x.at || 0) < g) x = null;
+      if (g && y && (y.at || 0) < g) y = null;
+      /* 墓碑是 2026/09/14 才加的，之前畢業的字義沒有墓碑、清單項目也沒有 at。
+         已經在 grad 裡、又沒有 at（不是考前抽考重新加回來的）→ 同樣是復活的舊資料。 */
+      if ((a.grad || {})[k] || (b.grad || {})[k]) {
+        if (x && !x.at) x = null;
+        if (y && !y.at) y = null;
+      }
+      if (!x && !y) return;
       if (!x) { out.items[k] = y; return; }
       if (!y) { out.items[k] = x; return; }
       var sx = x.seen || 0, sy = y.seen || 0;
@@ -63,9 +87,14 @@ var SYNC = (function () {
       if (sx > sy) pick = x;
       else if (sy > sx) pick = y;
       else pick = (x.due || 0) >= (y.due || 0) ? x : y;
-      /* 錯題標記取聯集：任何一台標記過答錯，合併後就保留。
-         漏掉會讓該補練的字悄悄消失，寧可多練一次。 */
-      if (!pick.wb && (x.wb || y.wb)) {
+      /* 錯題標記：只有「兩邊練的次數一樣」（真正的衝突）才取聯集。
+         寧可多練一次，但不能蓋掉比較新的那筆。
+
+         ⚠ 原本是無條件取聯集，那是個會吃掉進度的 bug：
+         答錯 → 同步上傳（雲端 wb=true）→ 之後答對（本機 wb=false、seen 較大）
+         → 下一次同步又被聯集改回 wb=true、wbAt 變回答錯那天。
+         於是答對的錯題永遠離不開錯題本，看起來就是「答對了沒存到」。 */
+      if (sx === sy && !pick.wb && (x.wb || y.wb)) {
         var c = {};
         for (var f in pick) if (Object.prototype.hasOwnProperty.call(pick, f)) c[f] = pick[f];
         c.wb = true;
@@ -118,6 +147,16 @@ var SYNC = (function () {
       Object.keys(src).forEach(function (k) { out.grad[k] = 1; });
     });
 
+    /* cards（單字卡）：逐張取 t（最後修改時間）比較新的那份。
+       刪除是留一筆 { del: 1, t } 的墓碑而不是真的 delete，
+       否則另一台還有那張卡，同步一次又長回來。 */
+    [a.cards || {}, b.cards || {}].forEach(function (src) {
+      Object.keys(src).forEach(function (k) {
+        var c = src[k], o = out.cards[k];
+        if (c && (!o || (c.t || 0) > (o.t || 0))) out.cards[k] = c;
+      });
+    });
+
     /* bad：用「單字＋例句」去重的聯集 */
     var seenBad = {};
     (a.bad || []).concat(b.bad || []).forEach(function (it) {
@@ -128,7 +167,7 @@ var SYNC = (function () {
     /* 純量設定（每日題數、考試日期…）：取最後修改時間較新的那份 */
     var newer = (a.mtime || 0) >= (b.mtime || 0) ? a : b;
     ["perDay", "examDate", "learnEndDate", "mixLevels", "finalReview",
-      "autoLoad", "scope", "fixBox0", "wrongBatch"].forEach(function (k) {
+      "autoLoad", "scope", "fixBox0", "wrongBatch", "cardFront"].forEach(function (k) {
       if (newer[k] !== undefined) out[k] = newer[k];
     });
     out.mtime = Math.max(a.mtime || 0, b.mtime || 0);
@@ -230,17 +269,28 @@ var SYNC = (function () {
       if (e.code === "missing") { cfg.gistId = ""; saveCfg(); return null; }
       throw e;
     }).then(function (remote) {
+      dirtyWhileBusy = false;
       var merged = merge(window.S, remote);
       return writeGist(merged).then(function () { return merged; });
     }).then(function (merged) {
-      window.S = merged;
+      /* ⚠ 不能直接 window.S = merged。
+         merged 是上傳「之前」的快照，而上傳要等 GitHub 回應（手機上一兩秒很常見）。
+         這段時間裡你答的題、紀錄頁的題數與學習時間都寫在舊的 S 上，
+         直接換掉就整批消失——實際上每答一題 8 秒後就會同步一次，
+         所以正常作答的節奏下，大約每七八題就有一題的紀錄被吃掉。
+         跟當下的本機再合併一次：本機比較新的東西（seen 較大、log 較大、
+         mtime 較新）都會留下來。 */
+      var fresh = merge(window.S, merged);
+      window.S = fresh;
       applying = true;
       if (typeof save === "function") save();
       applying = false;
-      /* 剛送出過，把待送的排程取消，不然 8 秒後會再打一次 */
+      /* 剛送出過，把待送的排程取消，不然 8 秒後會再打一次。
+         但上傳途中有新的變動的話，那些還沒送上去，要重新排一次。 */
       clearTimeout(dirtyTimer);
-      cfg.lastSync = Date.now(); saveCfg();
       busy = false;
+      if (dirtyWhileBusy) { dirtyWhileBusy = false; touch(); }
+      cfg.lastSync = Date.now(); saveCfg();
       return { ok: true, at: cfg.lastSync };
     }).catch(function (e) {
       applying = false;
@@ -252,6 +302,7 @@ var SYNC = (function () {
   /* 練完一題就標記一次，停下來 8 秒才真的送出，避免每題都打 API */
   function touch() {
     if (!enabled() || applying) return;
+    if (busy) dirtyWhileBusy = true;
     clearTimeout(dirtyTimer);
     dirtyTimer = setTimeout(function () {
       run().catch(function () { });
