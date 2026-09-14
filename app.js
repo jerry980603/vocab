@@ -1187,9 +1187,6 @@ function renderScreenCard() {
   refreshHeader();
 }
 
-/* 答錯的字隔幾題回來再考一次 */
-var WRONG_GAP = 3;
-
 function submit(gaveUp) {
   if (answered) { next(); return; }
   var it = qCur, sn = senseOf(it);
@@ -1265,10 +1262,9 @@ function submit(gaveUp) {
     /* 2026/09/14 使用者要求：答錯不用等 10 分鐘，直接回到練習裡。
        due 設成「現在」，中途離開再回來也會立刻排在最前面（priority 的 +1000）。 */
     it.due = Date.now();
-    /* 插回這一輪，隔 WRONG_GAP 題再考。不是塞到最尾巴——一輪七十題的話
-       尾巴要十幾分鐘後才輪到，比原本等 10 分鐘還久；也不是下一題馬上考，
-       答案才剛看完，那只是在考短期記憶。 */
-    queue.splice(Math.min(queue.length, WRONG_GAP + 1), 0, it);
+    /* 直接排到這一輪的最後面（使用者指定的做法）。
+       原本是等 10 分鐘到期、下一輪才會被排進來。 */
+    queue.push(it);
     qTotal++;
   }
   save();
@@ -1303,7 +1299,7 @@ function submit(gaveUp) {
   $("#fb").innerHTML =
     '<div class="fb ' + (ok ? "ok" : "bad") + '">' +
     (ok ? "✓ 答對了"
-        : (gaveUp ? "答案是 <b>" + esc(ans) + "</b>，已放進錯題本"
+        : (gaveUp ? "答案是 <b>" + esc(ans) + "</b>，排到這一輪最後再考一次"
                   : "✗ 正確答案是 <b>" + esc(ans) + "</b>")) +
     "</div>" + allExamplesHTML(it.w, it.si, ex);
   revealHint(sn);
@@ -1607,7 +1603,7 @@ function phasePlan(written) {
     "穩定度變成大約 3 倍，而這條階梯只有 2 倍；一格一格走，排程會越來越落後於" +
     "你實際記得的程度。改成跳兩格，總題數少 22%，考試當天的預期保留率" +
     "只從 98.6% 掉到 97.1%。<br><br>" +
-    "<b>答錯退兩格</b>，隔 " + WRONG_GAP + " 題就回來重考。答錯的題最花時間（要看答案、讀例句），" +
+    "<b>答錯退兩格</b>，直接排到這一輪最後面重考。答錯的題最花時間（要看答案、讀例句），" +
     "所以真正省時間的方式是別讓字第一次就答錯——那是「快篩」在做的事。" +
     "</div></div>" +
     /* 字庫缺口大的時候才提醒去補字。缺不到 5% 的時候，剩下的都是
@@ -2135,7 +2131,7 @@ function drawStat() {
     '<p style="font-size:13px;color:var(--sub);margin:16px 4px 0;line-height:1.75">' +
     "<b>時間怎麼算的</b>：只有停在「練習」或「錯題本」頁、而且最近 90 秒內有動作" +
     "（打字、點畫面）才會累加，每 5 秒記一次。把 App 開著去做別的事不會被算進來。<br>" +
-    "<b>「練到的字義」跟「題數」差在哪</b>：同一個字答錯後隔幾題重考，" +
+    "<b>「練到的字義」跟「題數」差在哪</b>：同一個字答錯後排到這一輪最後再考一次，" +
     "題數會加兩題，字義只算一個。</p>";
 
   $("#v-stat").innerHTML = html;
