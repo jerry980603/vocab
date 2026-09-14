@@ -322,10 +322,20 @@ input.cardin:focus{border-color:var(--accent)}
 .pickw{padding:12px 4px;border-bottom:1px solid var(--line)}
 .pickw .w{font-weight:650;font-size:17px;margin-bottom:4px}
 .picks{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 0;font-size:14px}
-.cardday{display:flex;justify-content:space-between;align-items:center;gap:10px;
-  margin:18px 4px 2px;font-size:14px;color:var(--sub)}
-.cardday:first-child{margin-top:0}
-.cardday b{color:var(--text)}
+/* 單字卡的每日資料夾 */
+.folders{border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden}
+.folder{
+  display:flex;align-items:center;gap:12px;width:100%;padding:14px 14px;text-align:left;
+  border-bottom:1px solid var(--line);
+}
+.folder:last-child{border-bottom:none}
+.folder:active{background:var(--accent-soft)}
+.folder .fn{flex:1;font-weight:600;font-size:16px}
+.folder .fc{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
+.folder .arrow{color:var(--sub);font-size:17px}
+.fic{width:22px;height:22px;flex:none;color:var(--sub)}
+.folder.now .fic{color:var(--accent)}
+.plan-head .fic{width:26px;height:26px;color:var(--accent)}
 
 /* ---------- 底部彈出 ---------- */
 #sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:none}

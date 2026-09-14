@@ -2276,35 +2276,73 @@ function cardSense(c) {
 
 var cardTab = "pick";     /* 加卡片那一段：pick 從字庫挑／own 自己輸入 */
 var cardQuery = "";
+var cardDay = null;       /* 打開中的資料夾（日期字串）；null＝資料夾列表 */
 var flip = null;          /* 翻卡中：{ ids, i, back } */
 
 function cardFront() { return S.cardFront === "zh" ? "zh" : "en"; }
 
+/* 「每日」單字卡：一天一個資料夾，卡片照加入的日期（c.d）自動歸檔 */
+function folderName(d) {
+  var n = dayLabelShort(d);
+  return d === today() ? "今天・" + n : d === daysAgo(1) ? "昨天・" + n : n;
+}
+function cardsByDay() {
+  var by = {};
+  cardList().slice().reverse().forEach(function (c) { (by[c.d] = by[c.d] || []).push(c); });
+  return by;   /* 每個資料夾裡照加入順序排，翻卡也是這個順序 */
+}
+var FOLDER_SVG = '<svg class="fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+  'stroke-width="1.7" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5Z"/></svg>';
+
+function frontSeg() {
+  return '<div class="seg" style="margin-top:12px">' +
+    '<button data-front="en"' + (cardFront() === "en" ? ' class="on"' : "") + ">正面是英文</button>" +
+    '<button data-front="zh"' + (cardFront() === "zh" ? ' class="on"' : "") + ">正面是中文</button></div>";
+}
+function bindCardCommon() {
+  $("#v-card").querySelectorAll("[data-front]").forEach(function (b) {
+    b.onclick = function () { S.cardFront = b.dataset.front; save(); drawCard(); };
+  });
+  $("#v-card").querySelectorAll("[data-delcard]").forEach(function (b) {
+    b.onclick = function () {
+      var c = S.cards[b.dataset.delcard];
+      delCard(b.dataset.delcard);
+      toast((c && c.w ? c.w + " " : "") + "已從單字卡移除");
+      drawCard();
+    };
+  });
+}
+
 function drawCard() {
   if (flip) { renderFlip(); return; }
-  var all = cardList(), td = today();
-  var todays = all.filter(function (c) { return c.d === td; });
+  if (cardDay) { drawFolder(); return; }
+  var all = cardList(), by = cardsByDay(), td = today();
+  /* 今天的資料夾就算還是空的也列出來——新加的卡都會放進這裡，要讓人看得到 */
+  if (!by[td]) by[td] = [];
+  var days = Object.keys(by).sort().reverse();
 
   var html =
     '<div class="plan-head">' +
-    '<div class="big">' + todays.length +
-    ' <span style="font-size:15px;color:var(--sub);font-weight:500">張是今天加的・全部 ' +
+    '<div class="big">' + days.length +
+    ' <span style="font-size:15px;color:var(--sub);font-weight:500">個資料夾・全部 ' +
     all.length + " 張</span></div>" +
-    '<div class="cap" style="line-height:1.8">練習時答完一題，按「加入單字卡」就會收到這裡；' +
-    "也可以在下面從字庫挑，或自己輸入。翻卡不計分，也不影響複習排程。</div></div>" +
+    '<div class="cap" style="line-height:1.8">每天加的卡片會自動收進<b>當天的資料夾</b>。' +
+    "練習時答完一題按「加入單字卡」，或在下面新增，都會放進「今天」。" +
+    "翻卡不計分，也不影響複習排程。</div></div>" +
 
-    (all.length
-      ? (todays.length
-          ? '<button class="btn" data-flip="today">翻今天的卡（' + todays.length + " 張）</button>" +
-            '<div class="row" style="margin-top:10px">' +
-            '<button class="btn ghost" data-flip="all">全部隨機翻（' + all.length + " 張）</button></div>"
-          : '<button class="btn" data-flip="all">全部隨機翻（' + all.length + " 張）</button>") +
-        '<div class="seg" style="margin-top:12px">' +
-        '<button data-front="en"' + (cardFront() === "en" ? ' class="on"' : "") + ">正面是英文</button>" +
-        '<button data-front="zh"' + (cardFront() === "zh" ? ' class="on"' : "") + ">正面是中文</button></div>"
+    '<h2 class="sec">資料夾</h2>' +
+    '<div class="folders">' + days.map(function (d) {
+      return '<button class="folder' + (d === td ? " now" : "") + '" data-day="' + d + '">' +
+        FOLDER_SVG + '<span class="fn">' + esc(folderName(d)) + "</span>" +
+        '<span class="fc">' + by[d].length + " 張</span>" +
+        '<span class="arrow">›</span></button>';
+    }).join("") + "</div>" +
+    (all.length > 1
+      ? '<button class="btn ghost" data-flipall style="margin-top:12px">全部資料夾一起隨機翻（' +
+        all.length + " 張）</button>"
       : "") +
 
-    '<h2 class="sec">加卡片</h2>' +
+    '<h2 class="sec">加卡片（放進今天的資料夾）</h2>' +
     '<div class="seg" style="margin-bottom:12px">' +
     '<button data-ctab="pick"' + (cardTab === "pick" ? ' class="on"' : "") + ">從字庫挑</button>" +
     '<button data-ctab="own"' + (cardTab === "own" ? ' class="on"' : "") + ">自己輸入</button></div>" +
@@ -2317,34 +2355,20 @@ function drawCard() {
         '<div id="ownHint" class="cardhint"></div>' +
         '<input id="ownZh" class="cardin" style="margin-top:8px" placeholder="中文，例如 視為理所當然" ' +
         'autocomplete="off">' +
-        '<button class="btn" id="btnOwn" style="margin-top:10px">加入單字卡</button>') +
-
-    '<h2 class="sec">我的單字卡</h2>' + cardDaysHTML(all);
+        '<button class="btn" id="btnOwn" style="margin-top:10px">加入單字卡</button>');
 
   $("#v-card").innerHTML = html;
 
-  $("#v-card").querySelectorAll("[data-flip]").forEach(function (b) {
-    b.onclick = function () {
-      var list = b.dataset.flip === "today" ? todays
-        : b.dataset.flip === "all" ? shuffle(all.slice())
-        : all.filter(function (c) { return c.d === b.dataset.flip; });
-      startFlip(list);
-    };
+  $("#v-card").querySelectorAll("[data-day]").forEach(function (b) {
+    b.onclick = function () { cardDay = b.dataset.day; window.scrollTo(0, 0); drawCard(); };
   });
-  $("#v-card").querySelectorAll("[data-front]").forEach(function (b) {
-    b.onclick = function () { S.cardFront = b.dataset.front; save(); drawCard(); };
-  });
+  if ($("[data-flipall]")) $("[data-flipall]").onclick = function () {
+    startFlip(shuffle(cardList().slice()));
+  };
   $("#v-card").querySelectorAll("[data-ctab]").forEach(function (b) {
     b.onclick = function () { cardTab = b.dataset.ctab; drawCard(); };
   });
-  $("#v-card").querySelectorAll("[data-delcard]").forEach(function (b) {
-    b.onclick = function () {
-      var c = S.cards[b.dataset.delcard];
-      delCard(b.dataset.delcard);
-      toast((c && c.w ? c.w + " " : "") + "已從單字卡移除");
-      drawCard();
-    };
-  });
+  bindCardCommon();
 
   if (cardTab === "pick") {
     $("#cardSearch").oninput = function () { cardQuery = this.value; cardHits(); };
@@ -2426,29 +2450,46 @@ function cardHits() {
   });
 }
 
-/* 「每日」單字卡：照加入的日期分組，最近的在上面，每一天都能單獨翻 */
-function cardDaysHTML(all) {
-  if (!all.length) {
-    return '<div id="cardDays" class="empty" style="padding:24px 8px">還沒有單字卡。<br>' +
-      '<span style="font-size:13px">練習答完一題時按「加入單字卡」，或用上面的方式加。</span></div>';
-  }
-  var byDay = {};
-  all.forEach(function (c) { (byDay[c.d] = byDay[c.d] || []).push(c); });
-  var td = today(), yd = daysAgo(1);
-  return '<div id="cardDays">' + Object.keys(byDay).sort().reverse().map(function (d) {
-    var list = byDay[d];
-    var name = d === td ? "今天" : d === yd ? "昨天" : dayLabelShort(d);
-    return '<div class="cardday"><span><b>' + name + "</b>　" + list.length + " 張</span>" +
-      '<button class="btn ghost sm" data-flip="' + d + '">翻這天</button></div>' +
-      list.map(function (c) {
-        var sn = cardSense(c);
-        return '<div class="li"><div><div class="w">' + esc(c.w) +
-          (c.si === undefined ? ' <span class="lv out">自訂</span>' : "") + "</div>" +
-          '<div class="m">' + (sn ? esc(sn.p) + " " + esc(sn.zh) : esc(c.zh)) + "</div></div>" +
-          '<button class="del" data-delcard="' + esc(c.id) + '" aria-label="移除">×</button></div>';
-      }).join("");
-  }).join("") + "</div>";
+/* 打開一個資料夾：那一天的卡片清單，可以照順序或隨機翻 */
+function drawFolder() {
+  var d = cardDay, list = cardsByDay()[d] || [], isToday = d === today();
+  /* 資料夾裡的卡刪光了（今天的除外）就退回列表，不留空資料夾 */
+  if (!list.length && !isToday) { cardDay = null; drawCard(); return; }
+
+  $("#v-card").innerHTML =
+    '<button class="minilink" id="folderBack" style="margin-bottom:8px">← 所有資料夾</button>' +
+    '<div class="plan-head">' +
+    '<div class="big" style="display:flex;align-items:center;gap:10px">' + FOLDER_SVG +
+    esc(folderName(d)) + "</div>" +
+    '<div class="cap">' + list.length + " 張卡片" +
+    (isToday ? "・今天新加的卡都會放進這裡" : "") + "</div></div>" +
+    (list.length
+      ? '<button class="btn" data-fliporder>翻這個資料夾（' + list.length + " 張）</button>" +
+        (list.length > 1
+          ? '<div class="row" style="margin-top:10px">' +
+            '<button class="btn ghost" data-flipshuffle>隨機順序翻</button></div>'
+          : "") +
+        frontSeg() +
+        '<h2 class="sec">卡片</h2>' +
+        list.map(function (c) {
+          var sn = cardSense(c);
+          return '<div class="li"><div><div class="w">' + esc(c.w) +
+            (c.si === undefined ? ' <span class="lv out">自訂</span>' : "") + "</div>" +
+            '<div class="m">' + (sn ? esc(sn.p) + " " + esc(sn.zh) : esc(c.zh)) + "</div></div>" +
+            '<button class="del" data-delcard="' + esc(c.id) + '" aria-label="移除">×</button></div>';
+        }).join("")
+      : '<div class="empty" style="padding:28px 8px">今天的資料夾還是空的。<br>' +
+        '<span style="font-size:13px">練習答完一題時按「加入單字卡」，' +
+        "或回到上一頁從字庫挑、自己輸入。</span></div>");
+
+  $("#folderBack").onclick = function () { cardDay = null; window.scrollTo(0, 0); drawCard(); };
+  if ($("[data-fliporder]")) $("[data-fliporder]").onclick = function () { startFlip(list); };
+  if ($("[data-flipshuffle]")) $("[data-flipshuffle]").onclick = function () {
+    startFlip(shuffle(list.slice()));
+  };
+  bindCardCommon();
 }
+
 function startFlip(list) {
   if (!list.length) return toast("沒有卡片可以翻");
   flip = { ids: list.map(function (c) { return c.id; }), i: 0, back: false };
