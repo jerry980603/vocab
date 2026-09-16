@@ -197,6 +197,7 @@ function addItem(w, si) {
   delete S.gone[id];
   /* 不管是自動載入、課表整組加入還是自己查到加的，都算「今天學的新字」 */
   var l = dayLog(); l.n = (l.n || 0) + 1;
+  enqueue(S.items[id]);
   save();
   return true;
 }
@@ -465,6 +466,27 @@ function refreshHeader() {
    練習
    ============================================================ */
 var queue = [], qTotal = 0, qCur = null, answered = false, hinted = 0, drillMode = "normal";
+
+/* 練習做到一半時，新進來的字一律「排到這一輪的最後面」（2026/09/16 使用者要求）。
+   新進來的包括：新加入清單的字（查單字、課表整組、單字卡「加入練習」、
+   跨過午夜自動補的新字）、答錯的字（submit 裡另外 push）、
+   以及做題途中才到期的複習（例如用提示答對、10 分鐘後到期的那種）。
+   以前這些都要等這一輪做完、重新按「開始」才排得進來。
+
+   只在「今天的進度」這一輪生效；清舊帳（wrong）與隨機加練（extra）
+   是自成一批的，不把今天的新字混進去。 */
+function roundOpen() {
+  return queue.length > 0 && (drillMode === "today" || drillMode === "normal");
+}
+function enqueue(it) {
+  if (!it || !roundOpen() || queue.indexOf(it) > -1) return;
+  queue.push(it); qTotal++;
+}
+/* 把「現在到期、但還不在這一輪裡」的字補到最後面 */
+function topUpQueue() {
+  if (!roundOpen()) return;
+  byPriority(normalDue()).forEach(enqueue);
+}
 /* 這一題答對了沒有——「太簡單」按鈕只在無提示答對之後才給按 */
 var lastOK = false;
 /* 第 2 次畢業確認時偷看了中文——看了就不算「本來就會」，不給畢業 */
@@ -694,6 +716,7 @@ function drawDrill() {
      如果照樣把 answered 重設成 false 再問一次，同一次作答會被算兩次：
      題數 +2、熟練度連跳兩次（實測 box 從 5 直接變成 7＝120 天）。
      已經答過的就直接讓它出列，從下一題接著做。 */
+  topUpQueue();
   if (answered && qCur === queue[0]) queue.shift();
   if (!queue.length) { drawDrillStart(el); return; }
   qCur = queue[0]; answered = false; hinted = 0;
@@ -1310,6 +1333,7 @@ function submit(gaveUp) {
 }
 
 function next() {
+  topUpQueue();
   queue.shift();
   if (!queue.length) { drawDrill(); return; }
   qCur = queue[0]; answered = false; hinted = 0;
@@ -1833,9 +1857,10 @@ function bindPlanRest() {
   $("#v-plan").querySelectorAll("[data-add-day]").forEach(function (b) {
     b.onclick = function () {
       var g = dayGroups()[+b.dataset.addDay], n = 0;
+      /* 不再 queue = []：做到一半的那一輪不作廢，新加的字由 addItem 排到最後面 */
       g.forEach(function (u) { if (addItem(u.w, u.si)) n++; });
-      queue = [];
-      toast(n ? "已加入 " + n + " 個字義，去「練習」開始吧" : "這組都已經在清單裡了");
+      toast(n ? "已加入 " + n + " 個字義" + (roundOpen() ? "，排在這一輪最後面" : "，去「練習」開始吧")
+              : "這組都已經在清單裡了");
       refreshHeader(); drawPlan();
     };
   });
@@ -2299,7 +2324,26 @@ function frontSeg() {
     '<button data-front="en"' + (cardFront() === "en" ? ' class="on"' : "") + ">正面是英文</button>" +
     '<button data-front="zh"' + (cardFront() === "zh" ? ' class="on"' : "") + ">正面是中文</button></div>";
 }
+/* 單字卡 → 加入練習。只有字庫的卡能練（自己輸入的沒有例句可以挖空） */
+function pracBtn(c) {
+  if (c.si === undefined) return "";
+  return hasItem(c.w, c.si)
+    ? '<span class="addbtn done">練習中</span>'
+    : '<button class="addbtn" data-prac="' + esc(c.id) + '">＋ 練習</button>';
+}
+function addCardToPractice(c) {
+  if (!c || c.si === undefined || hasItem(c.w, c.si)) return;
+  addItem(c.w, c.si);
+  toast(roundOpen() ? c.w + " 已加入練習，排在這一輪最後面" : c.w + " 已加入練習清單");
+  refreshHeader();
+}
+function bindPrac(redraw) {
+  $("#v-card").querySelectorAll("[data-prac]").forEach(function (b) {
+    b.onclick = function () { addCardToPractice(S.cards[b.dataset.prac]); redraw(); };
+  });
+}
 function bindCardCommon() {
+  bindPrac(drawCard);
   $("#v-card").querySelectorAll("[data-front]").forEach(function (b) {
     b.onclick = function () { S.cardFront = b.dataset.front; save(); drawCard(); };
   });
@@ -2476,6 +2520,7 @@ function drawFolder() {
           return '<div class="li"><div><div class="w">' + esc(c.w) +
             (c.si === undefined ? ' <span class="lv out">自訂</span>' : "") + "</div>" +
             '<div class="m">' + (sn ? esc(sn.p) + " " + esc(sn.zh) : esc(c.zh)) + "</div></div>" +
+            pracBtn(c) +
             '<button class="del" data-delcard="' + esc(c.id) + '" aria-label="移除">×</button></div>';
         }).join("")
       : '<div class="empty" style="padding:28px 8px">今天的資料夾還是空的。<br>' +
@@ -2528,6 +2573,11 @@ function renderFlip() {
     '<button class="btn ghost" id="flipPrev"' + (flip.i ? "" : " disabled") + ">← 上一張</button>" +
     '<button class="btn" id="flipNext">' + (last ? "翻完了" : "下一張 →") + "</button></div>" +
     '<div style="text-align:center;margin-top:12px">' +
+    (c.si !== undefined
+      ? (hasItem(c.w, c.si)
+          ? '<span class="cardhint" style="margin:0 10px">已在練習清單</span>'
+          : '<button class="minilink" data-prac="' + esc(c.id) + '" style="margin-right:14px">＋ 加入練習</button>')
+      : "") +
     '<button class="minilink" id="flipDel">從單字卡移除這張</button></div>' +
     '<p class="cardhint kbdline" style="text-align:center;margin-top:6px">' +
     '<span class="kbd">空白鍵</span> 翻面　<span class="kbd">←</span><span class="kbd">→</span> 換卡</p>';
@@ -2536,6 +2586,7 @@ function renderFlip() {
   $("#flipPrev").onclick = flipPrev;
   $("#flipNext").onclick = flipNext;
   $("#flipQuit").onclick = endFlip;
+  bindPrac(renderFlip);
   $("#flipDel").onclick = function () {
     var w = c.w;
     delCard(c.id);
