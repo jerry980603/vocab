@@ -195,6 +195,8 @@ h2.sec:first-child{margin-top:0}
   border-bottom:1px dashed var(--sub);padding:1px 0;line-height:1.5
 }
 .posmask:active{color:var(--accent);border-bottom-color:var(--accent)}
+/* 第 2 次畢業確認：點開就不能畢業，用警示色提醒 */
+.posmask.locked{color:var(--warn);border-bottom-color:var(--warn)}
 /* 快捷鍵標籤：只在有實體鍵盤的裝置顯示，手機上藏起來免得占空間 */
 .kbd,.kbdline{display:none}
 @media (hover:hover) and (pointer:fine){

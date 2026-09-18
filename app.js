@@ -329,7 +329,7 @@ function allExamplesHTML(w, curSi, curEx) {
   return h + "</div>";
 }
 
-/* 中文提示預設蓋著，點一下才翻開；作答後自動翻開 */
+/* 「詞性＋中文釋義」預設蓋著，點一下（或按 Shift）才翻開；作答後自動翻開 */
 function revealHint(sn) {
   var el = $("#posZh");
   if (!el || el.className.indexOf("posmask") < 0) return;
@@ -489,8 +489,10 @@ function topUpQueue() {
 }
 /* 這一題答對了沒有——「太簡單」按鈕只在無提示答對之後才給按 */
 var lastOK = false;
-/* 第 2 次畢業確認時偷看了中文——看了就不算「本來就會」，不給畢業 */
+/* 第 2 次畢業確認時偷看了「詞性＋中文釋義」——看了就不算「本來就會」，不給畢業 */
 var zhPeeked = false;
+/* 這一題的中文提示是不是「看了就不能畢業」（第 2 次確認、而且只有一句例句） */
+var hintLocked = false;
 
 /* 一般練習「不含」錯題本裡的字——錯題有自己獨立的一輪，
    混在一起會讓你在同一輪反覆撞同一個不會的字，很挫折也沒效率。 */
@@ -952,9 +954,13 @@ function renderCard() {
   /* 第 2 次畢業確認：正常情況下這裡會自動換下一句例句
      （sn.ex[it.seen % sn.ex.length]），換了句子還答得出來才算真的會。
      但全庫有 48.8% 的義項只寫了一句，換不了——那第二次等於重考同一題。
-     這種時候改成把中文蓋起來：同一句、少一個線索，難度接近換句。
-     偷看了就不給畢業（但不影響熟練度，那跟字母提示是兩回事）。 */
-  var maskZh = it.easy === 1 && sn.ex.length < 2;
+
+     這種時候改成鎖住「詞性＋中文釋義」那個提示：它本來就是蓋著的，
+     只是平常點開不用付代價；第 2 次確認時點開就不給畢業
+     （但不影響熟練度，那跟字母提示是兩回事）。
+     ⚠ 2026/09/18 使用者更正：要蓋的是**帶詞性的那個中文釋義**，
+     不是例句底下的整句中文翻譯——句子的中譯照常顯示。 */
+  hintLocked = it.easy === 1 && sn.ex.length < 2;
   var p = splitEx(ex.en);
   var fi = formInfo(it.w, p.ans);
   var nLet = p.ans.replace(/\s/g, "").length;
@@ -968,9 +974,7 @@ function renderCard() {
     (drillMode === "wrong" ? '<span class="lv out">錯題</span> ' : "") +
     "第 " + done + " / " + qTotal + " 題</span>" +
     '<span class="dots" title="熟練度">' + dots + "</span></div>" +
-    (maskZh
-      ? '<p class="zhline masked" id="zhLine">第 2 次確認：中文先蓋著。點一下可以看，但看了就不能畢業</p>'
-      : '<p class="zhline">' + esc(ex.zh) + "</p>") +
+    '<p class="zhline">' + esc(ex.zh) + "</p>" +
     '<p class="enline" id="enLine">' + clickable(p.pre) +
     '<span class="blank" id="blank">' + "_".repeat(Math.min(nLet, 12)) +
     /* 片語不標數字：那是「所有單字加起來的字母數」，看了只會誤導。
@@ -978,7 +982,10 @@ function renderCard() {
     (p.ans.indexOf(" ") > -1 ? "" : '<i class="bn">' + nLet + "</i>") + "</span>" +
     clickable(p.post) + "</p>" +
     '<div class="hintbar">' +
-    '<span class="posmask" id="posZh">詞性與中文（點一下顯示）<span class="kbd">Shift</span></span>' +
+    '<span class="posmask' + (hintLocked ? " locked" : "") + '" id="posZh">' +
+    (hintLocked
+      ? "第 2 次確認：詞性與中文先蓋著，點開就不能畢業"
+      : "詞性與中文（點一下顯示）") + '<span class="kbd">Shift</span></span>' +
     (fi.tip ? '<span class="tag gray">' + esc(fi.tip) + "</span>" : "") + "</div>" +
     '<div class="inwrap">' +
     '<input id="ansIn" placeholder="在這裡拼出單字" autocomplete="off" autocorrect="off" ' +
@@ -1016,11 +1023,7 @@ function renderCard() {
     e.stopPropagation();
     submit();
   });
-  $("#posZh").onclick = function () { revealHint(sn); };
-  if ($("#zhLine")) $("#zhLine").onclick = function () {
-    zhPeeked = true;
-    this.className = "zhline"; this.textContent = ex.zh;
-  };
+  $("#posZh").onclick = function () { peekHint(sn); };
   $("#enLine").addEventListener("click", onTokenClick);
   refreshHeader();
 }
@@ -1330,6 +1333,12 @@ function submit(gaveUp) {
   if (egBox) egBox.addEventListener("click", onTokenClick);
 
   refreshHeader();
+}
+
+/* 自己動手翻開提示。作答後的自動翻開走 revealHint()，不算偷看。 */
+function peekHint(sn) {
+  if (hintLocked && !answered) zhPeeked = true;
+  revealHint(sn);
 }
 
 function next() {
@@ -2813,7 +2822,7 @@ document.addEventListener("keyup", function (e) {
   modKey = null; modClean = false;
   if (!solo || !hotkeyTarget(e)) return;
   e.preventDefault();
-  if (e.key === "Shift") revealHint(senseOf(qCur));
+  if (e.key === "Shift") peekHint(senseOf(qCur));
   else giveUp();
 });
 
