@@ -115,7 +115,10 @@ nav .badge{
   background:var(--bad-soft);color:var(--bad);
   border:1px solid color-mix(in srgb, var(--bad) 20%, transparent);
 }
-.btn.sm{padding:9px 14px;font-size:14px;width:auto;display:inline-block;border-radius:7px}
+/* nowrap：設定頁那幾列是「說明文字 ＋ 右邊一顆小按鈕」，
+   說明長一點就會把按鈕壓窄、四個字被折成兩行。 */
+.btn.sm{padding:9px 14px;font-size:14px;width:auto;display:inline-block;
+  border-radius:7px;white-space:nowrap}
 .row{display:flex;gap:10px}
 .row>*{flex:1}
 .empty{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}

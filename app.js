@@ -2699,6 +2699,65 @@ function bindSyncBlock() {
   }
 }
 
+/* 「複製進度摘要給 Claude」的內容。
+
+   為什麼不直接丟 JSON.stringify(S)：那是幾百 KB 的原始存檔，
+   貼進對話會吃掉大量篇幅，而且人看不懂、沒辦法自己檢查對不對。
+   這裡輸出的是**判斷進度真正需要的那十幾個數字**，純文字、可讀，
+   使用者自己掃一眼也知道有沒有怪。備份請用下面的「複製進度」。 */
+function progressText() {
+  var p = paceInfo(), its = allItems();
+  var mastered = its.filter(function (i) { return i.box >= 5; }).length;
+  var due = normalDue().length;
+  var newPend = normalDue().filter(function (i) { return !i.seen && !i.wb; }).length;
+  var wrongDue = normalDue().filter(function (i) { return i.wb; }).length;
+  var days = Object.keys(S.log).sort();
+  var recent = days.slice(-7).map(function (d) {
+    var l = S.log[d] || {};
+    return "  " + d.slice(5) + "  " + (l.a || 0) + " 題 / " +
+      Math.round((l.ms || 0) / 60000) + " 分 / 新字 " + (l.n || 0) +
+      (l.a ? " / 正確率 " + Math.round((l.c || 0) / l.a * 100) + "%" : "");
+  });
+  var examLeft = daysTo(S.examDate), learnLeft = daysTo(S.learnEndDate);
+
+  return [
+    "【單字練習 App 進度摘要】" + today(),
+    "",
+    "計畫：考試 " + (S.examDate || "未設定") +
+      (examLeft === null ? "" : "（剩 " + examLeft + " 天）") +
+      "・學完日 " + (S.learnEndDate || "未設定") +
+      (learnLeft === null ? "" : "（剩 " + learnLeft + " 天）"),
+    "設定：每天 " + perDay() + " 個字義・目標範圍 " + scopeName() +
+      "・" + (mixOn() ? "難度平均混合" : "由淺到深") +
+      "・每批錯題 " + wrongBatch() + " 題" +
+      "・自動補新字" + (autoLoadOn() ? "開" : "關"),
+    "",
+    "進度：從 " + (days[0] || today()) + " 開始，第 " + p.elapsed + " 天",
+    "  清單裡 " + its.length + " 個字義，其中熟練（間隔 30 天以上）" + mastered + " 個",
+    "  快篩掉 " + Object.keys(S.known).length + " 個字・畢業 " +
+      Object.keys(S.grad).length + " 個字義",
+    "  合計已處理 " + p.unitsDone + " 個字義（" + p.wordsDone + " 個單字）",
+    "  目標範圍共約 " + p.allUnits + " 個字義，已編好例句的有 " + p.writtenUnits + " 個",
+    "",
+    "速度（來源：" + p.src + "）",
+    "  新字 " + p.use.toFixed(1) + " 個/天" +
+      (p.work.days >= 7 ? "・總共練 " + p.work.avg.toFixed(1) + " 個字義/天・" +
+        p.quiz.avg.toFixed(0) + " 題/天" : "（一天練幾題的平均還不足 7 天）"),
+    "  照這個速度：已編好例句的還要 " + p.written.days + " 天（" + fmtDate(p.written.at) +
+      "）；目標範圍全部還要 " + p.all.days + " 天（" + fmtDate(p.all.at) + "）",
+    "",
+    "待做：今天 " + due + " 題（新字 " + newPend + "・到期複習 " +
+      (due - newPend - wrongDue) + "・今天答錯 " + wrongDue + "）",
+    "  今天錯過 " + todayWrong().length + " 個・跨天舊帳 " + oldWrong().length + " 個",
+    "  自動補新字：" + (newPaused() ? "已暫停（待做量超過每日額度的兩倍）" : "正常"),
+    "  單字卡 " + Object.keys(S.cards || {}).filter(function (k) {
+      return !(S.cards[k] || {}).del;
+    }).length + " 張",
+    "",
+    "最近 " + recent.length + " 天："
+  ].concat(recent).join("\n");
+}
+
 function drawSet() {
   $("#v-set").innerHTML =
     '<h2 class="sec">要叫 Claude 幫忙的事</h2>' +
@@ -2708,6 +2767,9 @@ function drawSet() {
     '<div class="setrow"><div><div class="t">回報的怪句子（' + S.bad.length + "）</div>" +
     '<div class="d">你覺得不自然或有錯的例句</div></div>' +
     '<button class="btn sm ghost" id="cpBad">複製指令</button></div>' +
+    '<div class="setrow"><div><div class="t">進度摘要</div>' +
+    '<div class="d">貼給 Claude 就能判斷來不來得及</div></div>' +
+    '<button class="btn sm" id="cpStat">複製摘要</button></div>' +
 
     '<h2 class="sec">雲端同步</h2>' + syncBlockHTML() +
 
@@ -2745,6 +2807,9 @@ function drawSet() {
     if (!S.bad.length) return toast("沒有回報過句子");
     copy("這幾句例句我覺得怪怪的，請幫我檢查並修正單字庫裡的內容：\n" +
       S.bad.map(function (b) { return "- " + b.w + "（" + b.p + "）：" + b.en + " / " + b.zh; }).join("\n"));
+  };
+  $("#cpStat").onclick = function () {
+    copy("這是我現在的學習進度，請幫我判斷來不來得及、要不要調整：\n\n" + progressText());
   };
   $("#btnCopy").onclick = function () { copy(JSON.stringify(S)); };
   $("#btnFile").onclick = function () {
