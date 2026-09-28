@@ -507,14 +507,51 @@ var hintLocked = false;
    看起來像不可能的任務。舊帳留在下面獨立那一段，分批清。 */
 function normalDue() {
   var td = today(), now = Date.now();
-  return allItems().filter(function (i) {
+  var list = allItems().filter(function (i) {
     /* 今天錯的不看 due，一律算到期——答錯不用等（2026/09/14 使用者要求）。
        這樣改版前已經排在「10 分鐘後」的那批也會馬上回來。 */
     if (i.wb) return i.wbAt === td;
     return i.due <= now;
   });
+  /* 再加上今天配額內的舊帳（2026/09/28）。舊帳本來被整批排除，
+     使用者要求併回主線——但只放每天的額度，不是全部。 */
+  return list.concat(debtQuota());
 }
-/* 錯題分兩段：今天錯的記憶還新，答對一次就畢業，優先清；其餘是舊帳。 */
+/* 一個穩定的 32 位雜湊：同樣的字串永遠得到同樣的數字。
+   用來給舊帳做「同一天固定、換天就換一批」的抽樣。 */
+function hash32(s) {
+  var h = 2166136261;
+  for (var i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = (h + (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) >>> 0;
+  }
+  return h;
+}
+
+/* 今天要混進主線的舊帳。
+
+   2026/09/28 使用者要求「錯題不要管，直接放進練習清單」——
+   錯題本不再是一段要自己去清的獨立功課，舊帳直接算在今天的進度裡。
+   ⚠ 但**不能一次全倒進來**：他有 1215 個舊帳，全放今天就變成 1373 題，
+   那正是 CLAUDE.md 一直警告的「看起來像不可能的任務」。
+   所以每天只放 wrongBatch() 個（就是他原本設的「每批 20／40／60」）。
+
+   抽樣用「日期＋字義 id」的雜湊排序：同一天內每次呼叫都得到同一批
+   （不然佇列每次重建就換一批），換一天自動換一批（不會只練到最前面那幾十個）。 */
+function debtQuota() {
+  var pool = oldWrong();
+  var n = wrongBatch();
+  if (pool.length <= n) return pool;
+  var td = today();
+  return pool.map(function (it) {
+      return { it: it, k: hash32(td + "|" + idOf(it.w, it.si)) };
+    })
+    .sort(function (a, b) { return a.k - b.k; })
+    .slice(0, n)
+    .map(function (x) { return x.it; });
+}
+
+/* 錯題分兩段：今天錯的記憶還新，答對一次就畢業；其餘是舊帳。 */
 function todayWrong() {
   var td = today();
   return allItems().filter(function (i) { return i.wb && i.wbAt === td; });
@@ -548,6 +585,14 @@ function wrongBatch() {
                             錯得多的字本來就該被排前面、練更多次
    最後加一點抖動，免得每天的順序完全一樣、變成背順序而不是背字。 */
 function priority(it) {
+  /* 新字排最前面（2026/09/28 使用者指定）。
+
+     他的理由：先把沒見過的過一遍，答錯的會被 submit() 推到**這一輪的最後面**，
+     所以同一輪之內就再碰得到。「錯的先練」是靠那個機制達成的，
+     不是靠排序把錯題拉到前面——先把錯題堆在最前面，反而會讓他
+     一開卷就連撞幾十個不會的字。 */
+  if (!it.seen) return 3000 + Math.random() * 4;
+
   if (it.wb) {
     /* 錯題一律排最前面。同樣是錯題，**剛錯的排前面**——記憶還新，
        答對一次就畢業；三週前的舊帳已經衰減到接近零，先清它效率低。
@@ -555,11 +600,14 @@ function priority(it) {
        用逾期比例會剛好排成相反的順序（越舊越前面）。 */
     var days = it.wbAt
       ? (Date.now() - new Date(it.wbAt + "T00:00:00").getTime()) / DAY : 99;
-    return 1000 + Math.max(0, 60 - days) * 2 + (it.wrong || 0) * 2 + Math.random() * 4;
+    return 2000 + Math.max(0, 60 - days) * 2 + (it.wrong || 0) * 2 + Math.random() * 4;
   }
+  /* 剩下的到期複習：**不熟的先練**（熟練度低＝間隔短＝還沒學起來），
+     其次是逾期久的。`(MAXBOX - box) * 8` 讓 box 0 拿到 +56、box 7 拿到 0。 */
   var span = INT[it.box] || DAY;
   var overdue = Math.min((Date.now() - it.due) / span, 10);
-  return overdue * 10 + (it.wrong || 0) * 5 + Math.random() * 4;
+  return (MAXBOX - (it.box || 0)) * 8 + overdue * 10 +
+         (it.wrong || 0) * 5 + Math.random() * 4;
 }
 function byPriority(list) {
   return list.slice().sort(function (a, b) { return priority(b) - priority(a); });
@@ -568,30 +616,10 @@ function byPriority(list) {
 function buildQueue(mode, limit) {
   drillMode = mode || "normal";
   var list;
-  if (drillMode === "wrong") {
-    /* 錯題本只清跨天的舊帳；今天錯的已經在主線裡了。
-
-       ⚠ 不能純照優先序取前 N 名——那會讓排在後面的舊帳**永遠輪不到**
-       （starvation）。實測 60 個舊帳、每批 20 題，連續三次抽到的是
-       **完全相同的 20 個**；而且答錯的隔天又變成最新的舊帳，
-       同一批就這樣一直循環，後面 40 個一次都沒被練到。
-
-       改成分層抽樣：先照優先序排好，取前段當候選池（批量的 3 倍），
-       再從池子裡隨機抽。最近錯的仍然比較容易被抽到，
-       但每一批的內容都不一樣，也不會有人餓死。 */
-    var pool = byPriority(oldWrong());
-    if (limit && pool.length > limit) {
-      var cand = pool.slice(0, Math.min(pool.length, limit * 3));
-      list = shuffle(cand).slice(0, limit);
-    } else {
-      list = pool;
-    }
-  }
-  else if (drillMode === "extra") list = shuffle(allItems().filter(function (i) { return !i.wb; }));
-  /* 今天的進度＝新字＋到期複習，「不含錯題」。
-     錯題是另外一段，做完進度再清，而且可以分批。
-     混在同一輪裡的話，錯題本積了幾百個時，今天的功課會顯示七百題，
-     看起來像不可能的任務——但那其實是舊帳，不是今天的量。 */
+  if (drillMode === "extra") list = shuffle(allItems().filter(function (i) { return !i.wb; }));
+  /* 今天的進度＝新字＋到期複習＋今天錯的＋**每天配額內的舊帳**。
+     2026/09/28 之前舊帳是完全排除的，改成由 normalDue() 帶進定額——
+     全部倒進來會變成一千多題，那正是這段註解原本在警告的事。 */
   else if (drillMode === "today") list = byPriority(normalDue());
   else list = byPriority(normalDue());
   queue = list;
@@ -797,7 +825,16 @@ function drawDrillStart(el) {
      （踩過：due 0、wrongToday 4 → 到期要複習 -4）。
      2026/09/14 起今天錯的一律立刻到期（見 normalDue），所以兩者相等，
      但照樣從 normalDue 算，口徑才不會分岔。 */
-  var wrongDue = normalDue().filter(function (i) { return i.wb; }).length;
+  /* ⚠ 舊帳併進主線之後，「wb 且在 due 裡」不再等於「今天錯的」——
+     每天混進來的那批舊帳 wb 也是 true。兩者要分開數，
+     不然畫面會把 40 個舊帳寫成「今天答錯 40 個」（實測踩過）。 */
+  var tdStr = today();
+  var wrongDue = normalDue().filter(function (i) {
+    return i.wb && i.wbAt === tdStr;
+  }).length;
+  var debtDue = normalDue().filter(function (i) {
+    return i.wb && i.wbAt !== tdStr;
+  }).length;
   var t = todayTask(), l = dayLog();
   /* 「新字」與「到期複習」必須是 due 的兩個互斥子集，不然畫面會變成
      「還有 324 題」底下寫著「新字 70 ＋ 到期複習 324」，看起來像 394 題。
@@ -829,50 +866,53 @@ function drawDrillStart(el) {
     '<div class="cap" style="margin-top:10px;line-height:1.9">' +
     "・沒學過的新字 <b>" + newPend + "</b> 個字義" +
     (autoLoadOn() ? "（開 App 時已自動排好）" : "（手動模式，要自己按下面那顆）") + "<br>" +
-    "・到期要複習 <b>" + (due - newPend - wrongDue) + "</b> 個字義<br>" +
-    "・今天答錯已經可以重考的 <b>" + wrongDue + "</b> 個字義<br>" +
-    '<span style="opacity:.72">三項加起來就是上面的 ' + due + " 題，沒有重複計算。</span>" +
+    "・到期要複習 <b>" + (due - newPend - wrongDue - debtDue) + "</b> 個字義<br>" +
+    "・今天答錯要重考 <b>" + wrongDue + "</b> 個字義<br>" +
+    "・混進來的舊錯題 <b>" + debtDue + "</b> 個字義<br>" +
+    '<span style="opacity:.72">四項加起來就是上面的 ' + due + " 題，沒有重複計算。</span>" +
     "</div></div>" +
 
     (t.left
       ? '<button class="btn" id="btnToday">開始今天的進度</button>' +
         '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
-        (wrongDue ? "今天錯的 <b>" + wrongDue + "</b> 個會排在最前面。" : "") +
-        "跨天的舊錯題不算在裡面。中途離開會接著算。</p>"
+        "<b>新字排在最前面</b>，答錯的會排到這一輪的最後面，同一輪內就再練得到。" +
+        "中途離開會接著算。</p>"
       : '<div class="empty" style="padding:20px 8px">今天該練的都練完了，下一批 <b>' +
         waitTxt + "</b> 到期。<br>" +
         '<span style="font-size:13px">還有力氣就往下清一點錯題。</span></div>') +
 
-    /* 第二段：錯題。分批清，數字再大也不會變成今天的壓力。 */
-    '<h2 class="sec">錯題</h2>' +
+    /* 錯題不再是獨立的一段功課（2026/09/28 使用者要求「錯題不要管，
+       直接放進練習清單」）。舊帳每天按額度混進上面的進度，這裡只剩狀態與設定。 */
+    '<h2 class="sec">舊錯題</h2>' +
     '<div class="plan-head" style="margin-bottom:10px"><div class="cap" style="line-height:1.9">' +
-    "・<b>今天錯的 " + wrongToday + " 個</b>——已經在上面的進度裡，不用等<br>" +
-    "・<b>舊帳 " + wrong + " 個</b>——累積下來的，<b>不是今天的量</b>，每天清一點就好" +
+    "舊帳還有 <b>" + wrong + "</b> 個字義，" +
+    (wrong
+      ? "每天會自動混 <b>" + Math.min(wrongBatch(), wrong) + "</b> 個進上面的進度，" +
+        "不用另外去清。照這個速度大約 <b>" +
+        Math.ceil(wrong / Math.max(wrongBatch(), 1)) + " 天</b>輪完一遍。"
+      : "目前是空的 🎉") +
     "</div></div>" +
     (wrong
       ? '<div class="seg" style="margin-bottom:10px">' +
         WRONG_BATCH_OPTS.map(function (n) {
           return '<button data-wb="' + n + '"' +
-            (wrongBatch() === n ? ' class="on"' : "") + ">一批 " + n + " 題</button>";
+            (wrongBatch() === n ? ' class="on"' : "") + ">每天 " + n + " 個</button>";
         }).join("") + "</div>" +
         '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.7">' +
-        "錯題本裡 <b>3～5 級大約占七成半</b>——想多碰難字，" +
-        "把這個調大比改排序有效，排序只換順序、不換組成。</p>" +
-        (wrong > wrongBatch()
-          ? '<button class="btn bad" id="btnWrongBatch">清 ' + wrongBatch() + " 題錯題</button>" +
-            '<div class="row" style="margin-top:10px">' +
-            '<button class="btn ghost" id="btnWrongDrill">全部清（' + wrong + " 題）</button></div>"
-          : '<button class="btn bad" id="btnWrongDrill">清掉錯題（' + wrong + " 題）</button>")
-      : '<div class="empty" style="padding:20px 8px">沒有舊帳 🎉</div>') +
+        "舊帳裡 <b>3～5 級大約占七成半</b>——想多碰難字就把這個調大。" +
+        "調大會讓今天的題數跟著變多。</p>"
+      : "") +
 
     /* 把清單的去向攤開來。不然你會看到「清單有 132 個字」
        但今天的進度只剩 9 題，以為字不見了。 */
     '<div class="plan-head" style="margin-top:18px"><div class="cap" style="line-height:1.9">' +
     "<b>清單裡的 " + all + " 個字義現在在哪</b><br>" +
     "・<b>" + due + "</b> 個到期，算在今天的進度裡" +
-    (wrongDue ? "（含今天錯的 " + wrongDue + " 個）" : "") + "<br>" +
-    "・<b>" + wrong + "</b> 個是跨天的舊錯題（不混進進度）<br>" +
-    "・<b>" + (all - due - wrong) + "</b> 個還沒到複習時間，最近一批 " + waitTxt +
+    (wrongDue || debtDue
+      ? "（含今天錯的 " + wrongDue + " 個、混入的舊帳 " + debtDue + " 個）" : "") + "<br>" +
+    "・<b>" + wrong + "</b> 個是舊錯題（每天混 " +
+    Math.min(wrongBatch(), wrong) + " 個進去，已含在上面那行裡）<br>" +
+    "・<b>" + Math.max(0, all - due - wrong) + "</b> 個還沒到複習時間，最近一批 " + waitTxt +
     "</div></div>" +
 
     todayNewHTML() +
@@ -916,12 +956,6 @@ function drawDrillStart(el) {
   };
 
   if ($("#btnToday")) $("#btnToday").onclick = function () { buildQueue("today"); drawDrill(); };
-  if ($("#btnWrongBatch")) $("#btnWrongBatch").onclick = function () {
-    buildQueue("wrong", wrongBatch()); drawDrill();
-  };
-  if ($("#btnWrongDrill")) $("#btnWrongDrill").onclick = function () {
-    buildQueue("wrong"); drawDrill();
-  };
   $("#btnExtra").onclick = function () { buildQueue("extra"); drawDrill(); };
   el.querySelectorAll("[data-scr]").forEach(function (b) {
     b.onclick = function () { startScreen(+b.dataset.scr); };
@@ -2367,6 +2401,7 @@ function bindCardCommon() {
 }
 
 function drawCard() {
+  if (quiz) { renderQuiz(); return; }
   if (flip) { renderFlip(); return; }
   if (cardDay) { drawFolder(); return; }
   var all = cardList(), by = cardsByDay(), td = today();
@@ -2390,9 +2425,12 @@ function drawCard() {
         '<span class="fc">' + by[d].length + " 張</span>" +
         '<span class="arrow">›</span></button>';
     }).join("") + "</div>" +
-    (all.length > 1
-      ? '<button class="btn ghost" data-flipall style="margin-top:12px">全部資料夾一起隨機翻（' +
-        all.length + " 張）</button>"
+    (all.length
+      ? '<div class="row" style="margin-top:12px">' +
+        '<button class="btn ghost" data-quizall>全部一起拼寫測驗（' + all.length + " 張）</button>" +
+        (all.length > 1
+          ? '<button class="btn ghost" data-flipall>全部一起隨機翻</button>'
+          : "") + "</div>"
       : "") +
 
     '<h2 class="sec">加卡片（放進今天的資料夾）</h2>' +
@@ -2417,6 +2455,9 @@ function drawCard() {
   });
   if ($("[data-flipall]")) $("[data-flipall]").onclick = function () {
     startFlip(shuffle(cardList().slice()));
+  };
+  if ($("[data-quizall]")) $("[data-quizall]").onclick = function () {
+    startQuiz(shuffle(cardList().slice()));
   };
   $("#v-card").querySelectorAll("[data-ctab]").forEach(function (b) {
     b.onclick = function () { cardTab = b.dataset.ctab; drawCard(); };
@@ -2518,10 +2559,11 @@ function drawFolder() {
     (isToday ? "・今天新加的卡都會放進這裡" : "") + "</div></div>" +
     (list.length
       ? '<button class="btn" data-fliporder>翻這個資料夾（' + list.length + " 張）</button>" +
+        '<div class="row" style="margin-top:10px">' +
+        '<button class="btn ghost" data-quiz>拼寫測驗（' + list.length + " 張）</button>" +
         (list.length > 1
-          ? '<div class="row" style="margin-top:10px">' +
-            '<button class="btn ghost" data-flipshuffle>隨機順序翻</button></div>'
-          : "") +
+          ? '<button class="btn ghost" data-flipshuffle>隨機順序翻</button>'
+          : "") + "</div>" +
         frontSeg() +
         '<h2 class="sec">卡片</h2>' +
         list.map(function (c) {
@@ -2541,6 +2583,122 @@ function drawFolder() {
   if ($("[data-flipshuffle]")) $("[data-flipshuffle]").onclick = function () {
     startFlip(shuffle(list.slice()));
   };
+  if ($("[data-quiz]")) $("[data-quiz]").onclick = function () {
+    startQuiz(shuffle(list.slice()));
+  };
+  bindCardCommon();
+}
+
+/* ---------- 單字卡的拼寫測驗（2026/09/28 使用者要求） ----------
+
+   跟「練習」頁刻意分開：**不計分、不進錯題本、不影響複習排程、不計學習時間**，
+   純粹是自己測自己。所以這裡完全不碰 S.items 與 S.log，
+   對錯只記在這個 quiz 物件裡，離開就沒了。
+
+   題目：給詞性＋中文（自訂卡就給中文），答案是卡片上的那個英文字。
+   字庫卡另外把第一句例句的目標字挖掉當情境提示——挖的是例句裡的實際형，
+   但**答案一律是原形**（卡片上的字），免得還要猜要填哪個變化形。 */
+var quiz = null;
+
+function startQuiz(list) {
+  if (!list.length) return toast("沒有卡片可以測");
+  quiz = { ids: list.map(function (c) { return c.id; }), i: 0, ok: 0, wrongIds: [], done: false };
+  window.scrollTo(0, 0);
+  renderQuiz();
+}
+function endQuiz() { quiz = null; drawCard(); }
+
+function renderQuiz() {
+  /* 測到一半卡片被刪掉（例如另一台同步進來），跳過它 */
+  while (quiz.i < quiz.ids.length && !cardOn(quiz.ids[quiz.i])) quiz.ids.splice(quiz.i, 1);
+  if (!quiz.ids.length) { toast("沒有卡片了"); endQuiz(); return; }
+
+  if (quiz.i >= quiz.ids.length) return renderQuizEnd();
+
+  var c = S.cards[quiz.ids[quiz.i]], sn = cardSense(c);
+  var p = sn ? sn.p : (c.p || ""), zh = sn ? sn.zh : c.zh;
+  var ctx = "";
+  if (sn && sn.ex.length) {
+    var e = splitEx(sn.ex[0].en);
+    ctx = '<p class="enline" style="font-size:17px;margin:14px 0 0">' + esc(e.pre) +
+      '<span class="blank">' + "_".repeat(Math.min(c.w.replace(/\s/g, "").length, 12)) +
+      "</span>" + esc(e.post) + "</p>";
+  }
+
+  $("#v-card").innerHTML =
+    '<div class="qmeta"><span>拼寫測驗 ' + (quiz.i + 1) + " / " + quiz.ids.length +
+    "　答對 " + quiz.ok + "</span>" +
+    '<button class="minilink" id="qzQuit">結束</button></div>' +
+    '<div class="bar" style="margin:0 0 14px"><i style="width:' +
+    Math.round(quiz.i / quiz.ids.length * 100) + '%"></i></div>' +
+    '<div class="card">' +
+    (p ? '<span class="tag gray">' + esc(p) + "</span> " : "") +
+    '<span style="font-size:19px;font-weight:600">' + esc(zh) + "</span>" +
+    ctx +
+    '<div class="inwrap" style="margin-top:16px">' +
+    '<input id="qzIn" placeholder="把英文拼出來" autocomplete="off" autocorrect="off" ' +
+    'autocapitalize="none" spellcheck="false" enterkeyhint="done"></div>' +
+    '<div class="row" style="margin-top:12px">' +
+    '<button class="btn" id="qzGo">送出</button></div>' +
+    '<div class="row" style="margin-top:9px">' +
+    '<button class="btn ghost" id="qzSkip">不會，看答案</button></div>' +
+    '<div id="qzFb"></div></div>';
+
+  $("#qzGo").onclick = function () { quizSubmit(false); };
+  $("#qzSkip").onclick = function () { quizSubmit(true); };
+  $("#qzQuit").onclick = endQuiz;
+  $("#qzIn").addEventListener("keydown", function (ev) {
+    if (ev.key !== "Enter" || ev.isComposing) return;
+    ev.preventDefault(); ev.stopPropagation(); quizSubmit(false);
+  });
+  $("#qzIn").focus();
+}
+
+function quizSubmit(gaveUp) {
+  var c = S.cards[quiz.ids[quiz.i]];
+  if (quiz.answered) { quiz.i++; quiz.answered = false; renderQuiz(); return; }
+  var v = $("#qzIn").value;
+  if (!gaveUp && !norm(v)) { $("#qzIn").focus(); return; }
+  var ok = !gaveUp && norm(v) === norm(c.w);
+  quiz.answered = true;
+  if (ok) quiz.ok++;
+  else if (quiz.wrongIds.indexOf(c.id) < 0) quiz.wrongIds.push(c.id);
+
+  $("#qzIn").className = ok ? "ok" : "bad";
+  $("#qzIn").blur();
+  $("#qzGo").textContent = quiz.i === quiz.ids.length - 1 ? "看結果" : "下一張";
+  $("#qzGo").className = "btn " + (ok ? "ok" : "");
+  $("#qzSkip").style.display = "none";
+  $("#qzFb").innerHTML = '<div class="fb ' + (ok ? "ok" : "bad") + '">' +
+    (ok ? "✓ 答對了" : "正解是 <b>" + esc(c.w) + "</b>") + "</div>";
+}
+
+function renderQuizEnd() {
+  var total = quiz.ids.length, wrong = quiz.wrongIds.slice();
+  var rate = total ? Math.round(quiz.ok / total * 100) : 0;
+  $("#v-card").innerHTML =
+    '<div class="plan-head"><div class="big">答對 ' + quiz.ok + " / " + total +
+    ' <span style="font-size:15px;color:var(--sub);font-weight:500">・' + rate + "%</span></div>" +
+    '<div class="bar"><i style="width:' + rate + '%"></i></div>' +
+    '<div class="cap">這一輪不計分、不進錯題本，也不會動到複習排程。</div></div>' +
+    (wrong.length
+      ? '<button class="btn" id="qzAgain">只測剛才錯的 ' + wrong.length + " 張</button>" +
+        '<h2 class="sec">剛才拼錯的</h2>' +
+        wrong.map(function (id) {
+          var c = S.cards[id]; if (!c) return "";
+          var sn = cardSense(c);
+          return '<div class="li"><div><div class="w">' + esc(c.w) + "</div>" +
+            '<div class="m">' + (sn ? esc(sn.p) + " " + esc(sn.zh) : esc(c.zh)) + "</div></div>" +
+            pracBtn(c) + "</div>";
+        }).join("")
+      : '<div class="empty" style="padding:28px 8px">全部拼對了 🎉</div>') +
+    '<div class="row" style="margin-top:14px">' +
+    '<button class="btn ghost" id="qzBack">回資料夾</button></div>';
+
+  if ($("#qzAgain")) $("#qzAgain").onclick = function () {
+    startQuiz(wrong.map(function (id) { return S.cards[id]; }).filter(Boolean));
+  };
+  $("#qzBack").onclick = endQuiz;
   bindCardCommon();
 }
 
@@ -2710,7 +2868,13 @@ function progressText() {
   var mastered = its.filter(function (i) { return i.box >= 5; }).length;
   var due = normalDue().length;
   var newPend = normalDue().filter(function (i) { return !i.seen && !i.wb; }).length;
-  var wrongDue = normalDue().filter(function (i) { return i.wb; }).length;
+  var tdStr = today();
+  var wrongDue = normalDue().filter(function (i) {
+    return i.wb && i.wbAt === tdStr;
+  }).length;
+  var debtDue = normalDue().filter(function (i) {
+    return i.wb && i.wbAt !== tdStr;
+  }).length;
   var days = Object.keys(S.log).sort();
   var recent = days.slice(-7).map(function (d) {
     var l = S.log[d] || {};
@@ -2747,7 +2911,8 @@ function progressText() {
       "）；目標範圍全部還要 " + p.all.days + " 天（" + fmtDate(p.all.at) + "）",
     "",
     "待做：今天 " + due + " 題（新字 " + newPend + "・到期複習 " +
-      (due - newPend - wrongDue) + "・今天答錯 " + wrongDue + "）",
+      (due - newPend - wrongDue - debtDue) + "・今天答錯 " + wrongDue +
+      "・混入的舊帳 " + debtDue + "）",
     "  今天錯過 " + todayWrong().length + " 個・跨天舊帳 " + oldWrong().length + " 個",
     "  自動補新字：" + (newPaused() ? "已暫停（待做量超過每日額度的兩倍）" : "正常"),
     "  單字卡 " + Object.keys(S.cards || {}).filter(function (k) {
