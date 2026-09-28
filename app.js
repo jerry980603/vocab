@@ -700,8 +700,10 @@ function loadTodayNew() {
    不會因為做掉一半就縮水，這樣進度條才有意義。 */
 function todayTask() {
   var due = normalDue().length, wrong = oldWrong().length, l = dayLog();
-  /* left 只算「今天的進度」（新字＋到期複習），不含錯題。
-     錯題是可以慢慢還的舊帳，把它算進今天的目標只會讓人放棄。 */
+  /* left ＝ normalDue()，2026/09/28 起**已經含每天配額內的舊帳**
+     （舊帳併回主線，見 debtQuota）。所以清掉一個舊帳，進度條就前進一格。
+     ⚠ 這裡不能改成加上 oldWrong() 的全部——那有一千多個，
+     進度條會永遠幾乎不動，等於回到「看起來像不可能的任務」。 */
   l.g = Math.max(l.g || 0, (l.a || 0) + due);
   return { due: due, wrong: wrong, left: due, done: l.a || 0, goal: l.g };
 }
