@@ -269,6 +269,13 @@ h2.sec:first-child{margin-top:0}
 .alleg .eg .zh{color:var(--sub);margin-top:2px}
 .alleg .eg .tk{border-radius:4px;padding:1px 1px;cursor:pointer}
 .alleg .eg .tk:active{background:var(--accent-soft)}
+.egmore{margin-top:12px}
+.egmore summary{font-size:13px;color:var(--sub);cursor:pointer;padding:8px 2px}
+.btn.cd{position:relative;overflow:hidden}
+.btn.cd::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:100%;
+  background:currentColor;opacity:.45;transform-origin:left;
+  animation:cdbar var(--cd,1500ms) linear forwards}
+@keyframes cdbar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .minilink{font-size:13px;color:var(--sub);text-decoration:underline;padding:6px 0}
 
 /* ---------- 查單字 ---------- */

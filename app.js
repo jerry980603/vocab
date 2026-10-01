@@ -232,6 +232,7 @@ function senseOf(it) {
      n  今天新加進清單的字義數，也就是「今天學了幾個新字」
      ms 實際練習時間（毫秒）
      g  今天排定的題數，用來畫完成度
+     d  今天考過幾個混進來的舊錯題，用來扣每天的舊帳額度
    舊存檔只有 a 與 c，其他欄位讀到 undefined 一律當 0，不必轉檔。 */
 function dayLog(d) {
   d = d || today();
@@ -329,6 +330,18 @@ function allExamplesHTML(w, curSi, curEx) {
   return h + "</div>";
 }
 
+/* 答完之後的例句預設收合（2026/10/01）。
+   全攤開實測有 1477px 高，是「答錯一題要 28 秒」的主因；
+   剛考的那一句本來就在上面的卡片裡，想看其他情境再點開。 */
+function moreExamplesHTML(w, curSi, curEx) {
+  var e = DICT[String(w).toLowerCase()];
+  if (!e) return "";
+  var n = e.s.reduce(function (m, sn) { return m + sn.ex.length; }, 0);
+  if (n < 2) return "";
+  return '<details class="egmore"><summary>看這個字的全部例句（' + e.s.length +
+    " 個意思・" + n + " 句）</summary>" + allExamplesHTML(w, curSi, curEx) + "</details>";
+}
+
 /* 「詞性＋中文釋義」預設蓋著，點一下（或按 Shift）才翻開；作答後自動翻開 */
 function revealHint(sn) {
   var el = $("#posZh");
@@ -420,6 +433,7 @@ function go(v) {
   /* 移除過的頁面（例如 2026/09/09 拿掉的「我的字」與「錯題本」）
      如果還被誰呼叫到，退回練習頁而不是整個炸掉。 */
   if (!VIEWS[v] || !$("#v-" + v)) v = "drill";
+  if (autoT) cancelAuto();
   cur = v;
   document.querySelectorAll(".view").forEach(function (s) { s.classList.remove("on"); });
   $("#v-" + v).classList.add("on");
@@ -480,8 +494,96 @@ function roundOpen() {
 }
 function enqueue(it) {
   if (!it || !roundOpen() || queue.indexOf(it) > -1) return;
-  queue.push(it); qTotal++;
+  tailPush(it); qTotal++;
 }
+
+/* ============================================================
+   回合、保底線、收尾（2026/10/01）
+
+   一天三四百題是一座山，切成每 ROUND 題一回合才有停點可以喘。
+   依據：Bandura & Schunk (1981) 近程小目標比一個遠程大目標更能撐住
+   自我效能；Kivetz 等 (2006) 越接近終點越願意出力（目標漸進）。
+
+   回合用「今天答了幾題」（dayLog().a）來切，不另外存狀態——
+   重新整理、換裝置、跨頁回來都對得上，也不用動 sync.js。
+
+   收尾：Finn (2010) 用外語單字做的實驗——困難清單後面多加一段
+   較簡單的題目，受試者反而更願意再做一次（峰終定律）。
+   所以每回合最後 COOL 題、以及整輪最後 COOL 題，都換成熟字。
+   ⚠ 答錯的字仍然「排到最後面」（使用者指定），只是排在
+   那幾題收尾的熟字**前面**——coolN 記的就是佇列尾巴保留了幾題。
+   ============================================================ */
+var ROUND = 100, COOL = 5;
+var coolN = 0;
+var lastBreak = "";                    /* 已經顯示過休息畫面的那個「日期|題數」 */
+var rnd = { a: 0, c: 0, m: 0 };        /* 這回合：題數、答對、升到熟練的字義數（只放記憶體） */
+
+function roundNo() { return Math.floor((dayLog().a || 0) / ROUND) + 1; }
+function roundLeft() { return ROUND - ((dayLog().a || 0) % ROUND); }
+/* 「熟字」＝練過、不在錯題裡、已經撐過 14 天以上的間隔 */
+function isEasy(it) { return it.seen > 0 && !it.wb && (it.box || 0) >= 4; }
+function tailPush(it) {
+  var n = Math.min(coolN, queue.length);
+  queue.splice(queue.length - n, 0, it);
+}
+/* 一回合剩最後 COOL 題時，從後面的佇列裡挑最熟的一個拉到最前面 */
+function pullEasy() {
+  if (!roundOpen() || roundLeft() > COOL) return;
+  var end = queue.length - coolN, best = -1;
+  for (var i = 0; i < end; i++) {
+    if (isEasy(queue[i]) && (best < 0 || queue[i].box > queue[best].box)) best = i;
+  }
+  if (best > 0) queue.unshift(queue.splice(best, 1)[0]);
+}
+
+/* 保底線：新字全部過一遍＋做滿一回合。做到就算今天有守住，
+   剩下的留在到期清單裡，下次開 App 照樣排進來。 */
+function floorInfo() {
+  var l = dayLog(), due = normalDue();
+  var nw = due.filter(function (i) { return !i.seen && !i.wb; }).length;
+  var q = Math.max(0, ROUND - (l.a || 0));
+  return { q: q, nw: nw, ok: (!q && !nw) || !due.length };
+}
+function floorHTML() {
+  var f = floorInfo();
+  if (f.ok) return "<b>✓ 今天的保底守住了</b>，接下來每多做一題都是加分。";
+  var need = [];
+  if (f.nw) need.push("新字 <b>" + f.nw + "</b> 個");
+  if (f.q) need.push("<b>" + f.q + "</b> 題");
+  return "保底線（新字過一遍＋" + ROUND + " 題）還差 " + need.join("、") + "。";
+}
+
+/* 答對自動下一題：少按一次「下一題」，一天四百題就是四百次。
+   碰畫面任何地方或按任何鍵（Enter 除外，那本來就是下一題）就取消，
+   所以要看例句、加單字卡、按「太簡單」都來得及。 */
+var AUTO_MS = 1500, autoT = null;
+function autoNextOn() { return S.autoNext !== false; }
+function cancelAuto() {
+  if (autoT) { clearTimeout(autoT); autoT = null; }
+  var b = $("#btnGo");
+  if (b) b.classList.remove("cd");
+}
+function armAuto(ms) {
+  cancelAuto();
+  var it = qCur, b = $("#btnGo");
+  if (b) {
+    b.style.setProperty("--cd", ms + "ms");
+    void b.offsetWidth;                /* 重新觸發倒數動畫 */
+    b.classList.add("cd");
+  }
+  autoT = setTimeout(function () {
+    autoT = null;
+    /* 這段時間裡自己按了下一題、切了頁、開了查單字，都不要再跳一次 */
+    if (cur === "drill" && answered && qCur === it &&
+        !$("#sheetBg").classList.contains("on")) next();
+  }, ms);
+}
+$("#v-drill").addEventListener("pointerdown", function (e) {
+  if (!e.target.closest("#btnGo")) cancelAuto();
+}, true);
+document.addEventListener("keydown", function (e) {
+  if (autoT && e.key !== "Enter") cancelAuto();
+}, true);
 /* 把「現在到期、但還不在這一輪裡」的字補到最後面 */
 function topUpQueue() {
   if (!roundOpen()) return;
@@ -540,7 +642,12 @@ function hash32(s) {
    （不然佇列每次重建就換一批），換一天自動換一批（不會只練到最前面那幾十個）。 */
 function debtQuota() {
   var pool = oldWrong();
-  var n = wrongBatch();
+  /* ⚠ 要扣掉今天已經考過的舊帳（當天紀錄的 d）。少了這個扣除，
+     清掉一個舊帳、池子裡的下一個就遞補進「前 N 名」，topUpQueue 再把它
+     補進這一輪——「每天 20 個」實際上會一路補到整個錯題本清空為止
+     （2026/10/01 實測：332 題做完 100 題，剩下的不是 235 而是 255）。 */
+  var n = Math.max(0, wrongBatch() - (dayLog().d || 0));
+  if (!n) return [];
   if (pool.length <= n) return pool;
   var td = today();
   return pool.map(function (it) {
@@ -622,8 +729,19 @@ function buildQueue(mode, limit) {
      全部倒進來會變成一千多題，那正是這段註解原本在警告的事。 */
   else if (drillMode === "today") list = byPriority(normalDue());
   else list = byPriority(normalDue());
+  /* 收尾：把最熟的 COOL 個留到整輪最後面（見上面「回合、保底線、收尾」）。
+     題目太少時不必，那種日子本來就不累。 */
+  coolN = 0;
+  if (drillMode !== "extra" && list.length >= 30) {
+    var cool = list.filter(isEasy)
+      .sort(function (a, b) { return b.box - a.box; }).slice(0, COOL);
+    list = list.filter(function (i) { return cool.indexOf(i) < 0; }).concat(cool);
+    coolN = cool.length;
+  }
   queue = list;
   qTotal = queue.length;
+  rnd = { a: 0, c: 0, m: 0 };
+  pullEasy();
 }
 
 /* ============================================================
@@ -751,8 +869,67 @@ function drawDrill() {
   topUpQueue();
   if (answered && qCur === queue[0]) queue.shift();
   if (!queue.length) { drawDrillStart(el); return; }
+  if (queue.length <= coolN) coolN = 0;
   qCur = queue[0]; answered = false; hinted = 0;
   renderCard();
+}
+
+/* 一回合做完的休息畫面。這裡是「可以停」的地方：
+   告訴他這回合賺到什麼（不是還欠多少），保底守住了沒，要不要繼續由他決定。 */
+function drawBreak() {
+  var l = dayLog(), r = Math.floor((l.a || 0) / ROUND);
+  var more = Math.ceil(queue.length / ROUND);
+  qCur = null; answered = false;
+  $("#v-drill").innerHTML =
+    '<div class="plan-head">' +
+    '<div class="big">第 ' + r + " 回合完成</div>" +
+    '<div class="cap" style="margin-top:10px;line-height:1.9">' +
+    (rnd.a ? "・這回合答對 <b>" + Math.round(rnd.c / rnd.a * 100) + "%</b><br>" : "") +
+    (rnd.m ? "・<b>" + rnd.m + "</b> 個字義升到熟練（間隔 30 天以上）<br>" : "") +
+    "・今天累計 <b>" + (l.a || 0) + "</b> 題・<b>" + fmtDur(l.ms) + "</b><br>" +
+    "・" + floorHTML() +
+    "</div></div>" +
+    '<button class="btn" id="brkGo">繼續第 ' + (r + 1) + " 回合</button>" +
+    '<p style="font-size:13px;color:var(--sub);margin:10px 4px 14px;line-height:1.7">' +
+    "還剩 <b>" + queue.length + "</b> 題，大約 " + more + " 回合。" +
+    "可以先休息，晚一點再回來接著做。</p>" +
+    '<button class="btn ghost" id="brkStop">今天先到這裡</button>' +
+    '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
+    "沒做完的會留在到期清單裡，下次開 App 照樣排進來。</p>";
+  rnd = { a: 0, c: 0, m: 0 };
+  $("#brkGo").onclick = function () { drawDrill(); };
+  $("#brkStop").onclick = function () { queue = []; coolN = 0; drawDrill(); };
+  window.scrollTo(0, 0);
+  refreshHeader();
+}
+
+/* 固定時段：先決定「幾點、在什麼情境下」做第一回合。
+   Gollwitzer & Sheeran (2006) 的後設分析：「如果到了 X，我就做 Y」
+   這種執行意圖對目標達成的效果量約 d = 0.65。重點是情境線索，
+   所以除了時間還讓他寫一句「在哪裡／什麼事之後」。 */
+var planAtEdit = false;
+function planAtHTML() {
+  var at = S.planAt || "", cue = S.planCue || "";
+  if (at && !planAtEdit) {
+    var d = new Date(), hm = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+    var late = !(dayLog().a) && hm >= at;
+    return '<h2 class="sec">固定時段</h2>' +
+      '<div class="plan-head" style="margin-bottom:6px"><div class="cap" style="line-height:1.9">' +
+      "跟自己約好的：每天 <b>" + esc(at) + "</b>" + (cue ? "・<b>" + esc(cue) + "</b>" : "") +
+      "，就開始第 1 回合。" + (late ? "<br><b>時間到了，現在開始就算數。</b>" : "") +
+      "</div></div>" +
+      '<div style="text-align:right"><button class="minilink" id="planAtChg">改時間</button></div>';
+  }
+  var st = "padding:11px 10px;border:1px solid var(--line);border-radius:8px;" +
+    "background:var(--card);color:var(--text);font-size:16px;min-width:0";
+  return '<h2 class="sec">固定時段</h2>' +
+    '<p style="font-size:13px;color:var(--sub);margin:0 4px 10px;line-height:1.7">' +
+    "先決定每天<b>幾點、在什麼情況下</b>做第 1 回合。到時候不用再想要不要做。</p>" +
+    '<div style="display:flex;gap:8px;margin-bottom:10px">' +
+    '<input type="time" id="planAtIn" value="' + esc(at) + '" style="' + st + '">' +
+    '<input id="planCueIn" maxlength="30" value="' + esc(cue) +
+    '" placeholder="例：晚餐後在書桌" style="' + st + ';flex:1"></div>' +
+    '<button class="btn ghost" id="planAtSave">就這樣約定</button>';
 }
 
 /* 未來七天各有幾個字到期，讓你提前看到複習量會不會爆掉 */
@@ -858,13 +1035,16 @@ function drawDrillStart(el) {
     '<div class="plan-head">' +
     '<div class="big">' +
     (t.left
-      ? "還有 " + t.left + ' <span style="font-size:15px;color:var(--sub);font-weight:500">題要做</span>'
+      ? "還有 " + t.left + ' <span style="font-size:15px;color:var(--sub);font-weight:500">題要做・約 ' +
+        Math.ceil(t.left / ROUND) + " 回合</span>"
       : "今天的進度做完了 🎉") + "</div>" +
     '<div class="bar"><i style="width:' +
     (t.goal ? Math.min(100, Math.round(t.done / t.goal * 100)) : 100) + '%"></i></div>' +
     '<div class="cap">已完成 <b>' + t.done + "</b> 題・練到 <b>" + (l.w || 0) +
     "</b> 個字義・學習 <b>" + fmtDur(l.ms) + "</b>" +
     (l.a ? "・正確率 " + rate + "%" : "") + "</div>" +
+    (t.left || l.a
+      ? '<div class="cap" style="margin-top:10px;line-height:1.7">' + floorHTML() + "</div>" : "") +
     '<div class="cap" style="margin-top:10px;line-height:1.9">' +
     "・沒學過的新字 <b>" + newPend + "</b> 個字義" +
     (autoLoadOn() ? "（開 App 時已自動排好）" : "（手動模式，要自己按下面那顆）") + "<br>" +
@@ -875,13 +1055,14 @@ function drawDrillStart(el) {
     "</div></div>" +
 
     (t.left
-      ? '<button class="btn" id="btnToday">開始今天的進度</button>' +
+      ? '<button class="btn" id="btnToday">開始第 ' + roundNo() + " 回合</button>" +
         '<p style="font-size:13px;color:var(--sub);margin:10px 4px 0;line-height:1.7">' +
-        "<b>新字排在最前面</b>，答錯的會排到這一輪的最後面，同一輪內就再練得到。" +
-        "中途離開會接著算。</p>"
+        "每 " + ROUND + " 題一回合，做完一回合可以停。" +
+        "<b>新字排在最前面</b>，答錯的排到最後面，同一輪內就再練得到。</p>"
       : '<div class="empty" style="padding:20px 8px">今天該練的都練完了，下一批 <b>' +
-        waitTxt + "</b> 到期。<br>" +
-        '<span style="font-size:13px">還有力氣就往下清一點錯題。</span></div>') +
+        waitTxt + "</b> 到期。</div>") +
+
+    planAtHTML() +
 
     /* 錯題不再是獨立的一段功課（2026/09/28 使用者要求「錯題不要管，
        直接放進練習清單」）。舊帳每天按額度混進上面的進度，這裡只剩狀態與設定。 */
@@ -933,6 +1114,13 @@ function drawDrillStart(el) {
 
     '<h2 class="sec">未來七天的複習量</h2>' + loadForecast();
 
+  if ($("#planAtChg")) $("#planAtChg").onclick = function () { planAtEdit = true; drawDrill(); };
+  if ($("#planAtSave")) $("#planAtSave").onclick = function () {
+    var at = $("#planAtIn").value;
+    if (!at) { $("#planAtIn").focus(); return toast("先選一個時間"); }
+    S.planAt = at; S.planCue = $("#planCueIn").value.trim();
+    planAtEdit = false; save(); drawDrill();
+  };
   var bLoad = $("#btnLoadNew"), bMore = $("#btnMoreNew");
   el.querySelectorAll("[data-wb]").forEach(function (b) {
     b.onclick = function () {
@@ -1001,6 +1189,14 @@ function renderCard() {
   var fi = formInfo(it.w, p.ans);
   var nLet = p.ans.replace(/\s/g, "").length;
   var done = qTotal - queue.length + 1;
+  /* 今天的進度顯示「第幾回合、這回合剩幾題」，不顯示「第 37 / 412 題」——
+     分母四百多的進度條幾乎不會動，看了只會累。 */
+  var rl = Math.min(roundLeft(), queue.length);
+  var meta = roundOpen()
+    ? "第 " + roundNo() + " / " +
+      (roundNo() + Math.ceil(Math.max(0, queue.length - rl) / ROUND)) +
+      " 回合・這回合剩 " + rl + " 題"
+    : "第 " + done + " / " + qTotal + " 題";
   var dots = "";
   for (var i = 1; i <= MAXBOX; i++) dots += "<i" + (i <= it.box ? ' class="f"' : "") + "></i>";
 
@@ -1008,7 +1204,7 @@ function renderCard() {
     '<div class="card">' +
     '<div class="qmeta"><span>' +
     (drillMode === "wrong" ? '<span class="lv out">錯題</span> ' : "") +
-    "第 " + done + " / " + qTotal + " 題</span>" +
+    meta + "</span>" +
     '<span class="dots" title="熟練度">' + dots + "</span></div>" +
     '<p class="zhline">' + esc(ex.zh) + "</p>" +
     '<p class="enline" id="enLine">' + clickable(p.pre) +
@@ -1061,6 +1257,11 @@ function renderCard() {
   });
   $("#posZh").onclick = function () { peekHint(sn); };
   $("#enLine").addEventListener("click", onTokenClick);
+  /* 有實體鍵盤的裝置直接對焦，不必每題先點一下輸入框。
+     手機不做：非使用者手勢的 focus() 叫不出鍵盤，只會讓畫面亂跳。 */
+  if (window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    $("#ansIn").focus();
+  }
   refreshHeader();
 }
 
@@ -1146,6 +1347,7 @@ function markEasy() {
     toast("記下了。" + Math.round(INT[it.box] / DAY) + " 天後換一句再考一次，再答對就畢業");
     var b = $("#btnKnow");
     if (b) { b.textContent = "已記下，30 天後再確認一次"; b.disabled = true; }
+    if (autoNextOn()) armAuto(700);
     return;
   }
   /* 第二次確認：畢業。注意是「字義」層級——bank 的「銀行」畢業，
@@ -1262,6 +1464,9 @@ function submit(gaveUp) {
   var fi = formInfo(it.w, ans);
   var ok = !gaveUp && (norm(input) === norm(ans) ||
     (!!fi.suffix && norm(input + fi.suffix) === norm(ans)));
+  var box0 = it.box || 0;
+  /* 這一題是混進來的舊帳 → 記進今天的額度（見 debtQuota） */
+  if (it.wb && it.wbAt !== today()) { var dl = dayLog(); dl.d = (dl.d || 0) + 1; }
   it.seen++;
   logAnswer(ok, it);
 
@@ -1326,9 +1531,12 @@ function submit(gaveUp) {
     it.due = Date.now();
     /* 直接排到這一輪的最後面（使用者指定的做法）。
        原本是等 10 分鐘到期、下一輪才會被排進來。 */
-    queue.push(it);
+    tailPush(it);
     qTotal++;
   }
+  rnd.a++;
+  if (ok) rnd.c++;
+  if (box0 < 5 && it.box >= 5) rnd.m++;
   save();
 
   lastOK = ok;
@@ -1363,12 +1571,15 @@ function submit(gaveUp) {
     (ok ? "✓ 答對了"
         : (gaveUp ? "答案是 <b>" + esc(ans) + "</b>，排到這一輪最後再考一次"
                   : "✗ 正確答案是 <b>" + esc(ans) + "</b>")) +
-    "</div>" + allExamplesHTML(it.w, it.si, ex);
+    "</div>" + moreExamplesHTML(it.w, it.si, ex);
   revealHint(sn);
   var egBox = $("#allEg");
   if (egBox) egBox.addEventListener("click", onTokenClick);
 
   refreshHeader();
+  /* 無提示答對才自動跳。第 2 次畢業確認不跳——那是永久排除，要留時間給他決定。 */
+  if (ok && hinted === 0 && autoNextOn() &&
+      !(it.easy && !zhPeeked && canGraduate(it))) armAuto(AUTO_MS);
 }
 
 /* 自己動手翻開提示。作答後的自動翻開走 revealHint()，不算偷看。 */
@@ -1378,9 +1589,18 @@ function peekHint(sn) {
 }
 
 function next() {
+  cancelAuto();
   topUpQueue();
   queue.shift();
   if (!queue.length) { drawDrill(); return; }
+  if (queue.length <= coolN) coolN = 0;
+  /* 剛好做滿一回合 → 先停在休息畫面。lastBreak 擋住同一個題數重複觸發
+     （例如按「太簡單」畢業那條路也會走到這裡，但題數沒變）。 */
+  var a = dayLog().a || 0, bk = today() + "|" + a;
+  if (roundOpen() && a > 0 && a % ROUND === 0 && lastBreak !== bk) {
+    lastBreak = bk; drawBreak(); return;
+  }
+  pullEasy();
   qCur = queue[0]; answered = false; hinted = 0;
   renderCard();
 }
@@ -2938,6 +3158,12 @@ function drawSet() {
     '<div class="d">貼給 Claude 就能判斷來不來得及</div></div>' +
     '<button class="btn sm" id="cpStat">複製摘要</button></div>' +
 
+    '<h2 class="sec">練習</h2>' +
+    '<div class="setrow"><div><div class="t">答對自動下一題</div>' +
+    '<div class="d">無提示答對後 1.5 秒自動前進，碰一下畫面就會停住</div></div>' +
+    '<button class="btn sm ' + (autoNextOn() ? "" : "ghost") + '" id="tgAuto">' +
+    (autoNextOn() ? "開" : "關") + "</button></div>" +
+
     '<h2 class="sec">雲端同步</h2>' + syncBlockHTML() +
 
     '<h2 class="sec">備份</h2>' +
@@ -2974,6 +3200,9 @@ function drawSet() {
     if (!S.bad.length) return toast("沒有回報過句子");
     copy("這幾句例句我覺得怪怪的，請幫我檢查並修正單字庫裡的內容：\n" +
       S.bad.map(function (b) { return "- " + b.w + "（" + b.p + "）：" + b.en + " / " + b.zh; }).join("\n"));
+  };
+  $("#tgAuto").onclick = function () {
+    S.autoNext = !autoNextOn(); save(); drawSet();
   };
   $("#cpStat").onclick = function () {
     copy("這是我現在的學習進度，請幫我判斷來不來得及、要不要調整：\n\n" + progressText());

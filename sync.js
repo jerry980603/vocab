@@ -118,7 +118,7 @@ var SYNC = (function () {
       var o = {};
       /* a 題數、c 答對、w 練到的字義、n 新學的字義、ms 學習時間、g 當天的題數目標，
          每一個都取 max，理由同上。 */
-      ["a", "c", "w", "n", "ms", "g"].forEach(function (f) {
+      ["a", "c", "w", "n", "ms", "g", "d"].forEach(function (f) {
         o[f] = Math.max(x[f] || 0, y[f] || 0);
       });
       out.log[d] = o;
@@ -167,7 +167,8 @@ var SYNC = (function () {
     /* 純量設定（每日題數、考試日期…）：取最後修改時間較新的那份 */
     var newer = (a.mtime || 0) >= (b.mtime || 0) ? a : b;
     ["perDay", "examDate", "learnEndDate", "mixLevels", "finalReview",
-      "autoLoad", "scope", "fixBox0", "wrongBatch", "cardFront"].forEach(function (k) {
+      "autoLoad", "scope", "fixBox0", "wrongBatch", "cardFront",
+      "autoNext", "planAt", "planCue"].forEach(function (k) {
       if (newer[k] !== undefined) out[k] = newer[k];
     });
     out.mtime = Math.max(a.mtime || 0, b.mtime || 0);
