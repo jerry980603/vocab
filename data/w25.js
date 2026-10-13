@@ -90,7 +90,7 @@ addWords(`
 
 @retail|5
 =n.|零售
-.The book costs far less online than it does in {{retail}}.|這本書在網路上比在零售通路便宜得多。
+.She has worked in {{retail}} for ten years, mostly in clothing shops.|她在零售業工作了十年，大多是在服飾店。
 =adj.|零售的
 .{{Retail}} prices have risen faster than wages over the past two years.|過去兩年零售價格上漲的速度比薪資快。
 =v.|零售；以…價格出售

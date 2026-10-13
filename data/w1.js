@@ -32,7 +32,7 @@ addWords(`
 .Please log in to your {{account}} before trying to change the password.|請先登入你的帳戶，再嘗試變更密碼。
 =n.|描述；報導
 .He gave the police a full {{account}} of the accident.|他向警方詳述了整起意外。
-=v.|說明；解釋（account for）
+=v.|說明；解釋；是…的原因（account for）
 .The manager could not {{account}} for the missing files in the office.|經理無法解釋辦公室裡不見的那些檔案。
 .Bad weather may {{account}} for the low turnout at yesterday's event.|天氣不佳或許可以解釋昨天活動出席率偏低的原因。
 
@@ -201,8 +201,9 @@ addWords(`
 =v.|附上；貼上
 .Please {{attach}} a recent photo to the form before you send it.|寄出表格之前請貼上一張近照。
 .I have {{attached}} the file to this email in two different formats.|我已經用兩種格式把檔案附在這封信裡。
-=v.|使依戀
-.The boy is deeply {{attached}} to his grandmother, who raised him alone.|那男孩非常依戀獨自把他帶大的祖母。
+=v.|認為有（重要性、價值）（attach importance to）
+.Her parents {{attach}} great importance to good manners at the dinner table.|她的父母非常重視餐桌上的禮貌。
+.Scientists {{attached}} little value to the results of such a small study.|科學家不太看重這麼小規模研究的結果。
 
 @attempt|2
 =n.|嘗試；企圖
@@ -265,7 +266,7 @@ addWords(`
 =adj.|簡短的；短暫的
 .Let me give you a {{brief}} introduction before the main speaker arrives.|主講人到之前，讓我先做個簡短的介紹。
 .We had a {{brief}} conversation this morning about the changes to the schedule.|今天早上我們針對行程的變動簡短談了一下。
-=n.|摘要；簡報資料
+=n.|（工作的）指示；（訴訟的）案情摘要
 .The lawyer read through the {{brief}} carefully before entering the courtroom.|律師進入法庭前仔細讀完了案情摘要。
 =v.|向…簡報；向…說明
 .The captain {{briefed}} the crew on the safety rules before takeoff.|機長在起飛前向組員說明了安全規定。

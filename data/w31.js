@@ -13,7 +13,7 @@ addWords(`
 
 @identity|2
 =n.|身分
-.He refused to give his {{identity}} to anyone at the door.|他拒絕向門口的任何人表明身分。
+.The singer hid her {{identity}} by wearing a hat and dark glasses.|那位歌手戴著帽子和墨鏡來隱藏身分。
 .Police are still trying to confirm the {{identity}} of the driver.|警方仍在設法確認那名駕駛的身分。
 =n.|認同；特質
 .The town has kept its own strong {{identity}} despite rapid growth.|儘管快速成長，這個小鎮仍保有自己強烈的特色。
@@ -402,7 +402,7 @@ addWords(`
 =n.|大師；能手
 .He is a true {{master}} of a craft that few still practice.|他是一門少有人仍在從事的工藝的真正大師。
 =n.|碩士學位
-.He completed a {{master}} of arts before returning home to teach.|他取得文學碩士後回鄉教書。
+.He completed a {{Master}} of Arts before returning home to teach.|他取得文學碩士後回鄉教書。
 =v.|精通；掌握
 .It took him years to {{master}} the language well enough to teach.|他花了好幾年才精通這語言到足以教學的程度。
 

@@ -36,7 +36,7 @@ addWords(`
 @maximum|4
 =adj.|最大的；最高的
 .The {{maximum}} speed on this road is fifty kilometers an hour.|這條路的最高速限是每小時五十公里。
-.Each student may borrow a {{maximum}} number of five books at once.|每位學生一次最多可以借五本書。
+.The {{maximum}} temperature today will be thirty-five degrees in the city.|今天市區的最高氣溫將達三十五度。
 =n.|最大量；上限
 .The theatre holds a {{maximum}} of eight hundred people at any one time.|這座劇院一次最多可容納八百人。
 
@@ -357,7 +357,7 @@ addWords(`
 .Our hotel room {{overlooked}} the harbor and the hills beyond it.|我們的旅館房間俯瞰港口和後方的山丘。
 
 @overnight|4
-=adv.|一夜之間；突然地
+=adv.|過夜；一夜之間；突然地
 .The singer became famous {{overnight}} after the video was widely shared.|影片被大量分享後，那位歌手一夜成名。
 .We stayed {{overnight}} in a small town halfway to the coast.|我們在往海岸途中的一個小鎮過了一夜。
 =adj.|過夜的；夜間的

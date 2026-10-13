@@ -148,7 +148,7 @@ addWords(`
 =n.|單身漢；未婚男子
 .He remained a {{bachelor}} until he met his wife in his forties.|他一直是單身漢，直到四十多歲才遇見他的妻子。
 =n.|學士（學位）
-.She earned a {{bachelor}} of science degree before starting her medical training.|她在開始醫學訓練之前取得了理學學士學位。
+.She earned a {{Bachelor}} of Science degree before starting her medical training.|她在開始醫學訓練之前取得了理學學士學位。
 
 @beforehand|6
 =adv.|事先；預先

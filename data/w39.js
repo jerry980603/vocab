@@ -844,7 +844,7 @@ addWords(`
 .{{Nothing}} in the report explains why the machine suddenly stopped working.|報告裡沒有任何內容解釋機器為何突然停止運轉。
 .He said {{nothing}} during the whole discussion, though he clearly disagreed.|整場討論他什麼都沒說，儘管他顯然不同意。
 =n.|微不足道的人或事
-.She rose from {{nothing}} to become one of the country's finest surgeons.|她白手起家，成為全國最優秀的外科醫師之一。
+.In the big city he felt like a {{nothing}} whom nobody ever noticed.|在大城市裡，他覺得自己是個沒人注意的小人物。
 
 @notice|1
 =v.|注意到；察覺

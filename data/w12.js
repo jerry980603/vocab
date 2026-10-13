@@ -688,8 +688,8 @@ addWords(`
 .The children made a terrible {{mess}} in the kitchen while baking a cake.|孩子們烤蛋糕時把廚房弄得一團亂。
 =n.|混亂的局面；麻煩
 .He got into a financial {{mess}} after borrowing money from several friends.|他向好幾個朋友借錢後，陷入財務困境。
-=v.|弄亂；弄髒
-.Do not {{mess}} the papers on my desk; they are in careful order.|不要弄亂我桌上的文件，它們是仔細排好的。
+=v.|弄亂；弄髒（mess up）
+.Please do not {{mess up}} the papers on my desk; I sorted them carefully.|請別弄亂我桌上的文件，我仔細整理過了。
 
 @mist|3
 =n.|薄霧；霧氣

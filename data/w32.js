@@ -629,7 +629,7 @@ addWords(`
 
 @riches|2
 =n.|財富
-.He gave away most of his {{riches}} in the final years.|他在生命最後幾年把大部分財富都捐了出去。
+.He gave away most of his {{riches}} in the final years of his life.|他在生命最後幾年把大部分財富都捐了出去。
 .The story warns that {{riches}} do not always bring happiness.|這個故事警示財富未必總能帶來快樂。
 
 @roach|2

@@ -431,7 +431,7 @@ addWords(`
 
 @plural|5
 =adj.|複數的
-.Most English nouns form the {{plural}} form by adding an s.|大多數英文名詞加 s 構成複數形。
+.Please check whether the verb should be singular or {{plural}} here.|請檢查這裡的動詞應該用單數還是複數。
 =n.|複數形
 .The {{plural}} of this word is irregular, so you have to memorize it.|這個字的複數形不規則，必須背下來。
 .Children often use the wrong {{plural}} when they are learning to speak.|孩子在學說話時常會用錯複數形。

@@ -69,7 +69,7 @@ addWords(`
 .The village is a {{delightful}} place to stay for a few quiet days.|這個村莊是安靜住上幾天的宜人去處。
 
 @demonstrate|4
-=v.|示範；展示
+=v.|示範；展示；證明
 .The teacher {{demonstrated}} how to use the microscope before the class began.|老師在上課前示範了顯微鏡的使用方法。
 .These results {{demonstrate}} that the new method works far better than the old.|這些結果證明新方法比舊方法有效得多。
 =v.|示威；遊行抗議
@@ -87,7 +87,7 @@ addWords(`
 .A {{dense}} forest covers the northern half of this small island.|茂密的森林覆蓋了這座小島的北半部。
 .{{Dense}} fog closed the airport for most of Tuesday morning.|濃霧讓機場在週二上午大半時間都關閉。
 =adj.|密集的；人口稠密的
-.This district has the most {{dense}} population anywhere in the country.|這一區的人口密度是全國最高的。
+.The {{dense}} population of the capital makes housing very expensive.|首都人口稠密，使得住房非常昂貴。
 
 @depart|4
 =v.|出發；離開
@@ -218,12 +218,12 @@ addWords(`
 @discourage|4
 =v.|使氣餒；使沮喪
 .Do not let one poor result {{discourage}} you from trying again.|別讓一次不好的成績讓你氣餒到不敢再試。
-.His parents' constant criticism {{discouraged}} him from studying art at all.|父母不斷的批評讓他完全打消了學藝術的念頭。
 =v.|勸阻；阻止（discourage somebody from doing something）
 .The signs are meant to {{discourage}} visitors from feeding the wild monkeys.|這些告示是為了勸阻遊客餵食野生猴子。
+.His parents' constant criticism {{discouraged}} him from studying art at all.|父母不斷的批評讓他完全打消了學藝術的念頭。
 
 @disguise|4
-=v.|偽裝；喬裝
+=v.|偽裝；喬裝；掩飾（情感）
 .He escaped from the city {{disguised}} as an ordinary farm worker.|他喬裝成普通的農場工人逃出了城市。
 .She could not {{disguise}} her disappointment when she heard the final score.|她聽到最後比數時，無法掩飾自己的失望。
 =n.|偽裝；偽裝用的衣物

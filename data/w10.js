@@ -107,9 +107,9 @@ addWords(`
 @dare|3
 =aux.|敢（助動詞）
 .I {{dare}} not tell my parents what really happened last night.|我不敢告訴父母昨晚到底發生了什麼事。
+.How {{dare}} you read my messages without asking me first?|你怎麼敢不先問我就看我的訊息？
 =v.|敢；膽敢
 .Nobody {{dared}} to tell the manager that his plan had failed.|沒有人敢告訴經理他的計畫失敗了。
-.How {{dare}} you read my messages without asking me first?|你怎麼敢不先問我就看我的訊息？
 
 @decorate|3
 =v.|裝飾；布置
@@ -255,7 +255,7 @@ addWords(`
 .He was accused of {{murdering}} his business partner for money.|他被指控為了錢謀殺自己的生意夥伴。
 
 @naked|3
-=adj.|裸體的；無遮蔽的
+=adj.|裸體的；無遮蔽的；（the naked eye）肉眼
 .The baby lay {{naked}} on the towel while his mother found clothes.|媽媽去找衣服時，寶寶光著身子躺在毛巾上。
 .You cannot see these tiny insects with the {{naked}} eye.|這些微小的昆蟲用肉眼看不到。
 

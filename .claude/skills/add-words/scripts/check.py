@@ -144,6 +144,8 @@ SKIP_POS = {
     "notable": {"n."}, "peril": {"v."},
     # savage n. 朗文標「a very offensive word」且 old-fashioned，不放進高中生字庫
     "savage": {"n."},
+    # cripple n.（肢體殘障者）同樣是冒犯用語，2026/10 稽核時刪除
+    "cripple": {"n."},
     # solitary n. 是監獄術語（單獨監禁）與英式文學用法，罕用
     "solitary": {"n."},
     # w46（第 6 級 A–I）刻意不收的詞性：

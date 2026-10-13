@@ -41,7 +41,7 @@ addWords(`
 
 @gray|1
 =adj.|灰色的
-.The sky stayed a dull {{gray}} for the whole of that week.|那整週天空都是一片黯淡的灰色。
+.Her {{gray}} hair made her look older than she really was.|一頭灰髮讓她看起來比實際年齡老。
 =n.|灰色
 .She painted the kitchen walls a soft {{gray}} that suited the light.|她把廚房的牆漆成柔和的灰色，很配光線。
 =v.|變灰白
@@ -519,7 +519,7 @@ addWords(`
 =n.|工作
 .She found a {{job}} at a local factory soon after leaving school.|她離開學校後不久就在當地工廠找到工作。
 =n.|任務
-.Cleaning the whole kitchen turned out to be a bigger {{job}}.|清理整間廚房結果是件更大的工程。
+.Cleaning the whole kitchen turned out to be a bigger {{job}} than expected.|清理整間廚房結果比預期的更費工夫。
 
 @join|1
 =v.|加入
@@ -711,7 +711,7 @@ addWords(`
 .The {{lawyer}} explained every risk before they signed the contract.|簽約前，律師說明了每一項風險。
 
 @lazy|1
-=adj.|懶惰的
+=adj.|懶惰的；慵懶的；悠閒的
 .He was never {{lazy}}, just far too tired to work well.|他從不懶惰，只是太累而無法好好工作。
 .A {{lazy}} afternoon by the river was exactly what they needed.|在河邊度過一個慵懶的午後正是他們需要的。
 

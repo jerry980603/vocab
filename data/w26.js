@@ -114,7 +114,7 @@ addWords(`
 .The lake {{sparkled}} in the morning sun as we walked past.|我們經過時，湖面在晨光下閃閃發亮。
 .Her eyes {{sparkled}} with pleasure whenever anyone mentioned her grandchildren.|每當有人提起她的孫子，她的眼睛就閃著喜悅的光。
 =n.|閃耀；光彩
-.There was a {{sparkle}} in his voice that we had not heard for months.|他的聲音裡有種我們數月未曾聽見的光彩。
+.There was a {{sparkle}} in his eyes that we had not seen for months.|他的眼裡有種我們數月未曾見過的光彩。
 
 @specialty|5
 =n.|專長；專業

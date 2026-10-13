@@ -218,7 +218,7 @@ addWords(`
 .He began to {{sweat}} heavily after only ten minutes of running.|才跑十分鐘，他就開始大量流汗。
 
 @swell|3
-=v.|腫脹；膨脹
+=v.|腫脹；膨脹；增加
 .Her ankle began to {{swell}} badly right after she fell.|她跌倒後腳踝立刻嚴重腫了起來。
 .The crowd {{swelled}} to several thousand as the evening went on.|隨著夜晚推進，人群膨脹到數千人。
 

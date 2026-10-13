@@ -71,7 +71,7 @@ addWords(`
 .His attitude {{toward}} the whole project changed after that meeting.|那場會議後，他對整個計畫的態度改變了。
 
 @towards|2
-=prep.|朝向
+=prep.|朝向；為了（支付某事）
 .The dog ran {{towards}} the gate as soon as he whistled.|他一吹口哨，狗就朝大門跑去。
 .They saved money {{towards}} a trip they had planned for years.|他們為計畫多年的旅行存錢。
 
@@ -383,7 +383,7 @@ addWords(`
 =conj.|每當；無論何時
 .She smiles {{whenever}} anyone mentions the summer she spent abroad.|每當有人提起她在國外度過的那個夏天，她就微笑。
 =adv.|隨便什麼時候
-.Come and visit us {{whenever}} you happen to be nearby.|你哪天剛好在附近，隨時都歡迎來訪。
+.You can return the book next week or {{whenever}}; there is no hurry.|你可以下週或隨便什麼時候還書，不急。
 
 @wherever|2
 =conj.|無論哪裡
@@ -504,7 +504,7 @@ addWords(`
 =adv.|更糟地
 .He played {{worse}} in the second half than in the first.|他下半場打得比上半場更差。
 =n.|更糟的事
-.She feared that the {{worse}} was still waiting ahead of them.|她擔心更糟的事還在前方等著他們。
+.The patient's condition took a sudden turn for the {{worse}} last night.|病人的病情昨晚突然惡化。
 
 @worst|2
 =adj.|最糟的

@@ -995,6 +995,44 @@ localStorage／gist 裡，Claude 讀不到**。以前要他截圖或開 console 
 `debtQuota()` 的額度改成 `wrongBatch() - d`。`d` 已加進 `sync.js` 的 log 欄位清單。
 修好後同一份假存檔：332 題 ＋ 答錯重考 10 題 ＝ 342 題做完，舊帳剛好少 20 個。
 
+## 字庫全面稽核（2026/10/13，使用者要求）
+
+使用者要求逐條檢查三件事：**中文釋義跟句子用的意思不完全相同**、
+**意思相近但用法被曲解**、**根本沒有那個字義卻收了**。
+全庫 5202 詞條、8345 字義、12651 句逐條人工讀過，修了 75 處（81 項變更、35 個檔）。
+
+| 類型 | 數量 | 例子 |
+|---|---|---|
+| 釋義沒涵蓋例句實際用的意思 | 30 | `humble family`（出身卑微，不是謙虛）、`invented an excuse`（捏造）、`stayed overnight`（過夜）、`a good ear for languages`（辨音能力）、`the fork beyond the bridge`（岔路） |
+| 例句放錯義項 | 7 | `How dare you` 放在 v. 而不是 aux.；`discouraged him from studying` 放在「使氣餒」而不是「勸阻」；`relate to his feelings`、`be supposed to` 另立義項 |
+| 例句的詞性跟義項不符 | 10 | adj. 義項卻用 `a deep red`／`a soft pink`（那是名詞）、pron. 卻用 `cost ... each`（那是副詞）、adj. 卻用 `Both of the sisters`（那是代名詞）、adv. `whenever` 的例句其實是連接詞 |
+| 用法或搭配不對 | 15 | `Do not mess the papers`（要 mess up）、`rested in the shadow of a tree`（遮陽是 shade）、`the most dense population`、`a maximum number of five books`、`give his identity to anyone` |
+| 不存在或不該收的字義 | 2 | `attach` 的「使依戀」是形容詞 attached 的用法（跟 engage 同型）→ 換成 attach importance to；`cripple` n. 是冒犯用語 → 刪除（已加進 `SKIP_POS`） |
+| 句子不完整、大小寫、縮寫 | 11 | `a hotel on the other side`（缺 of town）、`a bigger job`（缺比較對象）、`Christmas eve`、`a master of arts`、`I'll`／`Don't` |
+
+**刻意不收**再加一個：`cripple` n.（理由同 `savage` n.，冒犯用語）。
+
+### ⚠ 寫新例句時要避開的四個坑（這次最常見）
+
+1. **顏色字的 adj. 義項不能用 `a + 形容詞 + 顏色`**：`painted the door a deep red`、
+   `the sky turned a soft pink` 裡的顏色是**名詞**（a shade of red）。
+   adj. 要用 `the red roof`、`her gray hair` 這種直接修飾名詞的句子。
+2. **限定詞的詞性要看句子結構**：`Both of the sisters` 是代名詞、`Both sisters` 才是形容詞；
+   `cost ten dollars each` 是副詞、`Each of the children` 才是代名詞。
+3. **例句用到的意思要在釋義裡**：寫完一個字，回頭逐句問「這句的意思，釋義裡有沒有寫」。
+   這次三分之一的問題都是例句用了第二個意思（humble 的出身卑微、ear 的辨音能力），
+   釋義卻只寫了最常見的那一個，使用者看到提示會以為自己記錯了。
+4. **`as ... as` 這種成對結構挖空會洩題**：句子裡有兩個 as，`check.py` 的 B 項會擋。
+   要練副詞 as 改用 `twice as exciting` 這種只出現一次的句型。
+
+### ⚠ 字義編號有變動的字
+
+`relate`、`suppose` 新增第 2 義，`addition` 的第 2 義拆成兩個（此外／加法），
+`cripple` 刪掉第 2 義，`attach` 第 2 義換了意思。
+使用者存檔用 `單字::義項編號` 當 key，這幾個字已加入清單的進度會**跟著編號走**：
+`addition::1` 現在指「此外」、`attach::1` 指「重視」、`cripple::1` 會被
+`renderCard()` 當成幽靈題自動刪掉。影響很小，所以沒有寫轉檔。
+
 ## 不要動的東西
 
 - `app.js` 的 localStorage key 是 `vocabApp_v1`。改動存檔結構會**清掉使用者的學習進度**，

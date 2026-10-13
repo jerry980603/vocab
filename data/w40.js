@@ -401,7 +401,7 @@ addWords(`
 
 @pink|1
 =adj.|粉紅色的
-.The sky turned a soft {{pink}} just before the sun disappeared completely.|太陽完全消失前，天空轉成柔和的粉紅色。
+.She wrapped the gift in {{pink}} paper and tied it with ribbon.|她用粉紅色的紙包禮物，再繫上緞帶。
 .She chose a {{pink}} notebook because it was easy to find inside her bag.|她選了本粉紅色筆記本，因為在包包裡很好找。
 =n.|粉紅色
 .He painted the door a bright {{pink}} that surprised all the neighbors.|他把門漆成鮮豔的粉紅色，讓所有鄰居都很驚訝。
@@ -805,7 +805,7 @@ addWords(`
 
 @red|1
 =adj.|紅色的
-.She painted the front door a deep {{red}} to match the roof.|她把前門漆成深紅色，好配合屋頂。
+.The {{red}} roof of the old farmhouse can be seen from miles away.|那棟老農舍的紅色屋頂從好幾英里外就看得見。
 .His face turned {{red}} when the teacher praised him in front of everyone.|老師在大家面前稱讚他時，他的臉紅了。
 =n.|紅色
 .The artist used {{red}} to draw the viewer's eye to the center.|畫家用紅色把觀者的目光引到中央。
@@ -862,7 +862,7 @@ addWords(`
 @rich|1
 =adj.|富有的
 .He became {{rich}} by selling a small program to a large company.|他把一個小程式賣給大公司而致富。
-.The village looks poor, yet its history is remarkably {{rich}}.|那個村莊看起來貧窮，歷史卻異常豐富。
 =adj.|豐富的（rich in）
 .These vegetables are {{rich}} in vitamins and cost very little here.|這些蔬菜富含維生素，而且在這裡很便宜。
+.The village looks poor, yet its history is remarkably {{rich}}.|那個村莊看起來貧窮，歷史卻異常豐富。
 `);

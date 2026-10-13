@@ -656,7 +656,7 @@ addWords(`
 @vanity|6
 =n.|虛榮；自負
 .His {{vanity}} would not allow him to wear glasses in public.|他的虛榮心讓他不肯在公開場合戴眼鏡。
-.The mirror in the hallway seemed to encourage everyone toward {{vanity}}.|走廊上的鏡子似乎讓每個人都變得愛照鏡子。
+.She bought the expensive dress out of pure {{vanity}}, not because she needed it.|她純粹出於虛榮才買那件昂貴的洋裝，並不是因為需要。
 
 @versatile|6
 =adj.|多才多藝的；多用途的

@@ -88,7 +88,7 @@ addWords(`
 
 @eve|2
 =n.|前夕
-.The whole family gathers on Christmas {{eve}} every year without fail.|全家人每年聖誕夜必定團聚。
+.The whole family gathers on Christmas {{Eve}} every year without fail.|全家人每年聖誕夜必定團聚。
 .On the {{eve}} of the election, both sides made final speeches.|選舉前夕，雙方都發表了最後的演說。
 
 @event|2
@@ -231,8 +231,8 @@ addWords(`
 .He apologized for having hurt her {{feelings}} the previous evening.|他為前一晚傷了她的感情而道歉。
 
 @fellow|2
-=n.|同伴；夥伴
-.He shared the small room with three {{fellows}} from his village.|他和三位同村的夥伴共用那間小房間。
+=n.|人；傢伙；同伴
+.He seems a pleasant {{fellow}}, though he rarely talks about himself.|他似乎是個隨和的人，不過很少談自己的事。
 .The old {{fellow}} at the corner shop knows everyone by name.|轉角店裡那位老先生叫得出每個人的名字。
 
 @female|2
@@ -582,7 +582,7 @@ addWords(`
 .These {{grapes}} are grown for wine rather than for eating.|這些葡萄是用來釀酒而非食用的。
 
 @greet|2
-=v.|問候；迎接
+=v.|問候；迎接；對…作出反應
 .He {{greeted}} every customer by name as they came in.|每位顧客進門時他都叫得出名字打招呼。
 .She {{greeted}} the news with a long and thoughtful silence.|她以久久的沉思沉默迎接這個消息。
 

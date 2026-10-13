@@ -120,7 +120,7 @@ addWords(`
 .This medicine treats one {{specific}} disease and has no other use.|這個藥只治療一種特定疾病，沒有其他用途。
 
 @spirit|2
-=n.|精神；心靈
+=n.|精神；心靈；情緒（spirits）
 .The team showed great fighting {{spirit}} even after losing three games.|即使輸了三場，球隊仍展現強大的鬥志。
 .Her {{spirits}} rose when she heard that her brother was safe.|聽到哥哥平安的消息，她的心情就好了起來。
 
@@ -223,12 +223,14 @@ addWords(`
 @suppose|2
 =v.|以為；認為
 .I {{suppose}} you are right, although I still feel slightly uneasy.|我想你是對的，儘管我仍覺得有點不安。
+=v.|應該；理應（be supposed to）
+.The train was {{supposed}} to arrive at noon, but it came two hours late.|火車本來應該中午到，結果晚了兩小時。
 .You are {{supposed}} to be in class now, not in the library.|你現在應該在教室，而不是在圖書館。
 
 @surface|2
 =n.|表面
 .The {{surface}} of the lake was so calm that it looked solid.|湖面平靜到看起來像是固體。
-.Please do not judge things by their {{surface}} without asking questions.|請不要不問問題就從表面評斷事情。
+.On the {{surface}}, the plan looks simple, but it hides many problems.|表面上這個計畫看似簡單，其實藏著許多問題。
 =v.|浮出水面；浮現
 .The whale {{surfaced}} only a few meters away from our small boat.|鯨魚就在離我們小船僅僅幾公尺的地方浮出水面。
 .New evidence {{surfaced}} months after the investigation had officially been closed.|調查正式結案數月之後，新的證據才浮現出來。
@@ -295,7 +297,7 @@ addWords(`
 
 @trace|3
 =v.|追蹤；追溯
-.The police {{traced}} the call to a hotel on the other side.|警方追查那通電話，發現來自另一頭的一家旅館。
+.The police {{traced}} the call to a hotel on the other side of town.|警方追查那通電話，發現來自城另一頭的一家旅館。
 =n.|痕跡
 .The thief left no {{trace}} except a single muddy footprint outside.|那個小偷除了外面一個泥腳印之外沒留下任何痕跡。
 

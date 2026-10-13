@@ -35,7 +35,7 @@ addWords(`
 .She {{detected}} a hint of sadness in her friend's quiet voice.|她從朋友輕柔的聲音裡察覺到一絲難過。
 
 @drown|3
-=v.|溺死；淹沒
+=v.|溺死；淹沒；（聲音）蓋過
 .Two swimmers nearly {{drowned}} when the current suddenly grew much stronger.|水流突然變強時，兩名泳客差點溺水。
 .The loud music completely {{drowned}} out the sound of my phone ringing.|大聲的音樂完全蓋過了我手機的鈴聲。
 
@@ -171,8 +171,8 @@ addWords(`
 .He began his speech with a famous {{quote}} from a Greek philosopher.|他以一句希臘哲學家的名言展開演講。
 
 @rank|3
-=n.|等級；排名
-.The university climbed several places in this year's international {{rank}} list.|這所大學在今年的國際排名表上前進了好幾名。
+=n.|等級；階級；地位
+.He rose to the {{rank}} of captain after ten years in the army.|他在軍中服役十年後升到上尉。
 =v.|把…列為；排名
 .Critics {{ranked}} her latest novel among the best books of the year.|評論家把她最新的小說列為年度最佳書籍之一。
 

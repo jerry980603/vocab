@@ -372,7 +372,7 @@ addWords(`
 .Ask him {{whether}} the library stays open during the summer holidays.|問問他圖書館暑假期間是否開放。
 
 @which|1
-=pron.|哪一個
+=pron.|哪一個；（關係代名詞，指事物）
 .He could not remember {{which}} of the two roads led to the temple.|他想不起來兩條路中哪一條通往寺廟。
 .The book, {{which}} she finished in one night, changed her opinion completely.|那本書她一晚就讀完，徹底改變了她的看法。
 =adj.|哪一個的
@@ -400,7 +400,7 @@ addWords(`
 .The woman {{who}} answered the phone sounded genuinely worried about something.|接電話的那位女士聽起來真的在擔心什麼。
 
 @whose|1
-=pron.|誰的
+=pron.|誰的；（關係代名詞）…的
 .{{Whose}} umbrella is standing beside the door of the classroom?|教室門邊那把傘是誰的？
 .The writer, {{whose}} first novel failed completely, became famous ten years later.|那位作家的第一本小說徹底失敗，十年後卻成名了。
 
@@ -410,7 +410,7 @@ addWords(`
 .Nobody could explain {{why}} the machine kept stopping every afternoon.|沒有人能解釋那台機器為何每天下午都會停。
 
 @wide|1
-=adj.|寬的
+=adj.|寬的；廣泛的
 .The river is too {{wide}} here for any bridge to cross it.|這裡的河太寬，任何橋都跨不過去。
 .She has a {{wide}} knowledge of local plants and their traditional uses.|她對當地植物及其傳統用途有廣泛的知識。
 =adv.|完全地；大大地

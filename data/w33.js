@@ -97,7 +97,7 @@ addWords(`
 .She {{sensed}} that something was wrong the moment she walked in.|她一走進來就察覺有些不對勁。
 
 @servant|2
-=n.|僕人
+=n.|僕人；（public servant）公務員
 .The large house once employed six {{servants}} and two full-time gardeners.|這棟房子從前雇用過六名僕人和兩名園丁。
 .He worked as a public {{servant}} for over thirty years.|他擔任公務員超過三十年。
 
@@ -144,7 +144,7 @@ addWords(`
 
 @shell|2
 =n.|殼
-.The child collected shells and put every {{shell}} in her pocket.|那孩子撿貝殼，把每一個殼都放進口袋。
+.The child collected small {{shells}} along the beach all afternoon.|那孩子整個下午都在海灘上撿小貝殼。
 .A turtle can pull its head right inside its {{shell}}.|烏龜可以把頭完全縮進殼裡。
 
 @shine|2
@@ -406,7 +406,7 @@ addWords(`
 
 @speed|2
 =n.|速度
-.The train travels at a {{speed}} of nearly three hundred kilometers.|這班火車以將近三百公里的時速行駛。
+.The train travels at a {{speed}} of nearly three hundred kilometers an hour.|這班火車以將近三百公里的時速行駛。
 =v.|超速行駛
 .He was fined for {{speeding}} along a quiet country road.|他因在安靜的鄉間道路超速而被罰款。
 

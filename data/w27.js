@@ -228,8 +228,6 @@ addWords(`
 =v.|使殘廢；使嚴重受損
 .The accident {{crippled}} him for life, yet he never once complained.|那場意外使他終身殘疾，他卻從未抱怨過。
 .Rising fuel costs have {{crippled}} many small airlines this year.|燃料成本上漲今年重創了許多小型航空公司。
-=n.|肢體殘障者（現已少用，具冒犯意味）
-.Older books use the word {{cripple}}, which most people now avoid.|舊書會用「跛子」這個詞，如今多數人都避免使用。
 
 @debris|5
 =n.|殘骸；碎片

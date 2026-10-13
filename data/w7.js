@@ -48,7 +48,7 @@ addWords(`
 
 @bold|3
 =adj.|大膽的；無畏的
-.It was {{bold}} of her to leave a safe job for art.|她放棄穩定的工作投身藝術，這很大膽。
+.It was {{bold}} of her to give up a steady job to paint.|她放棄穩定的工作去畫畫，這很大膽。
 .Only one student was {{bold}} enough to question the principal directly.|只有一個學生大膽到直接質疑校長。
 
 @casual|3

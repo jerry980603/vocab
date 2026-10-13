@@ -192,7 +192,7 @@ addWords(`
 =n.|工會
 .The workers formed a {{union}} to fight for better working conditions.|工人們組成工會爭取更好的工作條件。
 =n.|聯合；結合
-.The two small parties formed a {{union}} before the coming election.|兩個小黨在即將到來的選舉前結盟。
+.The new museum is a successful {{union}} of modern design and traditional craft.|這座新博物館成功結合了現代設計與傳統工藝。
 
 @unity|3
 =n.|團結；統一

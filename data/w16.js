@@ -604,7 +604,7 @@ addWords(`
 
 @landscape|4
 =n.|風景；地貌
-.The {{landscape}} changes completely once you cross to the other side.|一越過另一邊，地貌就完全改變。
+.The {{landscape}} changes completely once you cross to the other side of the mountains.|一越過山的另一邊，地貌就完全改變。
 .Farmers have shaped this {{landscape}} over more than a thousand years.|農民塑造這片地貌已超過一千年。
 =v.|美化（景觀）
 .The area around the new library was {{landscaped}} with trees and low walls.|新圖書館周圍的區域以樹木和矮牆做了景觀美化。

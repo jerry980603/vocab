@@ -413,7 +413,7 @@ addWords(`
 .The {{jury}} awarded first prize to a student from a small country school.|評審團把首獎頒給一位來自小型鄉村學校的學生。
 
 @juvenile|5
-=adj.|少年的；青少年的
+=adj.|少年的；青少年的；幼稚的
 .The city built a center to deal with {{juvenile}} crime more effectively.|市府設立了一個中心，以更有效處理少年犯罪。
 .His {{juvenile}} behavior at the meeting embarrassed everyone on his team.|他在會議上幼稚的行為讓團隊所有人都很尷尬。
 =n.|青少年；未成年人

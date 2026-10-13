@@ -45,8 +45,9 @@ addWords(`
 @addition|2
 =n.|增加的人事物
 .The new library is a welcome {{addition}} to the small town.|新圖書館是這個小鎮受歡迎的新增設施。
-=n.|加法；此外（in addition）
+=n.|此外（in addition）
 .In {{addition}} to teaching, she writes a column for a magazine.|除了教書之外，她還為一本雜誌寫專欄。
+=n.|加法
 .Children learn simple {{addition}} before they move on to subtraction.|孩子先學簡單的加法，才會進到減法。
 
 @address|2
@@ -243,7 +244,7 @@ addWords(`
 .His main {{argument}} was that the plan would cost far too much.|他的主要論點是這個計畫花費太高。
 
 @army|2
-=n.|軍隊；陸軍
+=n.|軍隊；陸軍；大批（人）
 .He joined the {{army}} at eighteen and served for twelve years.|他十八歲從軍，服役了十二年。
 .An {{army}} of volunteers cleaned the beach after the summer holiday.|暑假結束後，一大群志工清理了海灘。
 
@@ -388,7 +389,7 @@ addWords(`
 .The film is {{based}} on a true story from the last century.|這部電影改編自上個世紀的真實故事。
 
 @basic|2
-=adj.|基本的
+=adj.|基本的；簡陋的
 .Every student must learn the {{basic}} rules of safety before entering.|每位學生進入前都必須學會基本的安全規則。
 .The room was clean but very {{basic}}, with only a bed and chair.|房間乾淨卻極為簡陋，只有一張床和一把椅子。
 

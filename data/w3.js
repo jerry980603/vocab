@@ -100,7 +100,7 @@ addWords(`
 .The city {{honored}} the firefighters who had worked through the whole night.|市府表揚了那些整夜工作的消防員。
 
 @humble|2
-=adj.|謙虛的
+=adj.|謙虛的；（出身、地位）卑微的
 .Despite his success he remains {{humble}} and still answers every letter personally.|儘管成功，他仍然謙虛，每封信都親自回覆。
 .She comes from a {{humble}} family but never mentions it to anyone.|她出身寒微，卻從不對任何人提起。
 
@@ -255,12 +255,12 @@ addWords(`
 .The company {{introduced}} a new product that nobody had asked for.|公司推出了一項沒人要求過的新產品。
 
 @invent|3
-=v.|發明
+=v.|發明；捏造（藉口、故事）
 .Nobody can agree about who really {{invented}} the first working telephone.|關於誰真正發明了第一支能用的電話，沒有人有共識。
 .He {{invented}} an excuse to leave early and nobody questioned it.|他捏造了一個藉口提早離開，沒有人質疑。
 
 @invest|4
-=v.|投資
+=v.|投資；投入（時間、精力）
 .She {{invested}} all her savings in the company and lost everything.|她把所有積蓄投資在那家公司，結果賠光了。
 .You should {{invest}} more time in reading than in worrying about grades.|你該把更多時間投入閱讀，而不是擔心分數。
 
@@ -447,7 +447,7 @@ addWords(`
 
 @multiple|4
 =adj.|多重的；多個的
-.The test has {{multiple}} choice questions as well as two long essays.|這場測驗有選擇題，還有兩篇長篇作文。
+.The police received {{multiple}} reports of a strange light above the hills last night.|警方昨晚接到多起通報，說山丘上空出現奇怪的光。
 .He suffered {{multiple}} injuries in the accident but recovered within six months.|他在事故中多處受傷，卻在六個月內康復。
 
 @mutual|4

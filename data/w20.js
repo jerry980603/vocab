@@ -582,7 +582,7 @@ addWords(`
 .Doctors are {{cautious}} about promising a complete recovery so early.|醫生對這麼早就保證完全康復抱持謹慎態度。
 
 @celebrity|5
-=n.|名人
+=n.|名人；名聲
 .Several {{celebrities}} attended the opening of the new children's hospital.|好幾位名人出席了新兒童醫院的開幕典禮。
 .Sudden {{celebrity}} changed his life in ways he had never expected.|突如其來的名氣以他從未預期的方式改變了他的人生。
 

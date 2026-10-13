@@ -129,7 +129,7 @@ addWords(`
 @shadow|3
 =n.|影子；陰影
 .The tall building cast a long {{shadow}} across the square each afternoon.|那棟高樓每天下午都在廣場上投下長長的影子。
-.We rested in the {{shadow}} of a large tree beside the road.|我們在路旁一棵大樹的陰影下休息。
+.Her {{shadow}} grew longer and longer as the sun went down.|太陽西下時，她的影子愈拉愈長。
 =v.|跟蹤；尾隨
 .Police {{shadowed}} the suspect for three weeks before making the arrest.|警方跟蹤那名嫌犯三週後才逮捕他。
 

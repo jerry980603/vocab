@@ -28,7 +28,7 @@ addWords(`
 @observe|3
 =v.|觀察
 .Scientists {{observed}} the birds for six months without disturbing their nests.|科學家觀察那些鳥六個月，都沒有打擾牠們的巢。
-=v.|遵守；奉行
+=v.|遵守；奉行；慶祝（節日）
 .We {{observe}} this holiday every year with a quiet family dinner.|我們每年都以安靜的家庭晚餐來過這個節日。
 
 @obtain|4
@@ -49,8 +49,9 @@ addWords(`
 @occupy|4
 =v.|佔據；佔用
 .The books {{occupy}} half of my room and I still buy more.|那些書占了我房間一半的空間，我卻還在買。
-=v.|使忙碌
 .Reading {{occupies}} most of her free time during the long winter months.|漫長的冬季裡，閱讀占去了她大部分的空閒時間。
+=v.|使忙碌
+.She {{occupied}} herself with drawing while she waited for the doctor's call.|她等醫生來電時，靠畫畫讓自己有事做。
 
 @occur|2
 =v.|發生
@@ -111,7 +112,7 @@ addWords(`
 .He {{participated}} in the discussion actively although it was his first day.|儘管是第一天，他仍積極參與討論。
 
 @particular|2
-=adj.|特定的；特別的
+=adj.|特定的；特別的；（對…）挑剔的
 .Is there any {{particular}} reason for choosing this date over that one?|選這個日期而不選那個，有什麼特別的理由嗎？
 .She is very {{particular}} about her food and rarely eats out.|她對食物非常挑剔，很少在外面吃。
 
@@ -418,7 +419,7 @@ addWords(`
 .She left without any {{regret}} and never once looked back.|她毫無遺憾地離開，一次也沒有回頭。
 
 @regular|2
-=adj.|規律的；定期的
+=adj.|規律的；定期的；經常的
 .He is a {{regular}} customer here and always orders the same soup.|他是這裡的常客，總是點同一種湯。
 .{{Regular}} exercise keeps you healthy far better than any expensive medicine.|規律運動比任何昂貴的藥更能保持健康。
 =n.|常客
@@ -432,6 +433,8 @@ addWords(`
 @relate|2
 =v.|有關聯；使相關
 .These two events are closely {{related}}, although they happened years apart.|這兩件事密切相關，儘管相隔多年才發生。
+=v.|理解；體會（relate to）
+.Many young readers can easily {{relate}} to the lonely hero of the novel.|許多年輕讀者很容易對這部小說裡孤單的主角產生共鳴。
 .I cannot {{relate}} to his feelings because I have never been abroad.|我無法體會他的感受，因為我從沒出過國。
 
 @release|3
@@ -523,7 +526,7 @@ addWords(`
 .The library is a great {{resource}} for students who cannot buy books.|對買不起書的學生來說，圖書館是很好的資源。
 
 @respond|2
-=v.|回應；回答
+=v.|回應；回答；（對治療）有反應
 .He never {{responded}} to my message, not even after three whole weeks.|整整三週後他仍然沒有回覆我的訊息。
 .The patient {{responded}} well to treatment and went home within days.|那位病人對治療反應良好，幾天內就出院回家。
 

@@ -296,7 +296,7 @@ addWords(`
 =prep.|作為；當作
 .He worked {{as}} a village teacher for almost twenty years.|他當了將近二十年的老師。
 =adv.|同樣地（as...as）
-.The new film was not so exciting {{as}} the novel it was based on.|那部新電影不如它所改編的小說精彩。
+.The new film was good, but the novel was twice {{as}} exciting.|電影不錯，但小說精彩一倍。
 
 @ask|1
 =v.|詢問
@@ -602,7 +602,7 @@ addWords(`
 
 @blue|1
 =adj.|藍色的
-.The sky stayed a deep {{blue}} throughout that whole afternoon.|那整個下午天空都是深藍色。
+.She wore a {{blue}} scarf that matched the color of her eyes.|她圍著一條和眼睛顏色相襯的藍色圍巾。
 =n.|藍色
 .She painted the door a bright {{blue}} that everyone noticed.|她把門漆成一種人人都會注意到的亮藍色。
 
@@ -651,7 +651,7 @@ addWords(`
 
 @both|1
 =adj.|兩者的
-.{{Both}} of the sisters studied medicine at the same northern university.|兩姊妹都在同一所北方大學讀醫學。
+.{{Both}} sisters studied medicine at the same university in the north.|兩姊妹都在同一所北方大學讀醫學。
 =pron.|兩者
 .She offered him tea and coffee, and he wanted {{both}}.|她給他茶和咖啡，兩樣他都要。
 =adv.|兩者都（both...and）

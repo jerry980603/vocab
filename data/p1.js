@@ -14,7 +14,7 @@ addWords(`
 @as long as
 =片語|只要
 .You can borrow it {{as long as}} you return it tomorrow.|只要你明天還我，就可以借。
-.{{As long as}} you try your best, I'll be happy.|只要你盡力，我就開心了。
+.{{As long as}} you try your best, I will be happy with the result.|只要你盡力，我就會對結果感到滿意。
 
 @be about to
 =片語|正要；即將
@@ -197,7 +197,7 @@ addWords(`
 
 @put off
 =片語|延後；拖延
-.Don't {{put off}} until tomorrow what you can do today.|今日事今日畢。
+.Do not {{put off}} until tomorrow what you can do today.|今日事今日畢。
 .They {{put off}} the meeting until next week because two people were sick.|因為兩個人生病，他們把會議延到下週。
 
 @put up with

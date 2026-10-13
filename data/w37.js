@@ -97,12 +97,12 @@ addWords(`
 =adj.|每個的
 .{{Each}} student received a free dictionary at the start of term.|開學時每位學生都拿到一本免費字典。
 =pron.|每一個
-.They cost two hundred dollars {{each}} at that particular shop.|在那家店，它們每個要價兩百元。
+.{{Each}} of the children received a small gift before leaving.|每個孩子離開前都收到一份小禮物。
 =adv.|各自
 .The children were given three books {{each}} to take home.|每個孩子各拿到三本書帶回家。
 
 @ear|1
-=n.|耳朵
+=n.|耳朵；聽覺；辨音能力
 .He has been deaf in one {{ear}} since a childhood illness.|自從童年生病後，他一隻耳朵就失聰了。
 .She has a good {{ear}} for languages and picks up accents quickly.|她對語言很敏銳，很快就能學會腔調。
 
@@ -577,7 +577,7 @@ addWords(`
 .He {{forgot}} his umbrella and walked home in the heavy rain.|他忘了帶傘，在大雨中走路回家。
 
 @fork|1
-=n.|叉子
+=n.|叉子；岔路
 .He set a knife and {{fork}} beside every plate on the table.|他在桌上每個盤子旁擺了一副刀叉。
 .The road divides at the {{fork}} just beyond the old bridge.|道路在舊橋過去一點的岔路口分開。
 
@@ -666,7 +666,7 @@ addWords(`
 .He has {{gardened}} in the same plot for almost thirty years.|他在同一塊地上從事園藝將近三十年。
 
 @gate|1
-=n.|大門
+=n.|大門；登機門
 .The old iron {{gate}} squeaks loudly every time it opens.|那道舊鐵門每次打開都大聲吱嘎作響。
 .Passengers should reach the {{gate}} thirty minutes before departure time.|旅客應在起飛前三十分鐘抵達登機門。
 
