@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#22201d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>單字練習 v2</title>
+<link rel="manifest" href="manifest.json">
+<style>
+/* 配色、字體、元件沿用舊版（../index.html）的那一套：紙色底、暖黑墨字、單一墨藍重點色、
+   不用陰影只用髮絲線。理由寫在舊版 index.html 的註解與 CLAUDE.md「視覺改版」。 */
+:root{
+  --bg:#f4f2ed; --card:#fdfcfa; --text:#22201d; --sub:#726b62; --line:#e2ddd3;
+  --accent:#2b4c7e; --accent-soft:#e9ecf3;
+  --ok:#3f7d58; --ok-soft:#e9f0eb; --bad:#a8443a; --bad-soft:#f6ebe9; --warn:#8a6524;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --on-accent:#ffffff;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#171614; --card:#201f1c; --text:#e6e2da; --sub:#9c958a; --line:#332f2a;
+    --accent:#8fb3d9; --accent-soft:#232c39;
+    --ok:#79b891; --ok-soft:#1b271f; --bad:#d18a80; --bad-soft:#2b1e1c; --warn:#c9a15e;
+    --on-accent:#171614;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input{font-family:inherit;font-size:16px}
+header{
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+header h1{margin:0;font-size:17px;font-weight:650;letter-spacing:.02em}
+header .daily{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
+header .end{font-size:13px;color:var(--sub);border:1px solid var(--line);border-radius:7px;padding:4px 10px}
+main{padding:16px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:14px}
+.btn{display:block;width:100%;padding:14px;border-radius:8px;background:var(--accent);color:var(--on-accent);
+  font-weight:600;font-size:16px;text-align:center}
+.btn:active{opacity:.82}
+.btn.ghost{background:transparent;color:var(--sub);border:1px solid var(--line);font-weight:500}
+.btn.soft{background:color-mix(in srgb,var(--accent) 13%,var(--card));color:var(--accent);font-weight:700}
+.btn.sm{padding:8px 14px;font-size:14px;width:auto;display:inline-block;border-radius:7px;white-space:nowrap}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.sub{color:var(--sub);font-size:14px}
+.small{font-size:13px;color:var(--sub)}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;
+  background:var(--accent-soft);color:var(--accent)}
+.lv{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;
+  vertical-align:2px;background:var(--line);color:var(--sub)}
+.lv.l1,.lv.l2{background:#e4ebe2;color:#436b4d}
+.lv.l3,.lv.l4{background:#e5e9f0;color:#3d5a80}
+.lv.l5,.lv.l6{background:#f0e8d8;color:#836229}
+@media (prefers-color-scheme:dark){
+  .lv.l1,.lv.l2{background:#1f2b22;color:#88b697}
+  .lv.l3,.lv.l4{background:#1f2633;color:#93acd0}
+  .lv.l5,.lv.l6{background:#2c2519;color:#cfae6f}
+}
+h2.sec{font-size:13px;font-weight:650;color:var(--sub);letter-spacing:.06em;margin:22px 0 10px;
+  display:flex;align-items:center;gap:10px}
+h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---------- 首頁 ---------- */
+.clock{font-size:15px;font-variant-numeric:tabular-nums}
+.clock b{font-size:28px;font-weight:700;letter-spacing:-.01em}
+.bar{display:flex;gap:3px;margin:10px 0 6px}
+.bar i{flex:1;height:8px;border-radius:2px;background:var(--line)}
+.bar i.on{background:var(--accent)}
+.plan{list-style:none;padding:0;margin:14px 0 16px}
+.plan li{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line)}
+.plan li:first-child{border-top:none}
+.plan .n{font-variant-numeric:tabular-nums;color:var(--sub)}
+.note{font-size:13px;color:var(--sub);background:var(--accent-soft);border-radius:8px;padding:9px 12px;margin-top:12px}
+.done{color:var(--ok);font-weight:650}
+details summary{cursor:pointer;color:var(--sub);font-size:14px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.setrow:first-of-type{border-top:none}
+select{font-family:inherit;font-size:15px;padding:6px 8px;border-radius:7px;border:1px solid var(--line);
+  background:var(--card);color:var(--text)}
+
+/* ---------- 練習 ---------- */
+.stage{font-size:13px;color:var(--sub);margin-bottom:8px;display:flex;justify-content:space-between}
+.qw{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.25;margin:4px 0 6px;word-break:break-word}
+.sent{font-family:var(--serif);font-size:19px;line-height:1.62;margin:6px 0 4px}
+.sent .blank{letter-spacing:.08em;color:var(--accent);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:17px;white-space:nowrap}
+.sent .fill{color:var(--accent)}
+.sent .bn{font-size:11px;color:var(--sub);vertical-align:super;margin-left:2px;font-family:inherit}
+.exzh{color:var(--sub);font-size:15px;margin:4px 0}
+.opts{display:grid;gap:8px;margin-top:14px}
+.opt{text-align:left;padding:13px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-size:16px}
+.opt .k{display:inline-block;width:1.4em;color:var(--sub);font-size:13px}
+.opt.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:600}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opt.unk{text-align:center;color:var(--sub)}
+.opt:disabled{cursor:default}
+.ansrow{display:flex;align-items:center;gap:8px;margin-top:14px}
+#ans{flex:1;min-width:0;padding:13px 14px;border-radius:8px;border:2px solid color-mix(in srgb,var(--accent) 35%,var(--line));
+  background:#fff;color:var(--text);box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
+@media (prefers-color-scheme:dark){#ans{background:var(--bg)}}
+#ans:focus{outline:none;border-color:var(--accent)}
+.suffix{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--sub)}
+.tip{font-size:13px;color:var(--warn);margin-top:6px}
+.fb{margin-top:14px;padding:12px 14px;border-radius:8px;font-size:15px}
+.fb.ok{background:var(--ok-soft);color:var(--ok)}
+.fb.bad{background:var(--bad-soft);color:var(--bad)}
+.fb .more{color:var(--text);margin-top:6px}
+.next{margin-top:14px}
+.linkbtn{color:var(--sub);font-size:13px;text-decoration:underline;padding:6px 0;margin-top:6px}
+.disclaim{font-size:12px;color:var(--sub);margin-top:10px}
+.lcard .zh{font-size:19px;font-weight:600;margin:6px 0 10px}
+.lcard .ex{border-left:3px solid var(--line);padding-left:12px;margin:10px 0}
+.lcard .others{font-size:13px;color:var(--sub);margin-top:12px}
+.vs{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:560px){.vs{grid-template-columns:1fr 1fr}}
+.vs .card{margin:0}
+.vs .qw{font-size:24px}
+.banner{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:14px}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  background:var(--text);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:14px;opacity:0;
+  transition:opacity .2s;pointer-events:none;z-index:50;max-width:90vw}
+#toast.on{opacity:.94}
+.mig td{padding:5px 0;border-top:1px solid var(--line)}
+.mig td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.mig{width:100%;border-collapse:collapse;font-size:15px;margin:10px 0 14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>單字練習 <span class="small">v2</span></h1>
+  <span class="daily" id="daily"></span>
+</header>
+<main id="main"><div class="sub">載入中…</div></main>
+<div id="toast"></div>
+
+<script src="../data/bank.js"></script>
+<script src="../data/w1.js"></script>
+<script src="../data/w2.js"></script>
+<script src="../data/w3.js"></script>
+<script src="../data/w4.js"></script>
+<script src="../data/w5.js"></script>
+<script src="../data/w6.js"></script>
+<script src="../data/w7.js"></script>
+<script src="../data/w8.js"></script>
+<script src="../data/w9.js"></script>
+<script src="../data/w10.js"></script>
+<script src="../data/w11.js"></script>
+<script src="../data/w12.js"></script>
+<script src="../data/w13.js"></script>
+<script src="../data/w14.js"></script>
+<script src="../data/w15.js"></script>
+<script src="../data/w16.js"></script>
+<script src="../data/w17.js"></script>
+<script src="../data/w18.js"></script>
+<script src="../data/w19.js"></script>
+<script src="../data/w20.js"></script>
+<script src="../data/w21.js"></script>
+<script src="../data/w22.js"></script>
+<script src="../data/w23.js"></script>
+<script src="../data/w24.js"></script>
+<script src="../data/w25.js"></script>
+<script src="../data/w26.js"></script>
+<script src="../data/w27.js"></script>
+<script src="../data/w28.js"></script>
+<script src="../data/w29.js"></script>
+<script src="../data/w30.js"></script>
+<script src="../data/w31.js"></script>
+<script src="../data/w32.js"></script>
+<script src="../data/w33.js"></script>
+<script src="../data/w34.js"></script>
+<script src="../data/w35.js"></script>
+<script src="../data/w36.js"></script>
+<script src="../data/w37.js"></script>
+<script src="../data/w38.js"></script>
+<script src="../data/w39.js"></script>
+<script src="../data/w40.js"></script>
+<script src="../data/w41.js"></script>
+<script src="../data/w42.js"></script>
+<script src="../data/w43.js"></script>
+<script src="../data/w44.js"></script>
+<script src="../data/w45.js"></script>
+<script src="../data/w46.js"></script>
+<script src="../data/w47.js"></script>
+<script src="../data/p1.js"></script>
+<script src="core.js"></script>
+<script src="sync2.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
