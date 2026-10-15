@@ -1,6 +1,7 @@
 /* ============================================================
    v2 雲端同步（改自舊版 sync.js）
-   - token 跟舊版共用：讀 localStorage["vocabSync_v1"]，**只讀不寫**（設定請在舊版設定頁做）
+   - token：先讀舊版的 localStorage["vocabSync_v1"]（**只讀不寫**）；讀不到（例如 iPhone 主畫面圖示跟
+     Safari 分開存）就用 v2 設定頁自己貼的 token，存在 vocab2_sync.token
    - 同一個 gist，不同檔案：進度 vocab2-progress.json；答題事件依月份分檔 vocab2-events-YYYY-MM.json
      （一個檔到考前會有幾萬筆、超過 2MB，手機每小時重傳一次太重，所以按月切）
    - PATCH 只帶 v2 的檔案，舊版的 vocab-progress.json 不會被動到
@@ -18,14 +19,17 @@ var SYNC2 = (function () {
   function read(k) { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } }
   function mine() { return read(MINE); }
   function saveMine(o) { try { localStorage.setItem(MINE, JSON.stringify(o)); } catch (e) { } }
-  function token() { return (read(OLD).token || "").trim(); }
+  function token() { return (read(OLD).token || mine().token || "").trim(); }
+  /* 這個 token 是哪裡來的：old ＝ 共用舊版的設定（v2 不能關）；mine ＝ v2 設定頁貼的 */
+  function tokenFrom() { return (read(OLD).token || "").trim() ? "old" : mine().token ? "mine" : ""; }
+  function setToken(t) { var m = mine(); m.token = String(t || "").trim(); if (!m.token) delete m.token; saveMine(m); }
   /* 舊版設定裡的 gist id 只讀；那個 gist 被刪掉時記在自己的 dead，不然會一直回去打同一個 404 */
   function gistId() {
     var m = mine(), o = read(OLD).gistId || "";
     return m.gistId || (o && o !== m.dead ? o : "");
   }
   function enabled() { return !!token(); }
-  function info() { var m = mine(); return { enabled: enabled(), lastSync: m.lastSync || 0, lastEv: m.lastEv || 0 }; }
+  function info() { var m = mine(); return { enabled: enabled(), from: tokenFrom(), lastSync: m.lastSync || 0, lastEv: m.lastEv || 0 }; }
 
   function req(path, opts) {
     opts = opts || {};
@@ -149,5 +153,5 @@ var SYNC2 = (function () {
       }
     });
   }
-  return { enabled: enabled, info: info, run: run, touch: touch, auto: auto, pullFirst: pullFirst };
+  return { enabled: enabled, info: info, setToken: setToken, run: run, touch: touch, auto: auto, pullFirst: pullFirst };
 })();

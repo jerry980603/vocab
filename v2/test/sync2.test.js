@@ -161,6 +161,30 @@ test("gist 被刪掉了 → 重建一個新的（舊的 id 不再用）", functi
   });
 });
 
+test("讀不到舊版的 token（iPhone 主畫面圖示）→ 用 v2 設定頁貼的 token 同步，不寫舊版設定", function () {
+  var e = env({ token: false, mine: { token: "mineTok" }, gist: { id: "g1", files: { "vocab-progress.json": OLD } } });
+  assert.strictEqual(e.SYNC2.info().from, "mine");
+  return e.SYNC2.run().then(function () {
+    var patch = e.calls.filter(function (c) { return c.method === "PATCH"; });
+    assert.strictEqual(patch.length, 1);
+    assert.strictEqual(e.ls.getItem("vocabSync_v1"), null);
+    assert.strictEqual(JSON.parse(e.ls.getItem("vocab2_sync")).gistId, "g1");
+  });
+});
+test("舊版有 token 時用舊版的；setToken 只動 v2 自己的設定，清空就關掉", function () {
+  var e = env({ mine: { token: "mineTok" } });
+  var oldCfg = e.ls.getItem("vocabSync_v1");
+  assert.strictEqual(e.SYNC2.info().from, "old");
+  var e2 = env({ token: false });
+  assert.strictEqual(e2.SYNC2.enabled(), false);
+  e2.SYNC2.setToken("  abc  ");
+  assert.strictEqual(e2.SYNC2.enabled(), true);
+  assert.strictEqual(JSON.parse(e2.ls.getItem("vocab2_sync")).token, "abc");
+  e2.SYNC2.setToken("");
+  assert.strictEqual(e2.SYNC2.enabled(), false);
+  assert.strictEqual(e.ls.getItem("vocabSync_v1"), oldCfg);
+});
+
 /* 依序跑（每個都是非同步） */
 var pass = 0, fail = [];
 tests.reduce(function (p, t) {

@@ -124,18 +124,53 @@
   }
 
   /* 第一次打開：雲端已經有別台搬好的 v2 → 直接用；否則搬舊版（本機優先，再來雲端）；都沒有就從零開始 */
-  function firstOpen() {
+  /* again：設定頁的「重新搬家」——不採用雲端的 v2（那可能就是要丟掉的那份），只找舊版 */
+  function firstOpen(again) {
     view = "first";
-    $("#main").innerHTML = '<div class="card sub">第一次打開 v2，正在找舊版進度…</div>';
+    $("#main").innerHTML = '<div class="card sub">正在找舊版進度…</div>';
     var v1 = null;
     try { v1 = JSON.parse(localStorage.getItem(V1KEY)); } catch (e) { }
     var p = window.SYNC2 && SYNC2.enabled() ? SYNC2.pullFirst().catch(function () { return {}; }) : Promise.resolve({});
     p.then(function (r) {
-      if (r.v2 && r.v2.items) return confirmAdopt(r.v2);
+      if (!again && r.v2 && r.v2.items) return confirmAdopt(r.v2);
       if (v1 && v1.items) return confirmMigrate(v1, "這台裝置的舊版進度");
       if (r.v1 && r.v1.items) return confirmMigrate(r.v1, "雲端的舊版進度");
-      confirmMigrate(null, "");
+      noOld();
     });
+  }
+  /* 這個瀏覽器讀不到舊版：iPhone 主畫面圖示的 App 跟 Safari 是分開存的、換了瀏覽器或裝置都會這樣。
+     讓使用者把舊版「複製進度」的內容貼過來（或選舊版下載的備份檔），不靠雲端同步也能搬。 */
+  function noOld() {
+    view = "first";
+    $("#main").innerHTML = '<div class="card"><b>這個瀏覽器裡沒有舊版的進度</b>' +
+      '<p class="sub">有在用舊版的話，<b>先別按「從零開始」</b>。iPhone 上，從主畫面圖示打開的 App 跟 Safari 是分開存的，' +
+      "換瀏覽器或換裝置也一樣，所以這裡讀不到。</p>" +
+      '<ol class="small" style="padding-left:20px;margin:0 0 10px">' +
+      "<li>用平常開舊版的方式（例如主畫面圖示）打開舊版</li>" +
+      "<li>設定 →「複製進度」</li><li>回到這裡，貼在下面</li></ol>" +
+      '<textarea id="paste" rows="4" placeholder="貼上舊版的進度"></textarea>' +
+      '<button class="btn" id="usePaste" style="margin-top:10px">用貼上的進度搬家</button>' +
+      '<div class="small" style="margin-top:12px">或選擇舊版「下載備份檔」存的檔案：<br><input type="file" id="file" accept=".txt,.json,text/plain,application/json"></div>' +
+      '<button class="linkbtn" id="fresh" style="margin-top:14px">我沒有用過舊版，從零開始</button></div>';
+    var use = function (text) {
+      var o = null;
+      try { o = JSON.parse(String(text || "").trim()); } catch (e) { }
+      if (o && o.v === 2) return toast("這是 v2 的進度，請貼舊版「複製進度」的內容", 3000);
+      if (!o || !o.items || typeof o.items !== "object") return toast("看起來不是舊版的進度，請在舊版再按一次「複製進度」", 3000);
+      confirmMigrate(o, "貼上的舊版進度");
+    };
+    $("#usePaste").onclick = function () { use($("#paste").value); };
+    $("#file").onchange = function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () { use(rd.result); };
+      rd.readAsText(f);
+    };
+    $("#fresh").onclick = function () {
+      if (!confirm("確定從零開始？有在用舊版的話，之後要到設定按「重新搬家」才接得回來。")) return;
+      confirmMigrate(null, "");
+    };
   }
   function confirmAdopt(remote) {
     $("#main").innerHTML = '<div class="card"><b>雲端已經有 v2 的進度</b>' +
@@ -170,10 +205,11 @@
         row("不再出現（快篩、畢業）", s.excl + " 個字義") +
         row("待學新字", s.pool) +
         "</table>" +
-        '<div class="row"><a class="btn ghost" href="../index.html" style="text-decoration:none">先不要</a>' +
+        '<div class="row"><button class="btn ghost" id="no">先不要</button>' +
         '<button class="btn" id="ok">確認搬家</button></div></div>';
     }
     $("#main").innerHTML = h;
+    if ($("#no")) $("#no").onclick = noOld;
     $("#ok").onclick = function () {
       S = m.S;
       save();
@@ -223,21 +259,44 @@
     var t = si.lastSync ? new Date(si.lastSync).toLocaleString("zh-TW", { hour12: false }) : "還沒同步過";
     return '<h2 class="sec">其他</h2><div class="card">' +
       '<div class="setrow"><span>每天目標</span><select id="budget">' + opts + "</select></div>" +
-      '<div class="setrow"><span>雲端同步<br><span class="small">' +
-      (si.enabled ? "已設定・" + esc(t) : "沒設定（在舊版的設定頁設定，v2 會自動共用）") + "</span></span>" +
-      (si.enabled ? '<button class="btn sm ghost" id="syncNow">立即同步</button>' : "") + "</div>" +
+      (si.enabled
+        ? '<div class="setrow"><span>雲端同步<br><span class="small">已開啟' + (si.from === "old" ? "（共用舊版的設定）" : "") +
+          "・" + esc(t) + "</span>" + (si.from === "mine" ? '<br><button class="linkbtn" id="syncOff">關閉同步</button>' : "") +
+          '</span><button class="btn sm ghost" id="syncNow">立即同步</button></div>'
+        : '<div class="setrow" style="display:block"><span>雲端同步<br><span class="small">沒開。手機和電腦要共用 v2 的進度，' +
+          "就貼一組 GitHub token：舊版用的那組，或到 GitHub → Settings → Developer settings → Fine-grained tokens " +
+          "產生一組，權限只勾 Gists: Read and write。</span></span>" +
+          '<div class="ansrow" style="margin-top:8px"><input id="tok" class="tokin" type="password" autocomplete="off" placeholder="貼上 github_pat_ 開頭的那串">' +
+          '<button class="btn sm" id="tokOn">開啟同步</button></div></div>') +
       '<div class="setrow"><span>回報的題目<br><span class="small">' + S.bad.length + " 題・複製後貼給 Claude 修</span></span>" +
       '<button class="btn sm ghost" id="cpBad">複製</button></div>' +
       '<div class="setrow"><span class="small">答題事件 ' + pendN + " 筆還沒上傳" + (si.enabled ? "" : "（沒開同步）") + "</span></div>" +
+      '<div class="setrow"><span>重新搬家<br><span class="small">清掉 v2 的進度，重新從舊版搬（舊版不受影響）</span></span>' +
+      '<button class="btn sm ghost" id="redo">重新搬家</button></div>' +
       '<div class="setrow"><a href="../index.html" class="small">舊版（單字卡、查單字、課表、紀錄）→</a></div>' +
       '<div class="disclaim">題目由程式產生，不是大考中心的題目。</div></div>';
   }
   function bindSettings() {
     $("#budget").onchange = function () { S.set.budget = +this.value; save(); home(); };
+    if ($("#tokOn")) $("#tokOn").onclick = enableSync;
+    if ($("#syncOff")) $("#syncOff").onclick = function () {
+      if (!confirm("關閉同步？v2 的進度留在這台，雲端那份不會刪。")) return;
+      SYNC2.setToken("");
+      home();
+    };
     if ($("#syncNow")) $("#syncNow").onclick = function () {
       toast("同步中…");
       SYNC2.run({ events: true }).then(function () { toast("同步完成"); home(); })
         .catch(function (e) { toast("同步失敗：" + e.message, 3000); });
+    };
+    $("#redo").onclick = function () {
+      var n = 0;
+      Object.keys(S.log).forEach(function (d) { n += S.log[d].a || 0; });
+      if (!confirm("會清掉 v2 目前的進度（在 v2 答過 " + n + " 題），回到搬家畫面。舊版的進度不受影響。確定？")) return;
+      try { localStorage.removeItem(LS); localStorage.removeItem(LSE); } catch (e) { }
+      S = null; sess = null; st = null;
+      $("#daily").textContent = "";
+      firstOpen(true);
     };
     $("#cpBad").onclick = function () {
       if (!S.bad.length) return toast("沒有回報過題目");
@@ -246,6 +305,38 @@
       }).join("\n");
       copy(txt);
     };
+  }
+  function answered(s) {
+    var n = 0;
+    Object.keys((s && s.log) || {}).forEach(function (d) { n += s.log[d].a || 0; });
+    return n;
+  }
+  /* 開啟同步：雲端已經有另一次搬家的 v2 進度（born 不同）時，讓使用者選要留哪一份——
+     不問的話 merge() 會整份留比較新的那次，可能把練了比較多的那份蓋掉 */
+  function enableSync() {
+    var t = $("#tok").value.trim();
+    if (!t) return toast("請先貼上 token");
+    SYNC2.setToken(t);
+    toast("連線中…", 5000);
+    SYNC2.pullFirst().then(function (r) {
+      if (r.v2 && r.v2.items && r.v2.born !== S.born) {
+        var cloud = confirm("雲端已經有另一份 v2 進度（在 v2 答過 " + answered(r.v2) + " 題）。\n" +
+          "按「確定」：改用雲端那份（這台的 " + answered(S) + " 題會被取代）。\n" +
+          "按「取消」：用這台的（雲端那份會被取代）。");
+        if (cloud) { S = V2.normalize(JSON.parse(JSON.stringify(r.v2))); V2.refreshPool(S); }
+        else S.born = Date.now();
+        save(true);
+      }
+      return SYNC2.run({ events: true });
+    }).then(function () {
+      toast("同步開啟了");
+      SYNC2.auto();
+      home();
+    }).catch(function (e) {
+      SYNC2.setToken("");
+      toast(e.code === "auth" ? "token 無效，或沒有勾 Gists 權限" : "連線失敗：" + e.message, 4000);
+      home();
+    });
   }
   function copy(txt) {
     var done = function () { toast("已複製"); };

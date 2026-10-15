@@ -828,6 +828,20 @@ test("合併不改動兩邊、輸出不共用物件", function () {
   m.items[L3.id].pos = 6; m.rt["d|A"].push(1);
   assert.strictEqual(JSON.stringify(t.a), ja);
 });
+test("合併：兩份是不同次搬家來的（重新搬家）→ 整份用比較新的那次，丟掉的不會被合併回來", function () {
+  var t = twoSides();
+  t.a.born = 1000; t.b.born = 2000;
+  put(t.a, L3, { seen: 9 });                 // 舊的那份（要丟掉）練得比較多
+  put(t.b, L5, { seen: 1 });
+  var m = V.merge(t.a, t.b, "d"), m2 = V.merge(t.b, t.a, "d");
+  assert.strictEqual(m.items[L3.id], undefined); assert.ok(m.items[L5.id]);
+  assert.strictEqual(m.born, 2000);
+  assert.strictEqual(JSON.stringify(m2.items), JSON.stringify(m.items));
+});
+test("搬家與從零開始都記下搬家時間；舊存檔沒有就是 0", function () {
+  assert.strictEqual(V.migrate(null, NOW).S.born, NOW);
+  assert.strictEqual(V.normalize({}).born, 0);
+});
 test("合併：一邊是空的（第一次同步）→ 複製另一邊", function () {
   var t = twoSides();
   put(t.b, L3, { seen: 1 });

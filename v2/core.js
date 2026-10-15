@@ -196,6 +196,7 @@
     o.excl = o.excl || {};                        // 不進新字的字義：舊版快篩、畢業、刪除
     o.bad = o.bad || [];
     o.mtime = o.mtime || 0;
+    o.born = o.born || 0;                         // 搬家（或從零開始）的時間：「重新搬家」後用來認出新的那份
     Object.keys(o.items).forEach(function (k) {
       var it = o.items[k];
       if (!it.hardOk) it.hardOk = [];
@@ -206,7 +207,7 @@
     });
     return o;
   }
-  function blank(now) { return normalize({ set: { install: dateStr(now) } }); }
+  function blank(now) { return normalize({ set: { install: dateStr(now) }, born: now }); }
   function newItem(s, now, src) {
     return {
       w: s.w, si: s.si,
@@ -874,6 +875,9 @@
   function merge(a, b, dev) {
     if (!a || !a.items) return normalize(clone(b));
     if (!b || !b.items) return normalize(clone(a));
+    /* 兩份是不同次搬家來的（例如其中一台按了「重新搬家」）：整份用比較新的那次，不逐字合併，
+       不然丟掉的那份會被同步合併回來 */
+    if (a.born && b.born && a.born !== b.born) return normalize(clone(a.born > b.born ? a : b));
     var out = normalize({ set: {} });
     var newer = (a.mtime || 0) >= (b.mtime || 0) ? a : b, older = newer === a ? b : a;
 
@@ -941,6 +945,7 @@
       if (!seenBad[k]) { seenBad[k] = 1; out.bad.push(clone(it)); }
     });
     out.mtime = Math.max(a.mtime || 0, b.mtime || 0);
+    out.born = a.born || b.born || 0;
     return normalize(out);
   }
   /* 答題事件的合併：聯集、去重、依時間排序 */
