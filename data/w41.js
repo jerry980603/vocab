@@ -153,7 +153,7 @@ addWords(`
 
 @sad|1
 =adj.|傷心的；難過的
-.She felt {{sad}} for weeks after her closest friend moved to another country.|最好的朋友搬到別的國家後，她難過了好幾個星期。
+.The film has a {{sad}} ending that made half the audience cry.|這部電影有個悲傷的結局，讓一半的觀眾都哭了。
 .It is {{sad}} that so few people remember what happened in this town.|這麼少人記得這個鎮上發生過的事，實在令人難過。
 
 @safe|1
@@ -187,7 +187,7 @@ addWords(`
 @same|1
 =adj.|相同的
 .They arrived at the {{same}} conclusion although they worked completely separately.|他們雖然完全分開作業，卻得到相同的結論。
-.She has worn the {{same}} old watch since her grandfather gave it away.|自從祖父把那只舊錶送人以來，她就一直戴著它。
+.She has worn the {{same}} old watch since her grandfather gave it to her.|自從祖父把那只舊錶送給她，她就一直戴著。
 =pron.|同樣的事物
 .He ordered noodles, and his brother asked for the {{same}}.|他點了麵，他弟弟也要一樣的。
 =adv.|同樣地
@@ -528,7 +528,7 @@ addWords(`
 @slim|1
 =adj.|苗條的；微小的
 .She stayed {{slim}} by walking to work instead of taking the bus.|她走路上班而不搭公車，維持著苗條的身材。
-.There is only a {{slim}} chance that the missing keys will be found.|遺失的鑰匙被找到的機會很微小。
+.Our team has a {{slim}} chance of winning, but we will still try hard.|我們隊獲勝的機會很渺茫，但我們仍會努力。
 
 @slow|1
 =adj.|慢的
@@ -594,7 +594,7 @@ addWords(`
 
 @sofa|1
 =n.|沙發
-.He fell asleep on the {{sofa}} while waiting for the film to start.|他等電影開始時在沙發上睡著了。
+.The cat has scratched the arms of our new leather {{sofa}} again.|貓又把我們新皮沙發的扶手抓破了。
 .The old {{sofa}} was too large to fit through the narrow doorway.|那張舊沙發太大，過不了狹窄的門口。
 
 @soldier|1
@@ -657,7 +657,7 @@ addWords(`
 
 @sore|1
 =adj.|疼痛的
-.His legs were {{sore}} for two days after the long mountain walk.|長途山路健行後，他的腿痛了兩天。
+.My eyes are {{sore}} after staring at the computer screen all day.|盯著電腦螢幕一整天後，我的眼睛很痠痛。
 .She has a {{sore}} throat and can hardly speak above a whisper.|她喉嚨痛，幾乎只能用氣音說話。
 =n.|痛處；瘡
 .The old horse had a {{sore}} on its back from the heavy saddle.|那匹老馬背上因沉重的馬鞍而長了瘡。

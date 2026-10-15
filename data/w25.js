@@ -134,7 +134,7 @@ addWords(`
 @ritual|5
 =n.|儀式；例行程序
 .The tea ceremony is a {{ritual}} that has changed little in centuries.|茶道是一種數百年來幾乎沒有改變的儀式。
-.Reading before bed became a nightly {{ritual}} for the whole family.|睡前閱讀成了全家人每晚的例行儀式。
+.Lighting candles for the dead is an ancient {{ritual}} in many villages.|為亡者點蠟燭是許多村莊的古老儀式。
 =adj.|儀式的；儀式性的
 .The dancers wore {{ritual}} masks that had been carved by hand.|舞者戴著手工雕刻的儀式面具。
 
@@ -314,7 +314,7 @@ addWords(`
 
 @sheer|5
 =adj.|純粹的；完全的
-.Finding the ring again was {{sheer}} luck rather than careful searching.|再次找到那枚戒指純屬運氣，而非仔細尋找的結果。
+.She finished the marathon through {{sheer}} determination despite a painful knee.|儘管膝蓋疼痛，她全憑意志力跑完了馬拉松。
 .The {{sheer}} size of the building surprised everyone who saw it.|這棟建築驚人的規模讓每個看到的人都很意外。
 =adj.|陡峭的
 .There is a {{sheer}} drop of thirty meters just beyond the fence.|圍籬外就是三十公尺的陡峭落差。
@@ -451,7 +451,7 @@ addWords(`
 
 @spectacular|5
 =adj.|壯觀的；精采的
-.The view from the top of the hill was absolutely {{spectacular}}.|從山頂看出去的景色極為壯觀。
+.The fireworks over the harbor were {{spectacular}} and lasted almost twenty minutes.|港口上空的煙火極為壯觀，持續了將近二十分鐘。
 .She made a {{spectacular}} recovery after months in the hospital.|住院數月後，她的康復令人驚嘆。
 =n.|大型精采演出
 .The show was a musical {{spectacular}} with more than a hundred dancers.|這場演出是一場有上百位舞者的音樂大秀。
@@ -563,7 +563,7 @@ addWords(`
 
 @straightforward|5
 =adj.|簡單明瞭的；直接了當的
-.The instructions were {{straightforward}} enough for a child to follow.|說明簡單明瞭到連小孩都跟得上。
+.Fixing the problem turned out to be quite {{straightforward}} once we found the cause.|一旦找到原因，解決這個問題其實相當簡單。
 .She gave a {{straightforward}} answer instead of avoiding the question.|她直接了當地回答，而不是迴避問題。
 
 @strain|5
@@ -600,7 +600,7 @@ addWords(`
 
 @stumble|5
 =v.|絆倒；踉蹌
-.He {{stumbled}} on a loose stone and dropped everything he carried.|他被鬆動的石頭絆了一下，手上的東西全掉了。
+.The old man {{stumbled}} in the dark and reached out for the wall.|老人在黑暗中踉蹌了一下，伸手扶住牆壁。
 =v.|說話結巴；出錯
 .She {{stumbled}} over the difficult name twice during her speech.|演講中她兩次在那個難念的名字上結巴。
 =v.|偶然發現（stumble across／upon）
@@ -642,7 +642,7 @@ addWords(`
 @superb|5
 =adj.|極好的；出色的
 .The food at the small family restaurant was absolutely {{superb}}.|那家小型家庭餐廳的餐點極為出色。
-.She gave a {{superb}} performance in a difficult and demanding role.|她在一個困難而吃重的角色中演出精湛。
+.The hotel has a {{superb}} location right in the center of the old town.|那家飯店位置絕佳，就在老城區的正中心。
 
 @supervise|5
 =v.|監督；管理

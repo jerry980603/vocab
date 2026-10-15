@@ -47,7 +47,7 @@ addWords(`
 
 @impressive|2
 =adj.|令人印象深刻的
-.The view from the top of the hill was truly {{impressive}}.|從山頂看出去的景色真的令人印象深刻。
+.Winning five gold medals at her first competition was an {{impressive}} achievement.|在第一次參賽就贏得五面金牌，是令人印象深刻的成就。
 .She gave an {{impressive}} performance in a very difficult role.|她在一個極為困難的角色中演出令人驚豔。
 
 @improve|2
@@ -88,7 +88,7 @@ addWords(`
 
 @instruction|2
 =n.|指示；說明
-.Read the {{instructions}} carefully before you switch the machine on.|開啟機器之前請仔細閱讀說明。
+.The shelf came without {{instructions}}, so we had to guess how to build it.|那個架子沒附說明書，所以我們只好用猜的組裝。
 .She followed his {{instructions}} exactly and finished the job early.|她完全照他的指示做，提早完成了工作。
 
 @instrument|2
@@ -324,7 +324,7 @@ addWords(`
 @lone|2
 =adj.|單獨的；孤單的
 .A {{lone}} bird sat on the wire above the empty street.|一隻孤鳥停在空蕩街道上方的電線上。
-.He was the {{lone}} survivor of an accident that killed eight.|他是那場造成八人死亡意外的唯一生還者。
+.A {{lone}} runner crossed the bridge in the early morning fog.|一名孤單的跑者在清晨的霧中跑過橋。
 
 @loss|2
 =n.|損失；喪失

@@ -98,7 +98,7 @@ addWords(`
 
 @carnival|5
 =n.|嘉年華會；狂歡節
-.The whole town joins the {{carnival}} on the last weekend of June.|全鎮的人都會參加六月最後一個週末的嘉年華。
+.The {{carnival}} had rides, games, and a Ferris wheel that lit up at night.|嘉年華有遊樂設施、遊戲，還有一座晚上會發光的摩天輪。
 .Children wore bright costumes and danced through the streets at the {{carnival}}.|孩子們穿著鮮豔的服裝在嘉年華的街上跳舞。
 
 @casino|5
@@ -364,7 +364,7 @@ addWords(`
 @mumble|5
 =v.|含糊地說；咕噥
 .He {{mumbled}} an apology and left the room without looking up.|他含糊地道了歉，頭也不抬地離開房間。
-.She {{mumbled}} something about being tired and went straight to bed.|她咕噥了幾句說很累，就直接上床睡了。
+.Please do not {{mumble}}; speak clearly so that everyone at the back can hear.|請不要含糊地咕噥，說清楚一點，讓後面的人都聽得到。
 =n.|含糊的話語
 .His answer was a {{mumble}} that nobody in the room could understand.|他的回答含糊不清，房裡沒有人聽得懂。
 
@@ -582,8 +582,8 @@ addWords(`
 
 @rip|5
 =v.|撕裂；扯破
-.He {{ripped}} the letter in half without even reading it.|他看都沒看就把信撕成兩半。
-.She {{ripped}} her sleeve on a nail as she climbed the fence.|她翻越圍籬時袖子被釘子扯破了。
+.His old jeans {{ripped}} at the knee when he bent down quickly.|他快速彎下腰時，舊牛仔褲在膝蓋處裂開了。
+.Angry protesters {{ripped}} the posters into pieces and threw them away.|憤怒的抗議者把海報撕成碎片丟掉。
 =v.|扯掉；猛然拉開
 .The wind {{ripped}} several tiles off the roof during the night.|夜裡強風把屋頂上好幾片瓦掀掉了。
 =n.|裂口
@@ -681,7 +681,7 @@ addWords(`
 =n.|錫
 .The roof of the shed is made of cheap {{tin}} sheets.|那間棚屋的屋頂由廉價的錫板製成。
 =n.|罐頭；金屬罐
-.She opened a {{tin}} of soup and heated it on the stove.|她打開一罐湯，放到爐上加熱。
+.Grandmother kept her buttons in an old biscuit {{tin}} on the shelf.|祖母把鈕扣收在架上一個舊餅乾鐵罐裡。
 
 @torch|5
 =n.|火炬；手電筒

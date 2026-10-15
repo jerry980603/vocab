@@ -349,7 +349,7 @@ addWords(`
 =adj.|難以置信的；不可思議的
 .It seems {{incredible}} that nobody noticed the mistake for so many years.|這麼多年沒有人發現這個錯誤，實在令人難以置信。
 =adj.|極好的；驚人的
-.The view from the top of the mountain was absolutely {{incredible}}.|從山頂看出去的景色實在驚人。
+.She has an {{incredible}} voice that fills the whole hall without a microphone.|她的嗓音驚人，不用麥克風就能響徹整個大廳。
 
 @indication|4
 =n.|跡象；顯示
@@ -423,7 +423,7 @@ addWords(`
 .All restaurants here receive a health {{inspection}} at least twice a year.|這裡所有餐廳每年至少接受兩次衛生檢查。
 
 @inspiration|4
-=n.|靈感；啟發
+=n.|靈感；啟發；鼓舞人心的人或事物
 .The wild coast of her childhood was the {{inspiration}} for most of her paintings.|她童年時的野性海岸是她多數畫作的靈感來源。
 .His grandmother has been a lifelong {{inspiration}} to everyone in the family.|他的祖母一直是全家人終生的精神榜樣。
 
@@ -434,7 +434,7 @@ addWords(`
 
 @instruct|4
 =v.|指示；命令
-.The doctor {{instructed}} him to rest completely for at least two weeks.|醫生指示他至少完全休息兩週。
+.The pilot {{instructed}} all passengers to fasten their seat belts immediately.|機長指示所有乘客立刻繫好安全帶。
 .We were {{instructed}} to wait outside until our names were called.|我們被指示在外面等，直到叫到名字為止。
 =v.|教導；訓練
 .She {{instructs}} beginners in swimming every Saturday morning at the pool.|她每週六早上在泳池教初學者游泳。

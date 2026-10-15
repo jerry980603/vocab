@@ -261,7 +261,7 @@ addWords(`
 @turn out
 =片語|結果是；證明是
 .Everything {{turned out}} fine in the end, although nobody expected it.|儘管沒人預料到，最後一切都很順利。
-.The rumor {{turned out}} to be false, but the damage was done.|那則謠言後來證實是假的，但傷害已經造成。
+.The quiet new student {{turned out}} to be a brilliant piano player.|那位安靜的新同學原來是個出色的鋼琴手。
 
 @work out
 =片語|運動；健身

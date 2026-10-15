@@ -126,7 +126,7 @@ addWords(`
 
 @peak|2
 =n.|頂峰；高峰
-.Snow covers the {{peak}} of that mountain for most of the year.|那座山的山頂一年中大半時間都覆蓋著雪。
+.Climbers reached the {{peak}} just after sunrise and took photographs of the valley.|登山者剛過日出就登上山頂，拍下山谷的照片。
 =n.|巔峰；最高點
 .Her career reached its {{peak}} in the years after the war.|她的事業在戰後那幾年達到巔峰。
 =v.|達到高峰
@@ -371,7 +371,7 @@ addWords(`
 
 @principal|2
 =adj.|主要的
-.The {{principal}} reason for the delay was a shortage of parts.|延誤的主要原因是零件短缺。
+.Tourism is the {{principal}} source of income for most families on the island.|觀光是島上大多數家庭的主要收入來源。
 =n.|校長
 .The {{principal}} spoke to every new student during the first week.|校長在第一週與每位新生談話。
 
@@ -454,7 +454,7 @@ addWords(`
 
 @pupil|2
 =n.|學生
-.Every {{pupil}} in the class wrote a letter to the mayor.|班上每位學生都寫了一封信給市長。
+.The head teacher knows the name of every {{pupil}} in the school.|校長叫得出全校每一位學生的名字。
 .She taught the same group of {{pupils}} for three whole years.|她教同一群學生教了整整三年。
 
 @puppy|2

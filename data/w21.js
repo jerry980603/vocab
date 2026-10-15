@@ -26,7 +26,7 @@ addWords(`
 .The whole team took {{collective}} responsibility for the poor result.|整個團隊為這個糟糕的結果承擔集體責任。
 .It was a {{collective}} decision reached after three long meetings.|那是經過三場冗長會議後達成的集體決定。
 =n.|合作團體
-.The farmers formed a {{collective}} in order to sell their milk directly.|農民組成合作組織，以便直接銷售牛奶。
+.The bakery is run as a {{collective}}, and every worker shares the profits.|這家麵包店以合作團體的方式經營，每位員工都分享利潤。
 
 @combat|5
 =n.|戰鬥；作戰
@@ -162,7 +162,7 @@ addWords(`
 @comprise|5
 =v.|包含；由…組成
 .The committee {{comprises}} teachers, parents, and two officials from the council.|委員會由老師、家長和兩位議會官員組成。
-.Women {{comprise}} more than half of the students in this department.|女性占這個系學生的一半以上。
+.The house {{comprises}} three bedrooms, a kitchen, and a small garden.|這棟房子包含三間臥室、一間廚房和一座小花園。
 
 @compromise|5
 =n.|妥協；折衷
@@ -180,7 +180,7 @@ addWords(`
 
 @conceal|5
 =v.|隱藏；隱瞞
-.She could not {{conceal}} her disappointment when she heard the news.|她聽到消息時無法掩飾自己的失望。
+.The camera was {{concealed}} inside a book on the top shelf.|攝影機藏在最上層架子的一本書裡。
 .The company was accused of {{concealing}} important information from investors.|公司被指控向投資人隱瞞重要資訊。
 
 @concede|5
@@ -243,7 +243,7 @@ addWords(`
 
 @consent|5
 =n.|同意；許可
-.You need written {{consent}} from a parent before joining the trip.|參加這趟旅行前，你需要家長的書面同意。
+.No photographs may be published without the {{consent}} of the people in them.|未經照片中人物的同意，不得刊登任何照片。
 .The operation went ahead with the full {{consent}} of the family.|手術在家屬完全同意下進行。
 =v.|同意；答應（consent to）
 .Her father finally {{consented}} to the marriage after many months.|經過許多個月，她父親終於同意這樁婚事。
@@ -603,7 +603,7 @@ addWords(`
 .Please measure the {{dimensions}} of the room before ordering the carpet.|訂購地毯之前請先量好房間的尺寸。
 
 @diminish|5
-=v.|減少；縮小
+=v.|減少；縮小；貶低
 .Her interest in the subject {{diminished}} steadily over the following year.|接下來一年，她對這門學科的興趣持續減退。
 .Nothing can {{diminish}} the value of what she achieved that year.|沒有任何事能貶低她那年的成就。
 

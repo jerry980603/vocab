@@ -23,8 +23,8 @@ addWords(`
 
 @abundant|5
 =adj.|豐富的；大量的
-.Fish were once {{abundant}} in this river before the factories were built.|工廠興建之前，這條河裡的魚曾經非常豐富。
-.The region has {{abundant}} rainfall, so farmers rarely worry about drought.|這個地區雨量豐沛，農民很少擔心乾旱。
+.Sunshine is {{abundant}} in the south, which makes it perfect for growing fruit.|南部陽光充足，非常適合種植水果。
+.The island has an {{abundant}} supply of fresh water from mountain streams.|這座島有來自山澗、充沛的淡水供應。
 
 @abuse|5
 =n.|虐待
@@ -82,7 +82,7 @@ addWords(`
 .There is an {{acute}} shortage of nurses in hospitals across the country.|全國各地的醫院都嚴重缺乏護理人員。
 .He felt {{acute}} pain in his back after lifting the heavy box.|他搬起那個重箱子後背部感到劇痛。
 =adj.|敏銳的
-.Dogs have an {{acute}} sense of smell that humans cannot match.|狗有著人類比不上的敏銳嗅覺。
+.Owls have {{acute}} hearing that helps them hunt in complete darkness.|貓頭鷹聽覺敏銳，能在一片漆黑中獵食。
 
 @administration|5
 =n.|管理；行政
@@ -170,7 +170,7 @@ addWords(`
 
 @alliance|5
 =n.|聯盟；同盟
-.The two parties formed an {{alliance}} in order to win the election.|兩個政黨結成聯盟以贏得選舉。
+.The two countries formed an {{alliance}} to defend each other against attack.|兩國結盟，約定在遭受攻擊時互相防衛。
 .The military {{alliance}} has kept peace in the region for decades.|這個軍事同盟數十年來維持了該地區的和平。
 
 @allocate|5
@@ -188,7 +188,7 @@ addWords(`
 @alongside|5
 =prep.|在…旁邊；與…一起
 .She worked {{alongside}} nurses and doctors during the busiest winter months.|在最忙碌的冬季幾個月裡，她與護理師和醫生並肩工作。
-.A narrow path runs {{alongside}} the river for almost three kilometers.|一條窄路沿著河邊延伸近三公里。
+.The fishing boat pulled up {{alongside}} the ship to collect the supplies.|漁船靠到大船旁邊去領取補給。
 =adv.|在旁邊
 .The small fishing boat moved slowly forward and finally came {{alongside}}.|那艘小漁船緩緩前行，最後靠了過來。
 
@@ -447,12 +447,12 @@ addWords(`
 
 @bizarre|5
 =adj.|奇異的；離奇的
-.He told a {{bizarre}} story that nobody in the room quite believed.|他講了一個離奇的故事，房裡沒人完全相信。
+.It was {{bizarre}} to see snow falling in the middle of summer.|在盛夏看到下雪真是怪異。
 .The painting shows a {{bizarre}} creature with the head of a bird.|這幅畫描繪一隻長著鳥頭的奇異生物。
 
 @blast|5
 =n.|爆炸
-.The {{blast}} broke windows in buildings all along the narrow street.|爆炸震破了整條窄街上建築物的窗戶。
+.Two workers were injured in a {{blast}} at the chemical factory.|化學工廠的一場爆炸造成兩名工人受傷。
 =n.|一陣強風
 .A {{blast}} of cold air came in whenever the door was opened.|每次門一打開就灌進一陣冷風。
 =v.|炸開；爆破
@@ -561,7 +561,7 @@ addWords(`
 
 @capability|5
 =n.|能力；才能
-.Nobody doubts her {{capability}} to run a department of this size.|沒有人懷疑她管理這種規模部門的能力。
+.Running a marathon is well within his {{capabilities}} after months of training.|經過數月訓練，跑完馬拉松對他來說綽綽有餘。
 .The machine has the {{capability}} to print two hundred pages a minute.|這台機器有每分鐘印兩百頁的能力。
 
 @carbon|5

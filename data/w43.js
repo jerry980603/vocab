@@ -479,7 +479,7 @@ addWords(`
 @wonderful|1
 =adj.|極好的；很棒的
 .We had a {{wonderful}} time despite the rain that lasted all weekend.|儘管整個週末都在下雨，我們還是玩得很開心。
-.The view from the top of the hill was absolutely {{wonderful}}.|山頂的景色實在太棒了。
+.It was {{wonderful}} to see my grandparents again after three long years abroad.|在國外待了漫長的三年後，能再見到祖父母真是太好了。
 
 @word|1
 =n.|字；話語

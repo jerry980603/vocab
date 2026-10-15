@@ -276,7 +276,7 @@ addWords(`
 =v.|悄悄地移動
 .He {{slipped}} quietly out of the hall before the speech ended.|演說結束前他悄悄溜出了大廳。
 =n.|小疏失
-.One small {{slip}} in the calculation changed the whole result.|計算上一個小疏失改變了整個結果。
+.A {{slip}} of the tongue made him call his teacher Mom.|一時口誤讓他把老師叫成了媽媽。
 
 @slipper|2
 =n.|拖鞋
@@ -315,8 +315,8 @@ addWords(`
 
 @soccer|2
 =n.|足球
-.He has played {{soccer}} for the school team since he was ten.|他從十歲起就為校隊踢足球。
-.A game of {{soccer}} needs very little equipment to start.|踢足球開始時幾乎不需要什麼裝備。
+.He broke his leg playing {{soccer}} and missed the rest of the season.|他踢足球時摔斷了腿，錯過了整個球季剩下的比賽。
+.Our {{soccer}} coach makes us run around the field before every practice.|我們的足球教練每次練習前都要我們繞著球場跑。
 
 @social|2
 =adj.|社會的
@@ -575,8 +575,8 @@ addWords(`
 .The room was {{super}} clean when we arrived that evening.|我們那晚抵達時，房間非常乾淨。
 
 @supper|2
-=n.|晚餐
-.They eat a light {{supper}} at about seven every evening.|他們每晚七點左右吃一頓簡便的晚餐。
+=n.|晚餐；（睡前的）宵夜
+.Before bed, the children had a small {{supper}} of bread and warm milk.|睡前孩子們吃了麵包配熱牛奶當宵夜。
 .She invited us to stay for {{supper}} after the long walk.|走了那麼久之後，她邀我們留下吃晚餐。
 
 @support|2

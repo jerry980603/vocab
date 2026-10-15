@@ -24,7 +24,7 @@ addWords(`
 
 @array|5
 =n.|一系列；大量
-.The market offers a wide {{array}} of fresh fruit from local farms.|市場提供來自當地農場的各式新鮮水果。
+.The museum displays an impressive {{array}} of old clocks from around the world.|博物館展出一系列來自世界各地、令人讚嘆的古老時鐘。
 .She faced a bewildering {{array}} of choices when picking her college courses.|她在選大學課程時面對令人眼花撩亂的眾多選擇。
 
 @bureaucracy|5
@@ -284,9 +284,10 @@ addWords(`
 @patron|5
 =n.|贊助者；資助人
 .A wealthy {{patron}} paid for the young painter to study abroad.|一位富有的贊助者出錢讓這位年輕畫家出國深造。
-.The small theater could not survive without the support of regular {{patrons}}.|沒有常客的支持，這家小劇院無法維持下去。
+.The museum thanked its {{patrons}} for paying for the new wing.|博物館感謝出資興建新館區的贊助者。
 =n.|顧客；常客
 .{{Patrons}} of the library may borrow up to ten books at once.|圖書館的讀者一次最多可借十本書。
+.The small theater could not survive without the support of regular {{patrons}}.|沒有常客的支持，這家小劇院無法維持下去。
 
 @peasant|5
 =n.|農民；小農
@@ -323,7 +324,7 @@ addWords(`
 @perception|5
 =n.|看法；認知
 .Public {{perception}} of the police changed greatly after the report.|報告發表後，大眾對警方的看法有了很大轉變。
-.Her {{perception}} of the problem was quite different from mine.|她對這個問題的看法和我的相當不同。
+.Advertising can change our {{perception}} of what is normal and healthy.|廣告會改變我們對何謂正常與健康的認知。
 =n.|感知；察覺力
 .Cold weather can dull your {{perception}} of pain in the fingers.|寒冷的天氣會鈍化你手指對疼痛的感知。
 
@@ -422,8 +423,8 @@ addWords(`
 
 @plunge|5
 =v.|暴跌
-.Share prices {{plunged}} sharply after the company admitted its huge losses.|公司承認巨額虧損後，股價急遽暴跌。
-.Temperatures {{plunged}} below freezing during the second week of January.|一月第二週氣溫驟降到冰點以下。
+.The value of their house {{plunged}} after a factory was built next door.|隔壁蓋了工廠之後，他們房子的價值暴跌。
+.Sales of umbrellas {{plunged}} during the driest summer in fifty years.|在五十年來最乾燥的夏天，雨傘的銷量暴跌。
 =v.|使突然陷入；投入
 .The whole street was {{plunged}} into darkness when the power failed.|停電時整條街陷入一片黑暗。
 =n.|暴跌；驟降
@@ -516,7 +517,7 @@ addWords(`
 @premium|5
 =n.|保險費
 .The insurance {{premium}} rose sharply after he reported two accidents.|他報了兩次事故之後，保險費大幅上漲。
-=n.|額外費用；溢價
+=n.|額外費用；溢價；供不應求（at a premium）
 .Customers pay a {{premium}} for fruit that is grown without chemicals.|顧客願為不使用化學藥劑種植的水果多付錢。
 .Quiet rooms are at a {{premium}} in a hotel so close to the station.|在離車站這麼近的旅館，安靜的房間非常搶手。
 

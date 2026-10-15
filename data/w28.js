@@ -428,7 +428,7 @@ addWords(`
 =v.|擊敗
 .Our school {{beat}} the champions by a single point last Saturday.|上週六我們學校以一分之差擊敗了衛冕隊伍。
 =n.|節拍；拍子
-.The drummer kept a steady {{beat}} throughout the entire song.|鼓手在整首歌中維持穩定的節拍。
+.Everyone clapped to the {{beat}} as the band played its final song.|樂團演奏最後一首歌時，大家跟著節拍拍手。
 
 @beauty|2
 =n.|美；美麗

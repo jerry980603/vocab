@@ -85,7 +85,7 @@ addWords(`
 @dense|4
 =adj.|濃密的；茂密的
 .A {{dense}} forest covers the northern half of this small island.|茂密的森林覆蓋了這座小島的北半部。
-.{{Dense}} fog closed the airport for most of Tuesday morning.|濃霧讓機場在週二上午大半時間都關閉。
+.The jungle was so {{dense}} that we had to cut a path through it.|叢林茂密到我們得砍出一條路才能通過。
 =adj.|密集的；人口稠密的
 .The {{dense}} population of the capital makes housing very expensive.|首都人口稠密，使得住房非常昂貴。
 
@@ -133,9 +133,10 @@ addWords(`
 @detective|4
 =n.|偵探；刑警
 .A {{detective}} came to the house and asked us several careful questions.|一名刑警來到屋裡，問了我們幾個仔細的問題。
-.She has read every {{detective}} novel this famous writer ever published.|這位名作家出版過的每一本偵探小說她都讀過。
+.The {{detective}} finally found the stolen painting hidden in a farmhouse.|那位偵探終於找到藏在一間農舍裡的失竊畫作。
 =adj.|偵探的
 .He watches a {{detective}} series on television every Wednesday evening.|他每週三晚上都看一部電視偵探影集。
+.She has read every {{detective}} novel this famous writer ever published.|這位名作家出版過的每一本偵探小說她都讀過。
 
 @determination|4
 =n.|決心；毅力
@@ -207,7 +208,7 @@ addWords(`
 .Cutting down the forest so quickly turned out to be an environmental {{disaster}}.|這麼快地砍伐森林，結果成了一場環境災難。
 
 @discipline|4
-=n.|紀律；訓練
+=n.|紀律；訓練；自制力
 .Good {{discipline}} in a classroom depends far more on respect than on fear.|課堂上良好的紀律靠的是尊重而非恐懼。
 .Learning a musical instrument requires patience and a great deal of {{discipline}}.|學習樂器需要耐心和極大的自制力。
 =n.|學科；領域
@@ -580,7 +581,7 @@ addWords(`
 @fantastic|4
 =adj.|極好的；了不起的
 .You did a {{fantastic}} job organizing the concert in such a short time.|你在這麼短的時間內辦好音樂會，做得非常出色。
-.The view from the top of the tower is absolutely {{fantastic}}.|從塔頂看出去的景色美極了。
+.You passed every exam on your first try? That is {{fantastic}} news!|你每科考試都一次就過？真是太棒的消息了！
 =adj.|奇異的；不切實際的
 .He told us a {{fantastic}} story that nobody in the room believed.|他講了一個離奇的故事，房裡沒有人相信。
 

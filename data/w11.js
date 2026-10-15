@@ -2,7 +2,7 @@
    詞性依官方詞彙表；多義字經朗文當代字典查證；例句 10～14 字 */
 addWords(`
 @audience|3
-=n.|觀眾；聽眾
+=n.|觀眾；聽眾；讀者
 .The {{audience}} clapped for almost five minutes after the final song.|最後一首歌結束後，觀眾鼓掌將近五分鐘。
 .This magazine is written for an {{audience}} of young parents.|這本雜誌是為年輕父母這群讀者而寫的。
 
@@ -126,7 +126,7 @@ addWords(`
 @semester|3
 =n.|學期
 .We have two major reports to hand in this {{semester}}.|這學期我們有兩份大報告要交。
-.The new {{semester}} begins on the first Monday of September.|新學期在九月的第一個星期一開始。
+.She took five courses during her first {{semester}} at the university.|她在大學的第一個學期修了五門課。
 
 @signal|3
 =n.|信號；訊號

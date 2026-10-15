@@ -133,7 +133,7 @@ addWords(`
 @distinguish|4
 =v.|區分；辨別
 .Can you {{distinguish}} between the two colors under this weak yellow light?|在這種微弱的黃光下，你分辨得出這兩種顏色嗎？
-.It is hard to {{distinguish}} the twins unless you hear them speak.|除非聽他們說話，否則很難分辨那對雙胞胎。
+.A good judge must {{distinguish}} facts from rumors before making a decision.|好的法官做決定前必須區分事實與傳聞。
 
 @distribute|4
 =v.|分發；分配
@@ -345,7 +345,7 @@ addWords(`
 .She spent a year abroad as an {{exchange}} student in northern Japan.|她以交換學生的身分在日本北部待了一年。
 
 @expand|4
-=v.|擴大；擴張
+=v.|擴大；擴張；膨脹
 .The company plans to {{expand}} into Asia within the next three years.|公司計畫在未來三年內擴展到亞洲。
 .Metal {{expands}} when it is heated, which is why the bridge creaks.|金屬受熱會膨脹，這就是那座橋會發出聲響的原因。
 
@@ -419,7 +419,7 @@ addWords(`
 .Many {{factors}} led to the accident, including poor lighting and heavy rain.|許多因素造成了那場事故，包括照明不佳和大雨。
 
 @fail|1
-=v.|失敗；不及格
+=v.|失敗；不及格；未能（fail to do）
 .He {{failed}} the math test again although he had studied every night.|儘管每晚都念書，他數學考試又不及格了。
 .She {{failed}} to finish on time because the equipment broke down twice.|因為設備壞了兩次，她未能準時完成。
 =n.|不及格
@@ -490,7 +490,7 @@ addWords(`
 @fortunate|4
 =adj.|幸運的
 .I was {{fortunate}} to have such a good teacher during my first year.|第一年能有這麼好的老師，我很幸運。
-.We are {{fortunate}} that nobody was hurt when the old wall collapsed.|那面舊牆倒塌時沒有人受傷，我們很幸運。
+.We were {{fortunate}} enough to find a hotel room during the busy festival.|我們很幸運，在熱鬧的節慶期間還找得到飯店房間。
 
 @frequent|3
 =adj.|頻繁的；經常的

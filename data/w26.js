@@ -74,7 +74,7 @@ addWords(`
 
 @sob|5
 =v.|啜泣；嗚咽
-.The child {{sobbed}} quietly until his mother came back for him.|那孩子安靜地啜泣，直到母親回來接他。
+.He {{sobbed}} at his grandfather's funeral and could not stop for an hour.|他在祖父的葬禮上啜泣，一個小時都停不下來。
 .She {{sobbed}} into her hands and could not finish the sentence.|她掩面啜泣，話都說不完整。
 =n.|啜泣聲
 .A single {{sob}} escaped her before she managed to stay calm.|她發出一聲啜泣，隨後才勉強保持冷靜。
@@ -125,7 +125,7 @@ addWords(`
 @specimen|5
 =n.|標本；樣本
 .The museum holds thousands of plant {{specimens}} collected a century ago.|博物館收藏了數千件一個世紀前採集的植物標本。
-.The nurse took a blood {{specimen}} and sent it to the laboratory.|護理師採了血液樣本，送到實驗室去。
+.Scientists collected rock {{specimens}} from the surface of the moon.|科學家從月球表面採集了岩石樣本。
 
 @spicy|5
 =adj.|辛辣的；加了香料的
@@ -195,7 +195,7 @@ addWords(`
 
 @strand|5
 =n.|一縷；一股
-.A single {{strand}} of grey hair fell across her forehead.|一縷灰髮垂落在她的額前。
+.She twisted a {{strand}} of wool around her finger while she thought.|她一邊思考，一邊把一股毛線繞在手指上。
 =n.|（故事、論點的）一部分
 .The writer brings every {{strand}} of the story together in the final chapter.|作者在最後一章把故事的每條線索收攏在一起。
 =v.|使滯留；使受困
@@ -334,7 +334,7 @@ addWords(`
 .Under the {{treaty}}, both sides agreed to reduce their weapons.|根據條約，雙方同意削減武器。
 
 @tribute|5
-=n.|敬意；頌詞
+=n.|敬意；頌詞；（優點的）明證（be a tribute to）
 .The concert was a {{tribute}} to a singer who died last year.|這場音樂會是向去年過世的一位歌手致敬。
 .Her success is a {{tribute}} to the teachers who never gave up.|她的成功歸功於那些從未放棄的老師。
 
@@ -566,7 +566,7 @@ addWords(`
 @vertical|5
 =adj.|垂直的
 .The cliff is almost {{vertical}} and only experienced climbers attempt it.|那面峭壁幾乎垂直，只有經驗豐富的攀登者敢嘗試。
-.Draw a {{vertical}} line down the middle of the page.|在頁面正中央畫一條垂直線。
+.The flag has three {{vertical}} stripes of green, white, and red.|這面旗子有綠、白、紅三條直條紋。
 =n.|垂直線；垂直方向
 .The wall leans slightly away from the {{vertical}} near the top.|這面牆在接近頂端處微微偏離垂直方向。
 

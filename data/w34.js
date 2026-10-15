@@ -120,7 +120,7 @@ addWords(`
 =n.|寶藏；珍寶
 .The old map supposedly shows where the {{treasure}} was buried.|據說那張舊地圖標示著寶藏埋藏的地點。
 =v.|珍藏；珍視
-.She {{treasures}} the letters her grandmother wrote during the war.|她珍藏著祖母在戰時寫的那些信。
+.This old camera is one of my most {{treasured}} possessions.|這台舊相機是我最珍視的東西之一。
 
 @trial|2
 =n.|審判

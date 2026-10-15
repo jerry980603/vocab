@@ -173,7 +173,7 @@ addWords(`
 
 @approve|3
 =v.|贊成；批准
-.My parents do not {{approve}} of my staying out later than eleven.|我父母不贊成我在外面待到十一點以後。
+.Most teachers {{approve}} of the new plan to start school an hour later.|大多數老師贊成學校晚一小時上課的新計畫。
 .The government {{approved}} the new bridge project after three years of discussion.|經過三年討論，政府核准了新的橋梁工程。
 
 @argue|2
@@ -441,7 +441,7 @@ addWords(`
 =v.|貢獻；捐助
 .Everyone {{contributed}} some money to the fund for the injured worker.|每個人都為那位受傷工人的基金捐了些錢。
 =v.|促成；是…的原因之一
-.Poor sleep {{contributes}} to health problems that appear many years later.|睡眠不足導致許多年後才出現的健康問題。
+.Poor sleep {{contributes}} to health problems that appear many years later.|睡眠不足是許多年後才浮現的健康問題的成因之一。
 
 @convince|4
 =v.|說服；使信服

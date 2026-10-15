@@ -351,7 +351,7 @@ addWords(`
 @pick|1
 =v.|挑選；選擇
 .The teacher {{picked}} three students to represent the school at the contest.|老師挑了三名學生代表學校參加比賽。
-.You may {{pick}} any two books from the shelf near the window.|你可以從窗邊那個書架上挑任兩本書。
+.It took her an hour to {{pick}} a dress for the party.|她花了一個小時挑選要穿去派對的洋裝。
 =v.|採；摘
 .They {{picked}} apples all morning and filled six large wooden boxes.|他們摘了一整個上午的蘋果，裝滿了六個大木箱。
 =n.|選擇；精選的人事物

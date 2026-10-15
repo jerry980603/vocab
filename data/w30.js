@@ -23,7 +23,7 @@ addWords(`
 
 @employment|2
 =n.|就業；雇用
-.He found {{employment}} at a local factory soon after leaving school.|他離開學校後不久就在當地工廠找到工作。
+.{{Employment}} in the region has risen since the new port opened.|新港口開放以來，該地區的就業人數增加了。
 .The new road brought {{employment}} to several villages in the area.|新道路為該地區好幾個村莊帶來就業機會。
 
 @empty|2
@@ -63,7 +63,7 @@ addWords(`
 =n.|入口
 .We waited by the main {{entrance}} for almost twenty minutes.|我們在正門口等了將近二十分鐘。
 =n.|進入（許可）
-.{{Entrance}} to the museum is free on the first Sunday.|每月第一個週日博物館免費入場。
+.Visitors must show a ticket to gain {{entrance}} to the castle grounds.|遊客必須出示門票才能進入城堡園區。
 
 @environment|2
 =n.|環境（自然）
@@ -122,7 +122,7 @@ addWords(`
 @excite|2
 =v.|使興奮；激起
 .The news of the trip {{excited}} the children for days.|旅行的消息讓孩子們興奮了好幾天。
-.His speech {{excited}} strong feelings among everyone in the hall.|他的演說在大廳裡激起了強烈的情緒。
+.The idea of living near the sea {{excited}} her more than the higher salary.|住在海邊這個念頭比更高的薪水更讓她興奮。
 
 @excitement|2
 =n.|興奮；刺激
@@ -379,7 +379,7 @@ addWords(`
 =n.|部隊
 .A small {{force}} of soldiers guarded the bridge through the night.|一小支部隊整夜守衛那座橋。
 =v.|強迫
-.Illness {{forced}} him to give up the job he loved.|疾病迫使他放棄了心愛的工作。
+.The broken bridge {{forced}} us to drive an extra hour around the lake.|斷橋迫使我們多開一個小時繞過湖。
 
 @forest|2
 =n.|森林
@@ -612,7 +612,7 @@ addWords(`
 =n.|導遊；指南
 .A local {{guide}} showed us paths that tourists never find.|一位當地導遊帶我們走遊客從不會發現的小徑。
 =v.|引導；帶領
-.She {{guided}} the group carefully through the dark narrow cave.|她小心翼翼地帶領隊伍穿過黑暗狹窄的洞穴。
+.A nurse {{guided}} the old man gently to his seat in the waiting room.|一位護理師輕輕扶著老人走到候診室的座位。
 
 @gun|2
 =n.|槍
@@ -697,7 +697,7 @@ addWords(`
 
 @hippo|2
 =n.|河馬
-.A {{hippo}} spends most of the hot day resting in water.|河馬一天中最熱的時候大多待在水裡休息。
+.The {{hippo}} opened its huge mouth and showed two enormous teeth.|河馬張開巨大的嘴，露出兩顆碩大的牙齒。
 .The zoo's youngest {{hippo}} was born quite early last spring.|動物園最小的河馬去年初春出生。
 
 @historical|2

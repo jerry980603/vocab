@@ -123,7 +123,7 @@ addWords(`
 .This discovery represents a huge {{leap}} forward in cancer research.|這項發現代表癌症研究的一大躍進。
 
 @melt|3
-=v.|融化
+=v.|融化；（逐漸）消散
 .The ice cream {{melted}} quickly in the heat of the afternoon sun.|冰淇淋在午後的烈日下很快就融化了。
 .Her anger slowly {{melted}} away as he explained what had really happened.|他解釋真正發生的事後，她的怒氣慢慢消散。
 
@@ -204,7 +204,7 @@ addWords(`
 .A sudden {{scream}} from the next room woke everyone in the house.|隔壁房間突然傳來的尖叫吵醒了全家人。
 
 @shrink|3
-=v.|縮小；收縮
+=v.|縮小；收縮；減少
 .My favorite sweater {{shrank}} after I washed it in hot water.|我最愛的毛衣用熱水洗過之後縮水了。
 .The number of students in this village has {{shrunk}} year after year.|這個村子的學生人數逐年減少。
 
@@ -215,7 +215,7 @@ addWords(`
 .She gave a long {{sigh}} of relief when the results finally arrived.|結果終於出來時，她長長鬆了一口氣。
 
 @squeeze|3
-=v.|擠壓；榨
+=v.|擠壓；榨；塞進
 .She {{squeezed}} the lemon hard to get every last drop of juice.|她用力擠檸檬，要榨出最後一滴汁。
 .We managed to {{squeeze}} six people into that very small car.|我們設法把六個人塞進那輛很小的車裡。
 =n.|緊握；擠壓

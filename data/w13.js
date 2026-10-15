@@ -336,7 +336,7 @@ addWords(`
 @terrific|3
 =adj.|極好的；很棒的
 .You did a {{terrific}} job on that presentation in front of the whole company.|你在全公司面前的那場簡報做得非常棒。
-.The view from the top of the hill was absolutely {{terrific}} that morning.|那天早上從山頂看出去的景色美極了。
+.She is a {{terrific}} cook, and her soups are famous in the neighborhood.|她廚藝一流，她煮的湯在這一帶很出名。
 
 @thankful|3
 =adj.|感激的；慶幸的
@@ -355,7 +355,7 @@ addWords(`
 .He hurt his {{thumb}} while trying to hammer a nail into the wall.|他把釘子敲進牆裡時弄傷了拇指。
 .The baby held on to her father's {{thumb}} with surprising strength.|寶寶用驚人的力氣抓住父親的拇指。
 =v.|翻閱（thumb through）
-.She {{thumbed}} through the magazine while waiting for her name to be called.|她一邊等著被叫到名字，一邊翻閱雜誌。
+.He {{thumbed}} through the dictionary until he found the right page.|他快速翻著字典，直到找到要的那一頁。
 
 @tide|3
 =n.|潮；潮水

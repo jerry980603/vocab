@@ -1033,6 +1033,44 @@ localStorage／gist 裡，Claude 讀不到**。以前要他截圖或開 console 
 `addition::1` 現在指「此外」、`attach::1` 指「重視」、`cripple::1` 會被
 `renderCard()` 當成幽靈題自動刪掉。影響很小，所以沒有寫轉檔。
 
+### 第二輪（同日，使用者說「再找找，應該還有不少」）
+
+第一輪是逐句讀，這一輪改用工具找**人工讀容易漏的類型**，再逐條人工判斷。共 155 項：
+
+| 方法 | 抓到 | 例子 |
+|---|---|---|
+| 中譯跟釋義**沒有任何共同字**的句子（1085 句逐句看） | 釋義沒涵蓋 30、放錯義項 1、中譯不符 2 | `Metal expands`（膨脹）、`My mind wandered`（思緒飄移）、`audience of young parents`（讀者）、`at a premium`（供不應求）、`regular patrons` 放在「贊助者」 |
+| 用法與事實 | 6 | `half past four` 放在 adj.；棒球一個打者一局得四分；`stay up`（英式足球行話）；`pending the result` 是介系詞但官方只標 adj. |
+| 台灣文法考點 | 1 | `It is imperative that everyone leaves` → `leave`（學測考 that 子句用原形） |
+| **範本句換字** | 約 110 句 | 見下面 |
+| 常見學習者錯誤 regex（discuss about、suggest him to、be used to ＋ 原形…） | 0 | 第一輪已清乾淨 |
+| 朗文線上版逐字比對（2383 個多義字全抓下來，比詞性與義項數） | 3 | `crystal` 的 adj. 例句是複合詞 crystal clear；`detective novel` 放在 n.（那是名詞修飾語）；`weary` v. 補「使疲倦」 |
+
+朗文比對有 59 個詞性在朗文查不到，**全部是官方詞彙表有標的**（`signature` adj.、`sculpture` v.、
+`fatigue` v.、`graph` v. 這類名詞修飾語或較少見的轉類），沒有自己編出來的詞性，所以照原則保留。
+義項數多於朗文的 169 筆也逐一看過，都是朗文放在片語或複數形底下的（liabilities、norms、in spite of）。
+
+### ⚠ 範本句換字：這一輪最大宗的問題
+
+寫同義字時拿另一個字的句子只換答案，例如 spectacular／wonderful／impressive／
+incredible／terrific／fantastic／gorgeous／beautiful **八個形容詞共用「從山頂看出去的景色」**。
+`check.py` 的 F 撞題只擋「骨架 ≥0.97、中譯 ≥0.95、答案字母數相同」，這兩種都漏掉：
+
+1. **中譯只差一個不相干的字**：tin／can 的「她打開一罐湯」vs「他打開一罐湯」、
+   dense／thick 的「濃霧讓機場…」vs「濃霧使機場…」——字母數相同、中文也一樣，**真撞題**。
+   同類：sole／lone（唯一生還者）、stirred／excited、tumbled／plunged、deadly／lethal、
+   graph／chart、cap／hat、next／then、capability／competence、chest／trunk、cherish／treasure。
+2. **同義字、字母數不同**：summit／peak、employment／job、football／soccer、guide／lead、
+   consent／permission、couch／sofa、rip／tear……底線長度救得回答案，但句子完全沒有分辨力。
+
+修法一律是**保留較基本的那個字的句子，另一個字換成只屬於它的情境或搭配詞**
+（gut feeling、slip of the tongue、weather permitting、most treasured possessions）。
+已寫成腳本 `.claude/skills/add-words/scripts/dupscan.py`，**補字之後跟 `check.py` 一起跑**。
+剩下的 120 組是「豬肉／牛肉」「左腳／左膝」這種中文分得出來、又不是同義字的，刻意保留。
+
+第二輪沒有增刪任何字義，編號都沒變（`patron`、`detective` 各把一句移到第 2 義並補一句，
+`supper` 的釋義補了「宵夜」）。`sw.js` 的 `CACHE` 升到 `vocab-v83`。
+
 ## 不要動的東西
 
 - `app.js` 的 localStorage key 是 `vocabApp_v1`。改動存檔結構會**清掉使用者的學習進度**，

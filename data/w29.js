@@ -147,7 +147,7 @@ addWords(`
 @college|2
 =n.|學院；大學
 .He worked for two whole years before finally applying to {{college}}.|他工作了兩年才申請大學。
-.The {{college}} offers evening classes for people who already have jobs.|這所學院為已有工作的人開設夜間課程。
+.She was the first person in her family to go to {{college}}.|她是家裡第一個上大學的人。
 
 @comb|2
 =n.|梳子
@@ -464,7 +464,7 @@ addWords(`
 .They crossed the {{desert}} on foot in less than nine days.|他們徒步在不到九天內橫越了沙漠。
 .Almost nothing grows in this {{desert}} except a few tough plants.|除了少數堅韌的植物，這片沙漠幾乎寸草不生。
 =v.|拋棄；遺棄（重音在後）
-.He would never {{desert}} a friend who was in real trouble.|他絕不會拋棄真正陷入困境的朋友。
+.The village was {{deserted}} by its people after the mine closed.|礦場關閉後，村民紛紛離去，留下一座空村。
 .The birds {{deserted}} the nest as soon as people came near.|人一靠近，鳥就棄巢而去。
 
 @design|2
@@ -587,7 +587,7 @@ addWords(`
 @distance|2
 =n.|距離
 .The {{distance}} between the two villages is barely three kilometers.|兩個村莊之間的距離不到三公里。
-.She could see the snowy mountains clearly in the {{distance}}.|她可以清楚看見遠處的群山。
+.She could see the snowy mountains clearly in the {{distance}}.|她可以清楚看見遠處白雪覆蓋的群山。
 
 @distant|2
 =adj.|遙遠的
@@ -616,7 +616,7 @@ addWords(`
 .The number of students {{doubled}} within just three short years.|學生人數在短短三年內增加了一倍。
 =n.|替身演員
 .A professional {{double}} performed every dangerous scene in the film.|片中每個危險場面都由專業替身演出。
-=adv.|加倍地
+=adv.|加倍地；彎成兩折地（bent double）
 .He was bent {{double}} with laughter by the end of the story.|故事說完時，他笑得直不起腰。
 
 @dove|2

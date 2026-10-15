@@ -378,7 +378,7 @@ addWords(`
 @deter|6
 =v.|嚇阻；阻止
 .Bright lighting outside the shop helps {{deter}} thieves at night.|店外明亮的照明有助於在夜間嚇阻竊賊。
-.Nothing could {{deter}} her from finishing the course she had started.|沒有什麼能阻止她完成已經開始的課程。
+.High fines are meant to {{deter}} drivers from using their phones.|高額罰款是為了嚇阻駕駛人使用手機。
 
 @devour|6
 =v.|狼吞虎嚥；吞噬
@@ -395,7 +395,7 @@ addWords(`
 
 @differentiate|6
 =v.|區分；辨別
-.Young children cannot easily {{differentiate}} between a promise and a wish.|幼童不容易區分承諾和願望的差別。
+.Some people with color blindness cannot {{differentiate}} red from green.|有些色盲的人無法區分紅色和綠色。
 .Good design helps customers {{differentiate}} this brand from its many rivals.|好的設計幫助顧客把這個品牌與眾多對手區分開來。
 
 @diplomacy|6
@@ -587,14 +587,14 @@ addWords(`
 @flourish|6
 =v.|繁榮；茁壯
 .Small businesses began to {{flourish}} once the new road was finished.|新路完工之後，小型企業開始興盛起來。
-.These plants {{flourish}} in poor soil where others cannot survive.|這些植物在別的植物活不了的貧瘠土壤中依然茁壯。
+.Roses {{flourish}} in this sunny corner of the garden every summer.|玫瑰每年夏天都在花園這個向陽的角落開得很茂盛。
 =n.|誇張的動作
 .He signed the contract with a {{flourish}} and handed back the pen.|他誇張地一揮簽下合約，把筆遞了回去。
 
 @formidable|6
 =adj.|令人敬畏的；難以應付的
 .She proved a {{formidable}} opponent in every debate she entered.|她在參加過的每一場辯論中都是難以應付的對手。
-.The team faces a {{formidable}} task if it wants to stay up.|如果想保住資格，這支球隊面對的是一項艱鉅的任務。
+.The young team faces a {{formidable}} task against last year's champions.|這支年輕的球隊要對上去年的冠軍，任務十分艱鉅。
 
 @formulate|6
 =v.|制定；構想
@@ -641,7 +641,7 @@ addWords(`
 .She rose quickly through the {{hierarchy}} of the civil service.|她在公務體系的層級中迅速升遷。
 
 @hover|6
-=v.|盤旋；懸停
+=v.|盤旋；懸停；（在附近）徘徊
 .A helicopter began to {{hover}} above the crowded football stadium.|一架直升機開始在擁擠的足球場上空盤旋。
 .He tends to {{hover}} near the door whenever he feels uncomfortable.|每當他覺得不自在，就會在門邊徘徊。
 
@@ -668,7 +668,7 @@ addWords(`
 
 @imperative|6
 =adj.|極其重要的；必要的
-.It is {{imperative}} that everyone leaves the building within two minutes.|每個人都必須在兩分鐘內離開大樓，這一點極其重要。
+.It is {{imperative}} that everyone leave the building within two minutes.|每個人都必須在兩分鐘內離開大樓，這一點極其重要。
 =n.|必須做的事；當務之急
 .Reducing waste has become an {{imperative}} for every manufacturer today.|減少廢棄物已成為今日每家製造商的當務之急。
 
@@ -686,7 +686,7 @@ addWords(`
 =v.|引起；導致
 .Certain drugs can {{induce}} sleep within about twenty minutes of being taken.|某些藥物在服用後大約二十分鐘內就能引起睡意。
 =v.|勸誘；說服
-.Nothing could {{induce}} her to sell the house her father built.|沒有什麼能勸她賣掉父親蓋的那棟房子。
+.The company offered extra pay to {{induce}} workers to stay longer.|公司提供額外薪資，勸誘員工留得更久。
 
 @infer|6
 =v.|推論；推斷

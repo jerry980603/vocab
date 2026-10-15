@@ -75,7 +75,7 @@ addWords(`
 .He {{added}} quietly that the whole plan might still change.|他補充說整個計畫仍可能改變。
 
 @afraid|1
-=adj.|害怕的
+=adj.|害怕的；擔心的
 .She was {{afraid}} of deep water until she was nearly twenty.|她一直到將近二十歲都怕深水。
 .He seemed {{afraid}} that somebody outside might overhear their conversation.|他似乎擔心有人會聽見他們的談話。
 
@@ -403,7 +403,7 @@ addWords(`
 =n.|蝙蝠
 .A {{bat}} flew out of the old barn just before dark.|天黑前，一隻蝙蝠從舊穀倉飛了出來。
 =v.|擊球
-.She {{batted}} first and scored four runs in that inning.|她第一棒上場，在那一局得了四分。
+.He {{batted}} well in the final game and helped his team win.|他在最後一場比賽打擊表現很好，幫助球隊獲勝。
 
 @bath|1
 =n.|洗澡；浴缸

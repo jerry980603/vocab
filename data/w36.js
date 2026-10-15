@@ -27,7 +27,7 @@ addWords(`
 =adj.|明亮的
 .The kitchen stays {{bright}} until quite late on summer evenings.|夏日傍晚，廚房到很晚都還很明亮。
 =adj.|聰明的
-.She was a {{bright}} student who finished the course a year early.|她是個聰明的學生，提早一年修完課程。
+.He is a {{bright}} boy who learns new games faster than anyone.|他是個聰明的男孩，學新遊戲比誰都快。
 =adv.|明亮地
 .The stars shone {{bright}} above the quiet field that night.|那晚星星在寧靜的田野上方明亮閃耀。
 
@@ -159,7 +159,7 @@ addWords(`
 
 @cap|1
 =n.|帽子（有帽舌）
-.He wore an old blue {{cap}} to keep the sun off.|他戴著一頂舊藍帽遮陽。
+.He wore his baseball {{cap}} backwards and carried a bat on his shoulder.|他反戴著棒球帽，肩上扛著一支球棒。
 =n.|蓋子
 .She could not get the {{cap}} off the bottle of water.|她打不開那瓶水的瓶蓋。
 =v.|限制（上限）
@@ -667,7 +667,7 @@ addWords(`
 
 @decide|1
 =v.|決定
-.She {{decided}} to study music even though her parents disagreed.|即使父母不同意，她仍決定讀音樂。
+.We need to {{decide}} quickly, because the offer ends on Friday.|我們得快點決定，因為這個優惠星期五就結束了。
 .They could not {{decide}} where the new library should be built.|他們無法決定新圖書館該蓋在哪裡。
 
 @deep|1
@@ -681,7 +681,7 @@ addWords(`
 @desk|1
 =n.|書桌；櫃檯
 .He keeps every old letter in the bottom drawer of his {{desk}}.|他把每封舊信都放在書桌最下層的抽屜。
-.Please leave your key at the {{desk}} before you go out.|外出前請把鑰匙留在櫃檯。
+.Ask at the information {{desk}} if you cannot find the right gate.|如果找不到正確的登機門，請到服務台詢問。
 
 @dictionary|1
 =n.|字典
@@ -711,7 +711,7 @@ addWords(`
 
 @dinner|1
 =n.|晚餐；正餐
-.They eat {{dinner}} together at seven almost every single evening.|他們幾乎每晚七點都一起吃晚餐。
+.We are having fish for {{dinner}} tonight, so please buy some lemons.|我們今晚晚餐吃魚，所以請買些檸檬。
 .They eat {{dinner}} together every evening, however busy the day has been.|不管一天多忙，他們每天晚上都一起吃晚餐。
 
 @dirty|1

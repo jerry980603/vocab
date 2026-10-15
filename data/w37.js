@@ -445,7 +445,7 @@ addWords(`
 =n.|電影
 .They watched an old {{film}} together on that rainy Sunday afternoon.|那個下雨的週日下午，他們一起看了部老電影。
 =n.|底片；薄膜
-.A thin {{film}} of dust covered every book on the shelf.|架上每本書都覆著一層薄薄的灰塵。
+.A thin {{film}} of oil spread slowly across the surface of the lake.|一層薄薄的油膜慢慢擴散到整個湖面。
 
 @finally|1
 =adv.|終於；最後
@@ -646,7 +646,7 @@ addWords(`
 =adj.|好笑的
 .He told a {{funny}} story that made the whole room laugh.|他講了個好笑的故事，逗得全場大笑。
 =adj.|奇怪的
-.There was a {{funny}} smell coming from somewhere under the floor.|地板下某處傳來一股奇怪的味道。
+.This milk tastes a bit {{funny}}, so please check the date on it.|這牛奶喝起來有點怪，請看一下上面的日期。
 
 @future|1
 =n.|未來
@@ -685,7 +685,7 @@ addWords(`
 
 @giant|1
 =adj.|巨大的
-.A {{giant}} tree fell across the road during the storm.|暴風雨中一棵巨大的樹橫倒在路上。
+.A {{giant}} screen above the stage showed the singer's face to everyone.|舞台上方的巨型螢幕讓每個人都看得到歌手的臉。
 =n.|巨人
 .The story tells of a {{giant}} who guarded the mountain pass.|這個故事講述一位守護山口的巨人。
 

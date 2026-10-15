@@ -163,7 +163,7 @@ addWords(`
 @temper|3
 =n.|脾氣
 .He has a quick {{temper}} and often regrets what he says.|他脾氣很急，常常後悔自己說出口的話。
-=n.|（一時的）情緒
+=n.|（一時的）情緒；怒氣（in a temper）
 .She left the room in a {{temper}} without saying goodbye.|她氣呼呼地離開房間，連再見都沒說。
 
 @theory|3

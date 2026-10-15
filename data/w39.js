@@ -82,7 +82,7 @@ addWords(`
 =n.|水平；程度；等級
 .Students at this {{level}} should be able to write a short essay.|這個程度的學生應該有能力寫一篇短文。
 .The water {{level}} in the reservoir dropped sharply during the long drought.|長期乾旱期間，水庫的水位急遽下降。
-=adj.|平坦的；同高的
+=adj.|平坦的；同高的；（比分）相同的
 .We need a {{level}} surface before we can set up the heavy tent.|我們要有平坦的地面才能搭起這頂沉重的帳篷。
 .After the final goal the two teams were {{level}} on points again.|進了最後一球之後，兩隊的積分再度打平。
 
@@ -368,7 +368,7 @@ addWords(`
 .He left a black {{mark}} on the wall while moving the heavy sofa.|他搬那張沉重的沙發時在牆上留下一道黑色痕跡。
 .The dog's muddy paws left {{marks}} all over the clean kitchen floor.|狗沾滿泥巴的腳掌在乾淨的廚房地板上留下痕跡。
 =n.|分數
-.She got the highest {{mark}} in the class for her history essay.|她的歷史報告拿到全班最高分。
+.Her {{marks}} in science improved a lot after she joined the study group.|她加入讀書會之後，自然科的分數進步了很多。
 .You need a {{mark}} of sixty or above to pass this course.|你需要六十分以上才能通過這門課。
 =v.|做記號；標示
 .Please {{mark}} the correct answer with a cross rather than a circle.|請用叉號而不是圈圈標示正確答案。
@@ -765,7 +765,7 @@ addWords(`
 .The {{next}} train to the coast leaves from platform three in ten minutes.|下一班往海邊的火車十分鐘後從三號月台發車。
 .She moved into the {{next}} room because hers was far too noisy.|她搬到隔壁房間，因為她那間實在太吵了。
 =adv.|接下來；然後
-.First heat the oil, and {{next}} add the onions and the garlic.|先把油加熱，接著放入洋蔥和大蒜。
+.What should we do {{next}} if the bus does not come at all?|如果公車根本不來，我們接下來該怎麼辦？
 .He apologized, and what happened {{next}} surprised everyone in the room.|他道了歉，而接下來發生的事讓房裡的每個人都很驚訝。
 
 @nice|1
@@ -876,7 +876,7 @@ addWords(`
 =n.|護理師；護士
 .The {{nurse}} checked his temperature every two hours throughout the long night.|護理師整夜每兩小時就量一次他的體溫。
 .She trained as a {{nurse}} and now works in a children's hospital.|她受訓成為護理師，現在在一家兒童醫院工作。
-=v.|照護；看護
+=v.|照護；看護；調養（傷病）
 .She {{nursed}} her elderly mother at home for almost three difficult years.|她在家照護年邁的母親將近三年，非常辛苦。
 .He stayed home to {{nurse}} a knee injury before the next season.|他待在家裡養膝傷，以備下個球季。
 `);

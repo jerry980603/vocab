@@ -728,7 +728,7 @@ addWords(`
 .He {{microwaved}} the rice for one minute and it turned out fine.|他把飯微波了一分鐘，結果還不錯。
 
 @minus|3
-=prep.|減去
+=prep.|減去；沒有；少了
 .Twenty {{minus}} eight leaves twelve, which every child here can calculate quickly.|二十減八等於十二，這裡每個孩子都能很快算出來。
 .He came home from the trip {{minus}} his wallet and one shoe.|他從旅行回到家時，皮夾和一隻鞋都不見了。
 =adj.|零下的

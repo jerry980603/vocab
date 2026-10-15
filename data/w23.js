@@ -188,7 +188,7 @@ addWords(`
 .On holiday he likes to {{indulge}} in long meals and afternoon naps.|度假時他喜歡縱情於長時間的用餐與午睡。
 .She rarely {{indulges}} in sweet food, but today she ordered a cake.|她很少放縱吃甜食，但今天她點了一塊蛋糕。
 =v.|縱容；溺愛
-.Grandparents often {{indulge}} their grandchildren far more than the parents would like.|祖父母常常比父母希望的更加溺愛孫子女。
+.On her birthday, her husband {{indulged}} her every wish without complaint.|她生日那天，丈夫毫無怨言地滿足了她的每個願望。
 .He {{indulged}} his son with expensive toys instead of spending time with him.|他用昂貴的玩具縱容兒子，而不是花時間陪他。
 
 @inevitable|5

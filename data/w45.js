@@ -638,7 +638,7 @@ addWords(`
 =n.|後車廂（美式）
 .He put the suitcases in the {{trunk}} and locked the car.|他把行李箱放進後車廂，然後鎖上車。
 =n.|大箱子
-.Old letters filled the wooden {{trunk}} she found in the attic.|她在閣樓找到的木箱裡塞滿了舊信。
+.He packed all his clothes into a large {{trunk}} before sailing to America.|搭船前往美國之前，他把所有衣服裝進一個大衣箱。
 
 @tub|3
 =n.|浴缸

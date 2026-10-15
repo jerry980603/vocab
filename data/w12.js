@@ -581,7 +581,7 @@ addWords(`
 .The {{icy}} roads caused several accidents on the first morning of January.|結冰的路面在一月的第一個早晨造成多起事故。
 .He slipped on the {{icy}} steps and hurt his left knee badly.|他在結冰的階梯上滑倒，左膝嚴重受傷。
 =adj.|冰冷的；冷淡的
-.She gave him an {{icy}} look and walked out without saying goodbye.|她冷冷地看了他一眼，沒說再見就走了出去。
+.His {{icy}} reply made it clear that he was still angry with us.|他冷冰冰的回答清楚表明他還在生我們的氣。
 
 @indoor|3
 =adj.|室內的

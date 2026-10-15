@@ -75,7 +75,7 @@ addWords(`
 @significant|3
 =adj.|重要的；顯著的
 .The team made {{significant}} progress after changing the way they practiced.|改變練習方式之後，球隊有了顯著的進步。
-.There is a {{significant}} difference between knowing and truly understanding something.|知道一件事和真正理解它有顯著的差別。
+.Prices rose by a {{significant}} amount after the new tax was introduced.|新稅實施後，物價上漲了相當可觀的幅度。
 
 @similar|2
 =adj.|相似的
@@ -140,7 +140,7 @@ addWords(`
 @stable|3
 =adj.|穩定的
 .His condition is now {{stable}}, and the doctors expect a full recovery.|他的狀況現在穩定了，醫生預期會完全康復。
-.She is looking for a {{stable}} job after years of short contracts.|經過多年的短期合約，她在找一份穩定的工作。
+.Make sure the ladder is {{stable}} before you climb onto the roof.|爬上屋頂之前，先確定梯子很穩固。
 
 @standard|2
 =n.|標準；水準
@@ -413,7 +413,7 @@ addWords(`
 .She {{volunteered}} to help the old man carry his heavy bags home.|她自願幫那位老先生把沉重的袋子提回家。
 
 @wander|3
-=v.|漫步；閒逛
+=v.|漫步；閒逛；（思緒）飄移
 .We {{wandered}} around the old town all afternoon without a map.|我們沒帶地圖，在老城區閒逛了一整個下午。
 .My mind {{wandered}} during the lecture and I missed the main point.|演講中我心思飄走了，錯過了重點。
 =n.|漫步；閒逛

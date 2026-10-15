@@ -143,7 +143,7 @@ addWords(`
 @violation|4
 =n.|違反；侵犯
 .Parking here is a clear {{violation}} of the rules posted at the gate.|在這裡停車明顯違反了大門上張貼的規定。
-.Reading someone's private letters is a serious {{violation}} of trust.|讀別人的私人信件是嚴重的信任侵犯。
+.The report describes many {{violations}} of human rights during the war.|這份報告描述了戰爭期間許多侵犯人權的行為。
 
 @virus|4
 =n.|病毒
@@ -455,7 +455,7 @@ addWords(`
 
 @graph|4
 =n.|圖表；曲線圖
-.The {{graph}} shows how rainfall has changed over the last fifty years.|這張圖表顯示過去五十年降雨量的變化。
+.The line on the {{graph}} rises steeply between the first and second years.|圖上的曲線在第一年和第二年之間急遽上升。
 .Draw a {{graph}} using the figures in the second column.|用第二欄的數字畫一張圖表。
 =v.|用圖表表示
 .She {{graphed}} the results so that the pattern became obvious.|她把結果畫成圖表，讓規律變得一目了然。

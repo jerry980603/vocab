@@ -42,7 +42,7 @@ addWords(`
 
 @lethal|6
 =adj.|致命的
-.A single bite from that snake can be {{lethal}} without quick treatment.|那種蛇咬一口，若不及時治療就可能致命。
+.Even a small amount of this chemical can be {{lethal}} to a child.|即使只是少量的這種化學物質，對孩子也可能致命。
 .The combination of ice and speed proved {{lethal}} on the mountain road.|結冰加上車速快，在那條山路上被證明是致命的。
 
 @liable|6
@@ -91,7 +91,7 @@ addWords(`
 .His role in the project was {{marginal}} despite what he tells people.|儘管他對外那樣說，他在這個計畫裡的角色其實無足輕重。
 
 @martial|6
-=adj.|軍事的；戰爭的
+=adj.|軍事的；戰爭的；武術的（martial arts）
 .The country was placed under {{martial}} law after the failed uprising.|起義失敗後，該國實施了戒嚴。
 .He has practised a Chinese {{martial}} art since he was seven.|他從七歲起就練習一種中國武術。
 
@@ -247,7 +247,7 @@ addWords(`
 @originate|6
 =v.|起源；發源
 .The custom is believed to {{originate}} in a small village near the border.|這項習俗據信起源於邊境附近的一個小村莊。
-.Many English words {{originate}} from Latin and reached us through French.|許多英文字源自拉丁文，經由法文傳到我們這裡。
+.The fire is thought to have {{originated}} in the kitchen of the restaurant.|據信火災起源於那家餐廳的廚房。
 
 @orthodox|6
 =adj.|正統的；傳統的
@@ -294,7 +294,7 @@ addWords(`
 @pending|6
 =adj.|待決的；懸而未決的
 .The case is still {{pending}} and may not be heard until autumn.|這個案子仍懸而未決，可能要到秋天才會開庭。
-.He was suspended from duty {{pending}} the result of the investigation.|在調查結果出爐前，他被暫時停職。
+.The lawyer is handling three {{pending}} cases for the same company this month.|這位律師這個月正在處理同一家公司的三件未決案件。
 
 @peril|6
 =n.|危險；險境
@@ -682,7 +682,7 @@ addWords(`
 @weary|6
 =adj.|疲憊的；厭倦的
 .After twelve hours on the road they were far too {{weary}} to cook.|在路上開了十二個小時後，他們累得根本不想煮飯。
-=v.|使厭倦
+=v.|使疲倦；使厭倦
 .Endless meetings began to {{weary}} even the most patient staff.|沒完沒了的會議連最有耐心的員工都開始感到厭煩。
 
 @withhold|6

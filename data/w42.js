@@ -17,7 +17,7 @@ addWords(`
 
 @stupid|1
 =adj.|愚蠢的
-.It was {{stupid}} of me to leave the car unlocked overnight.|我把車整晚沒上鎖，真是愚蠢。
+.That was a {{stupid}} mistake, and it cost our team the game.|那是個愚蠢的錯誤，害我們隊輸了比賽。
 .Nobody is {{stupid}} for asking a question they honestly do not understand.|問一個自己真的不懂的問題，一點也不愚蠢。
 
 @subject|1
@@ -198,7 +198,7 @@ addWords(`
 @terrible|1
 =adj.|可怕的；糟糕的
 .The traffic was {{terrible}}, so we arrived nearly an hour late.|交通糟透了，所以我們晚了將近一小時才到。
-.She felt {{terrible}} about forgetting her best friend's birthday last week.|她忘了上週最好朋友的生日，覺得非常糟糕。
+.He has a {{terrible}} memory for names but never forgets a face.|他記名字的能力很差，但見過的臉從不會忘。
 
 @test|1
 =n.|測驗；考試

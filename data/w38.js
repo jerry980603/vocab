@@ -96,7 +96,7 @@ addWords(`
 
 @guy|1
 =n.|傢伙；男人（口語）
-.The {{guy}} at the corner shop knows every customer by name.|轉角店裡那個人叫得出每位顧客的名字。
+.A {{guy}} from my class offered to fix my bicycle for free.|班上一個男生說要免費幫我修腳踏車。
 .A friendly {{guy}} helped her carry the heavy bags upstairs.|一個友善的人幫她把重袋子提上樓。
 
 @habit|1
@@ -113,7 +113,7 @@ addWords(`
 =n.|一半
 .She ate only {{half}} of the sandwich and saved the rest.|她只吃了一半三明治，剩下的留起來。
 =adj.|一半的
-.The shop closed at {{half}} past four on that particular afternoon.|那天下午四點半那家店就關門了。
+.The bus was late, so we waited for a {{half}} hour in the rain.|公車誤點，我們在雨中等了半小時。
 =adv.|一半地
 .The door stood {{half}} open and light spilled into the hall.|門半開著，光線灑進了大廳。
 
@@ -247,7 +247,7 @@ addWords(`
 
 @hen|1
 =n.|母雞
-.They keep six {{hens}} in the yard behind the old house.|他們在老屋後院養了六隻母雞。
+.The {{hen}} sat on her eggs for three weeks until the chicks hatched.|母雞孵蛋孵了三週，直到小雞破殼而出。
 .Each {{hen}} lays about five eggs during a normal week.|每隻母雞在平常的一週裡下大約五顆蛋。
 
 @here|1
@@ -448,7 +448,7 @@ addWords(`
 
 @insect|1
 =n.|昆蟲
-.A tiny {{insect}} crawled slowly across the open kitchen window.|一隻微小的昆蟲緩緩爬過敞開的廚房窗戶。
+.Bees and ants are {{insects}} that live together in large groups.|蜜蜂和螞蟻是群居生活的昆蟲。
 .Most {{insects}} in this garden actually help the plants grow.|這座花園裡多數昆蟲其實有助於植物生長。
 
 @inside|1

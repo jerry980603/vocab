@@ -42,7 +42,7 @@ addWords(`
 .The answer is quite {{obvious}} once you draw a simple diagram.|只要畫個簡單的圖，答案就相當明顯了。
 
 @occasion|3
-=n.|場合；時機
+=n.|場合；時機；次（on several occasions）
 .She wore her mother's dress for the special {{occasion}} last Saturday.|上週六那個特別的場合，她穿了母親的洋裝。
 .I have met him on several {{occasions}} but never learned his name.|我見過他好幾次，卻從沒問過他的名字。
 
@@ -99,12 +99,12 @@ addWords(`
 @overcome|4
 =v.|克服
 .She {{overcame}} her fear of speaking in public within a single year.|她在一年之內克服了公開演說的恐懼。
-.We must {{overcome}} these difficulties together or the project will fail.|我們必須一起克服這些困難，否則計畫會失敗。
+.The team {{overcame}} a bad start to win the final in the last minute.|球隊克服開局不利，在最後一分鐘贏得決賽。
 
 @owe|3
 =v.|欠；歸功於
 .I still {{owe}} him five hundred dollars from the trip last summer.|去年夏天那趟旅行，我還欠他五百元。
-.She {{owes}} her success to hard work rather than to any luck.|她把成功歸功於努力，而不是任何運氣。
+.He says he {{owes}} his life to the doctor who operated that night.|他說他的命是那晚動手術的醫生救回來的。
 
 @participate|2
 =v.|參加；參與
@@ -141,7 +141,7 @@ addWords(`
 @permit|3
 =v.|允許
 .Smoking is not {{permitted}} in this building, including the outdoor balcony.|這棟建築內禁止吸菸，包括戶外陽台。
-.My parents will not {{permit}} me to stay out later than eleven.|我父母不允許我在外面待到十一點以後。
+.Weather {{permitting}}, the concert will be held in the park tomorrow.|天氣許可的話，音樂會明天將在公園舉行。
 =n.|許可證
 .You cannot park here without a {{permit}} issued by the city government.|沒有市政府核發的許可證，你不能停在這裡。
 

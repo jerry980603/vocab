@@ -39,7 +39,7 @@ addWords(`
 .Salt {{crystals}} formed slowly at the bottom of the shallow dish.|鹽的結晶在淺盤底部慢慢形成。
 .She wore a small {{crystal}} on a silver chain around her neck.|她脖子上戴著一條銀鏈，墜著一小顆水晶。
 =adj.|清澈的；水晶般的
-.The water was so {{crystal}} clear that we could count the fish.|水清澈見底，我們數得出有幾條魚。
+.The hotel looks out over the {{crystal}} waters of a quiet mountain lake.|這家飯店俯瞰一座寧靜山中湖泊清澈的湖水。
 
 @cuisine|5
 =n.|烹飪；菜餚
@@ -250,7 +250,7 @@ addWords(`
 
 @essence|5
 =n.|本質；精髓
-.The {{essence}} of her argument is that prevention costs far less.|她論點的精髓是預防的花費低得多。
+.Kindness is the {{essence}} of good teaching, not clever methods or tricks.|善良才是好教學的精髓，而不是巧妙的方法或技巧。
 .In {{essence}}, the two plans are almost exactly the same.|本質上，這兩項計畫幾乎完全相同。
 
 @estate|5
@@ -324,7 +324,7 @@ addWords(`
 .He grew up in an {{exclusive}} suburb where every house had a pool.|他成長於一個家家有泳池的高級郊區。
 
 @execute|5
-=v.|執行；實施
+=v.|執行；實施；完成（高難度動作）
 .The plan was carefully {{executed}} over a period of eighteen months.|這項計畫在十八個月間被謹慎地執行。
 .The dancer {{executed}} the difficult turn perfectly on her first attempt.|那位舞者第一次嘗試就完美完成了那個高難度旋轉。
 =v.|處決
@@ -469,12 +469,12 @@ addWords(`
 .The company runs a {{fleet}} of nearly two hundred delivery vans.|這家公司經營將近兩百輛送貨車的車隊。
 
 @flexibility|5
-=n.|彈性；靈活性
+=n.|彈性；靈活性；柔軟度
 .The job offers real {{flexibility}} about when and where you work.|這份工作在工作時間與地點上有真正的彈性。
 .Daily stretching improves both strength and {{flexibility}} over several months.|每天伸展在數月間能同時改善肌力與柔軟度。
 
 @flip|5
-=v.|翻轉；輕拋
+=v.|翻轉；輕拋；快速翻閱（flip through）
 .She {{flipped}} the pancake neatly and caught it in the pan.|她俐落地把鬆餅翻面，穩穩接在鍋子裡。
 .He {{flipped}} through the magazine looking for the article he wanted.|他翻閱雜誌，尋找想看的那篇文章。
 =n.|翻轉；擲（硬幣）
@@ -607,7 +607,7 @@ addWords(`
 @gorgeous|5
 =adj.|極美的；令人驚豔的
 .The view from the hotel balcony was absolutely {{gorgeous}} at sunset.|日落時從旅館陽台看出去的景色美極了。
-.She wore a {{gorgeous}} blue dress to her sister's wedding.|她穿了一件驚豔的藍色洋裝去參加姊姊的婚禮。
+.The bride looked {{gorgeous}} in her mother's old silk wedding dress.|新娘穿著母親的舊絲綢婚紗，看起來美極了。
 
 @graphic|5
 =adj.|生動的；圖像的
@@ -663,7 +663,7 @@ addWords(`
 =n.|腸；內臟
 .The doctor explained how bacteria in the {{gut}} affect our health.|醫生解釋腸道細菌如何影響我們的健康。
 =n.|直覺（gut feeling）
-.My {{gut}} told me something was wrong long before anyone spoke.|早在有人開口前，我的直覺就告訴我有事不對勁。
+.I had a {{gut}} feeling that something was wrong, so I called home.|我直覺有什麼不對勁，所以打了電話回家。
 =v.|摧毀（內部）
 .Fire {{gutted}} the old theatre in less than two hours.|大火在不到兩小時內燒毀了那座老劇院的內部。
 
@@ -676,7 +676,7 @@ addWords(`
 =v.|拖；拉
 .They {{hauled}} the heavy boat up the beach before the storm.|暴風雨來臨前，他們把沉重的船拖上沙灘。
 .Workers {{hauled}} stone from the quarry using horses and carts.|工人用馬車從採石場搬運石頭。
-=n.|拖運；一次的獲得量
+=n.|拖運；一次的獲得量；（漫長的）路程
 .It was a long {{haul}} from the station to the campsite.|從車站到營地是一段漫長的路程。
 
 @hazard|5

@@ -149,7 +149,7 @@ addWords(`
 =v.|拖延；緩慢進行
 .The meeting {{dragged}} on for two hours longer than planned.|會議比預定時間多拖了兩個小時。
 =n.|累贅；乏味的事
-.Cleaning the whole classroom alone every Friday is a real {{drag}}.|每個星期五獨自打掃整間教室真的很煩人。
+.Waiting an hour in line at the bank was such a {{drag}}.|在銀行排隊等一個小時真是煩死人了。
 
 @erase|3
 =v.|擦掉；抹去

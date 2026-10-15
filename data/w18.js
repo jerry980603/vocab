@@ -37,7 +37,7 @@ addWords(`
 .Teenagers often {{rebel}} against the rules their parents try to set.|青少年常反抗父母試圖訂下的規矩。
 
 @reception|4
-=n.|接待；歡迎
+=n.|接待；歡迎；（對…的）反應
 .The new teacher was given a warm {{reception}} by every class.|每個班級都熱烈歡迎這位新老師。
 .Her proposal met with a cool {{reception}} from the older members.|她的提案受到年長成員冷淡的回應。
 =n.|接待處；櫃檯
@@ -243,7 +243,7 @@ addWords(`
 .Recent events only strengthened her {{resolve}} to find out the truth.|近來的事件只是更堅定了她查明真相的決心。
 
 @respectable|4
-=adj.|體面的；受人尊敬的
+=adj.|體面的；受人尊敬的；（數量、品質）還不錯的
 .They were a {{respectable}} family who had lived here for generations.|他們是世代住在這裡的體面人家。
 .He earns a {{respectable}} living from writing textbooks for schools.|他靠替學校編寫教科書賺取不錯的收入。
 
@@ -389,7 +389,7 @@ addWords(`
 
 @seize|4
 =v.|抓住；奪取
-.He {{seized}} her arm and pulled her away from the passing car.|他抓住她的手臂，把她從駛過的車子旁拉開。
+.The goalkeeper {{seized}} the ball before the striker could reach it.|守門員搶在前鋒之前一把抓住了球。
 .The army {{seized}} control of the airport within a single hour.|軍隊在一小時內就奪下了機場的控制權。
 =v.|把握（機會）
 .She {{seized}} the chance to study abroad the moment it appeared.|機會一出現，她就把握住出國念書的機會。
@@ -500,7 +500,7 @@ addWords(`
 @splendid|4
 =adj.|極好的；壯麗的
 .We had a {{splendid}} view of the whole valley from the top.|我們從山頂上將整座山谷的壯麗景色盡收眼底。
-.She did a {{splendid}} job organizing the concert almost single-handed.|她幾乎獨力籌辦那場音樂會，做得非常出色。
+.The hotel was a {{splendid}} old building with marble floors and painted ceilings.|那家飯店是一棟壯麗的老建築，有大理石地板和彩繪天花板。
 
 @split|4
 =v.|分開；分裂

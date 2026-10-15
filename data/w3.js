@@ -235,7 +235,7 @@ addWords(`
 @intend|4
 =v.|打算；意圖
 .I {{intend}} to study medicine although my family hopes for something else.|儘管家人希望我念別的，我打算讀醫學。
-.He did not {{intend}} to hurt anyone with that careless remark.|他無意用那句不經意的話傷害任何人。
+.We {{intend}} to open a second shop in the city next spring.|我們打算明年春天在市區開第二家店。
 
 @interpret|4
 =v.|口譯；翻譯

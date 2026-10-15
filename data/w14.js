@@ -108,7 +108,7 @@ addWords(`
 .The whole accident was over in the {{blink}} of an eye.|整場意外在一眨眼之間就結束了。
 
 @bloom|4
-=n.|花；花朵
+=n.|花；花朵；盛開（in full bloom）
 .The garden is full of white {{blooms}} in the first week of April.|四月的第一週，花園裡開滿了白色的花。
 .These roses are in full {{bloom}} and will last another two weeks.|這些玫瑰正盛開，還能維持兩個星期。
 =v.|開花

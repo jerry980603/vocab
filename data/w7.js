@@ -28,7 +28,7 @@ addWords(`
 .Braking became almost {{automatic}} after he had driven for several years.|開了幾年車之後，踩煞車幾乎成了下意識的動作。
 
 @awful|3
-=adj.|糟糕的；可怕的
+=adj.|糟糕的；可怕的；（覺得）難受的
 .The weather was so {{awful}} that we cancelled the whole trip.|天氣糟到我們把整趟旅行都取消了。
 .He felt {{awful}} about forgetting his best friend's birthday for the second time.|第二次忘記好朋友的生日讓他覺得很過意不去。
 
@@ -143,7 +143,7 @@ addWords(`
 
 @horrible|3
 =adj.|可怕的；令人不快的
-.There was a {{horrible}} smell coming from the drain behind the kitchen.|廚房後面的排水溝傳來一股難聞的氣味。
+.I had a {{horrible}} dream about falling from a very tall building.|我做了一個從很高的大樓摔下來的可怕的夢。
 .She had a {{horrible}} feeling that she had left the oven on.|她有種可怕的感覺，覺得自己沒關烤箱。
 
 @humid|3

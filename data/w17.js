@@ -168,7 +168,7 @@ addWords(`
 @moreover|4
 =adv.|此外；而且
 .The plan is expensive; {{moreover}}, it may not solve the real problem.|這項計畫花費高昂；此外，它未必能解決真正的問題。
-.She speaks four languages and, {{moreover}}, has lived on three continents.|她會說四種語言，而且曾在三大洲生活過。
+.The rent is cheap; {{moreover}}, the apartment is only five minutes from school.|房租很便宜；而且，那間公寓離學校只要五分鐘。
 
 @motivation|4
 =n.|動機；積極性
@@ -654,7 +654,7 @@ addWords(`
 
 @prominent|4
 =adj.|重要的；著名的
-.A {{prominent}} scientist gave the opening lecture at the conference.|一位著名的科學家在會議上發表開幕演說。
+.Several {{prominent}} business leaders attended the opening of the new port.|好幾位知名的企業領袖出席了新港口的啟用典禮。
 .Education played a {{prominent}} part in the government's new policy.|教育在政府的新政策中占有重要地位。
 =adj.|顯眼的；突出的
 .The notice was placed in a {{prominent}} position beside the main door.|公告貼在大門旁邊顯眼的位置。
