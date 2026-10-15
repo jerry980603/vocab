@@ -390,6 +390,33 @@ test("字母提示：單字逐字母、片語給每個字的開頭", function ()
   assert.strictEqual(V.hintMask({ form: "abandoned" }, 2), "ab_______");
   assert.strictEqual(V.hintMask({ form: "account for" }, 1), "a______ f__");
 });
+test("「我選的也說得通」→ 這題作廢：pos、lapses、搞混對象還原，明天再考，不再重考，記一筆 X 事件", function () {
+  var S = mkS(), M5 = find(function (s) { return s.lv === 5 && !s.multi; });
+  put(S, M5, { pos: 4, due: NOW, lapses: 3 });
+  var x = review(S, M5, { pick: "wrong", rt: 1500 });
+  assert.strictEqual(x.r.out, "hard");                    // 第 4 次 lapse → 變頑固字
+  assert.strictEqual(x.sess.retry.length, 1);
+  assert.strictEqual(V.undo(S, x.sess, x.st, NOW), true);
+  var it = S.items[M5.id];
+  assert.deepStrictEqual([it.pos, it.lapses, it.hard, it.ce, it.lastDn], [4, 3, false, 0, ""]);
+  assert.deepStrictEqual(it.conf, {});
+  assert.strictEqual(it.due, TOMORROW);
+  assert.strictEqual(x.sess.retry.length, 0);
+  var ev = x.sess.events[x.sess.events.length - 1];
+  assert.strictEqual(ev[2], "X"); assert.strictEqual(ev[1], M5.id);
+  assert.strictEqual(V.undo(S, x.sess, x.st, NOW), false);  // 不能作廢兩次
+});
+test("作廢只用在一般複習答錯；答對、新字、頑固字都不行", function () {
+  var S = mkS(); put(S, L5, { pos: 2, due: NOW });
+  var x = review(S, L5, { pick: "right", rt: 5000 });
+  assert.strictEqual(V.undo(S, x.sess, x.st, NOW), false);
+  var S2 = mkS(); put(S2, L3, { pos: 1, due: NOW, hard: true, lapses: 4 });
+  var sess = V.startSession(S2, NOW, "d"), st = V.next(S2, sess, NOW);
+  V.cardDone(S2, sess, st, 5000, NOW);
+  st = V.next(S2, sess, NOW);
+  V.submit(S2, sess, st, { pick: st.q.opts.filter(function (o) { return o.id !== L3.id; })[0].id, rt: 3000 }, NOW);
+  assert.strictEqual(V.undo(S2, sess, st, NOW), false);
+});
 test("回報「我選的也說得通」：記下選了哪個字", function () {
   var S = mkS(), q = V.makeQ(S, "abandon::1", "B");
   V.report(S, q, NOW, "present");

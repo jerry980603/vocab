@@ -733,6 +733,8 @@
     var ph = st.ph === "retry" ? st.sub : st.ph;
     var hint = mc ? 0 : (res.hint || 0);
     var j = judge(S, sess.dev, rtKey(q), ok, res.rt || 0, mc, hint, now, ph === "pre" || st.ph === "review");
+    /* 一般複習答錯：先存一份答題前的狀態，「我選的也說得通」時用 undo() 還原（只有這裡會扣分） */
+    var prev = ph === "review" && !ok ? clone(it) : null;
 
     it.seen++;
     if (ok) it.right++; else it.wrong++;
@@ -791,9 +793,26 @@
       ok: ok, out: out, quick: ok && j.quick, fmt: q.fmt, posB: posB, pos: it.pos,
       form: q.form || "", ans: q.ans,
       picked: picked ? { id: picked.id, w: picked.w, zh: picked.short } : null,   // 「你選的『吸收』是 absorb」
-      j: j, ev: ev
+      j: j, ev: ev, prev: prev
     };
     return st.result;
+  }
+
+  /* 「我選的也說得通」：這題作廢、不扣分。字義還原成答題前的狀態（含 lapses、pos、搞混對象、
+     有沒有因此變成頑固字），明天再考；從本次的重考清單拿掉；另記一筆題型 "X" 的事件，
+     之後用答題事件校正參數時可以把這題排除。只有一般複習的答錯能用（其他情況答錯本來就不扣分）。 */
+  function undo(S, sess, st, now) {
+    var r = st.result;
+    if (!r || r.ok || !r.prev || r.undone) return false;
+    var id = sense(st.id).id, it = clone(r.prev);
+    it.due = Math.max(it.due, addDays(now, 1));
+    S.items[id] = it;
+    for (var i = sess.retry.length - 1; i >= 0; i--) {
+      if (sess.retry[i].id === id) { sess.retry.splice(i, 1); break; }
+    }
+    sess.events.push([Math.floor(now / 1000), id, "X", 0, 0, r.ev[5], r.pos, it.pos, sess.dev]);
+    r.undone = true;
+    return true;
   }
 
   /* 「回報有問題」：格式同舊版 { w, p, en, zh }，多記題型與選項 */
@@ -951,7 +970,7 @@
     newQuota: newQuota, dayPlan: dayPlan, homeInfo: homeInfo,
     mixByLevel: mixByLevel, refreshPool: refreshPool, drawBatch: drawBatch,
     startSession: startSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
-    report: report, migrate: migrate, merge: merge, mergeEvents: mergeEvents
+    undo: undo, report: report, migrate: migrate, merge: merge, mergeEvents: mergeEvents
   };
   if (typeof module !== "undefined" && module.exports) module.exports = V2;
   else root.V2 = V2;

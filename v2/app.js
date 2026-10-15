@@ -378,9 +378,13 @@
     $("#next").onclick = goNext;
     $("#report").onclick = function () {
       clearTimeout(autoT);
-      V2.report(S, q, Date.now(), res && res.picked ? res.picked.w : "");
-      save();
-      this.disabled = true; this.textContent = "已記下（首頁「其他」可以複製給 Claude 修）";
+      var also = q.fmt === "B" && res && res.picked, now = Date.now();
+      V2.report(S, q, now, also ? res.picked.w : "");
+      var undone = also && V2.undo(S, sess, st, now);
+      flushEvents(); save();
+      this.disabled = true;
+      this.textContent = undone ? "已記下，這題不扣分，明天再考" : "已記下（首頁「其他」可以複製給 Claude 修）";
+      if (undone && $(".fb.bad .small")) $(".fb.bad .small").textContent = "這題作廢，不扣分";
     };
     if (!touchDev) $("#next").focus();
   }
