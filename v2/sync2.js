@@ -14,7 +14,7 @@ var SYNC2 = (function () {
   var DESC = "英文單字練習 — 學習進度（由 App 自動維護，請勿手動編輯）";
   var EV_EVERY = 3600000;   // 答題事件最多每小時傳一次（練習結束時另外強制傳）
 
-  var busy = false, dirtyTimer = null, dirtyWhileBusy = false, applying = false;
+  var busy = false, dirtyTimer = null, dirtyWhileBusy = false, applying = false, autoOn = false;
 
   function read(k) { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } }
   function mine() { return read(MINE); }
@@ -99,7 +99,15 @@ var SYNC2 = (function () {
       return fileOf(g, FILE);
     }).then(function (remote) {
       dirtyWhileBusy = false;
-      var merged = V2.merge(APP.getS(), remote, dev), files = {};
+      /* 雲端是另一次搬家的 v2（born 不同）：不自己決定留哪份——merge() 會整份留比較新的那次，
+         可能把另一台練了很久的進度蓋掉（例如第二台第一次開 v2 時沒網路、自己搬了家）。交給使用者選 */
+      var loc = APP.getS();
+      if (remote && remote.items && remote.born && loc.born && remote.born !== loc.born && !opts.force) {
+        busy = false;
+        if (APP.conflict) APP.conflict(remote);
+        return { conflict: true };
+      }
+      var merged = V2.merge(loc, remote, dev), files = {};
       files[FILE] = merged;
       var pend = APP.events(), m = mine();
       var sendEv = pend.length && (opts.events || Date.now() - (m.lastEv || 0) >= EV_EVERY);
@@ -121,6 +129,7 @@ var SYNC2 = (function () {
         return merged;
       });
     }).then(function (merged) {
+      if (merged && merged.conflict) return merged;
       var fresh = V2.merge(APP.getS(), merged, dev);
       applying = true;
       APP.setS(fresh);
@@ -146,7 +155,10 @@ var SYNC2 = (function () {
   function auto() {
     if (!enabled()) return;
     run().then(function () { APP.refresh(); }).catch(function () { });
+    if (autoOn) return;            // 監聽只掛一次（關掉再開同步不會重複掛）
+    autoOn = true;
     document.addEventListener("visibilitychange", function () {
+      if (!enabled()) return;
       if (document.visibilityState === "hidden") {
         clearTimeout(dirtyTimer);
         run({ events: true }).catch(function () { });

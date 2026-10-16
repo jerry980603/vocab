@@ -319,15 +319,9 @@
     SYNC2.setToken(t);
     toast("連線中…", 5000);
     SYNC2.pullFirst().then(function (r) {
-      if (r.v2 && r.v2.items && r.v2.born !== S.born) {
-        var cloud = confirm("雲端已經有另一份 v2 進度（在 v2 答過 " + answered(r.v2) + " 題）。\n" +
-          "按「確定」：改用雲端那份（這台的 " + answered(S) + " 題會被取代）。\n" +
-          "按「取消」：用這台的（雲端那份會被取代）。");
-        if (cloud) { S = V2.normalize(JSON.parse(JSON.stringify(r.v2))); V2.refreshPool(S); }
-        else S.born = Date.now();
-        save(true);
-      }
-      return SYNC2.run({ events: true });
+      var force = false;
+      if (r.v2 && r.v2.items && r.v2.born !== S.born) { chooseCopy(r.v2); force = true; }
+      return SYNC2.run({ events: true, force: force });
     }).then(function () {
       toast("同步開啟了");
       SYNC2.auto();
@@ -338,6 +332,24 @@
       home();
     });
   }
+  /* 雲端與這台是不同次搬家的 v2：讓使用者選留哪一份（不選的那份被取代） */
+  function chooseCopy(remote) {
+    var cloud = confirm("雲端有另一份 v2 進度（在 v2 答過 " + answered(remote) + " 題）。\n" +
+      "按「確定」：改用雲端那份（這台的 " + answered(S) + " 題會被取代）。\n" +
+      "按「取消」：用這台的（雲端那份會被取代）。");
+    if (cloud) { S = V2.normalize(JSON.parse(JSON.stringify(remote))); V2.refreshPool(S); }
+    else S.born = Date.now();
+    save(true);
+    return cloud;
+  }
+  /* 背景同步時才發現衝突（例如第二台第一次開 v2 時沒網路、自己搬了家）：同一次開 App 只問一次 */
+  var asked = false;
+  APP.conflict = function (remote) {
+    if (asked) return;
+    asked = true;
+    chooseCopy(remote);
+    SYNC2.run({ events: true, force: true }).then(function () { if (view === "home") home(); }).catch(function () { });
+  };
   function copy(txt) {
     var done = function () { toast("已複製"); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, fallback);

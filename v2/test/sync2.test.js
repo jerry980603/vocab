@@ -45,6 +45,7 @@ function env(opts) {
     return json(out);
   }
   var state = { s: opts.local || V.blank(Date.now()) };
+  if (!opts.local) state.s.born = 0;   // 預設不比對搬家時間（避免同一毫秒才相同的不穩定）；衝突的測試自己設定
   var ctx = {
     localStorage: ls, fetch: fetchFn, V2: V, console: console, Promise: Promise, JSON: JSON, Date: Date, Math: Math, Object: Object,
     setTimeout: function () { return 0; }, clearTimeout: function () { },
@@ -55,7 +56,8 @@ function env(opts) {
       setS: function (s) { state.s = V.normalize(s); },
       events: function () { return JSON.parse(ls.getItem("vocab2_events") || "[]"); },
       dropEvents: function (n) { ls.setItem("vocab2_events", JSON.stringify(JSON.parse(ls.getItem("vocab2_events") || "[]").slice(n))); },
-      refresh: function () { }
+      refresh: function () { },
+      conflict: function (r) { ctx.__conflict = r; }
     }
   };
   ctx.window = ctx;
@@ -183,6 +185,23 @@ test("舊版有 token 時用舊版的；setToken 只動 v2 自己的設定，清
   e2.SYNC2.setToken("");
   assert.strictEqual(e2.SYNC2.enabled(), false);
   assert.strictEqual(e.ls.getItem("vocabSync_v1"), oldCfg);
+});
+
+test("雲端是另一次搬家的 v2（born 不同）→ 不上傳、不默默合併，交給使用者選；選完 force 才上傳", function () {
+  var remote = V.blank(Date.now()); remote.born = 111; put(remote, "abandon::0", { seen: 9 });
+  var e = env({ gist: { id: "g1", files: { "vocab2-progress.json": { content: JSON.stringify(remote) } } } });
+  e.state.s.born = 222; put(e.state.s, "bank::0", { seen: 1 });
+  var called = null;
+  return e.SYNC2.run().then(function (r) {
+    assert.ok(r.conflict);
+    assert.strictEqual(e.calls.filter(function (c) { return c.method === "PATCH"; }).length, 0);
+    assert.ok(e.state.s.items["bank::0"]); assert.ok(!e.state.s.items["abandon::0"]);
+    return e.SYNC2.run({ force: true });
+  }).then(function () {
+    var up = JSON.parse(e.gist().files["vocab2-progress.json"].content);
+    assert.strictEqual(up.born, 222);                       // 用這台的
+    assert.ok(up.items["bank::0"]);
+  });
 });
 
 /* 依序跑（每個都是非同步） */

@@ -156,6 +156,23 @@ test("重考又答錯 → 不再扣、再隔 LAG 題", function () {
   assert.strictEqual(it.pos, 2);
   assert.deepStrictEqual(x.sess.later, [{ id: L5.id, ph: "review", at: x.sess.n + V.LAG }]);
 });
+test("頁面重開（iPhone 背景被關掉）：10 分鐘內剛答錯的字不放進複習清單，先隔 LAG 題", function () {
+  var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
+  review(S, L5, { pick: "wrong", rt: 5000 });
+  var sess = V.startSession(S, NOW + 30000, "d");
+  assert.strictEqual(sess.revQ.indexOf(L5.id), -1);
+  assert.deepStrictEqual(sess.later, [{ id: L5.id, ph: "review", at: V.LAG }]);
+  var sess2 = V.startSession(S, NOW + 11 * 60000, "d");     // 超過 10 分鐘就照常
+  assert.ok(sess2.revQ.indexOf(L5.id) > -1);
+});
+test("頁面重開：剛在複習答錯變成頑固字的，也不會馬上考", function () {
+  var S = mkS(), it = put(S, L5, { pos: 1, due: NOW, lapses: 3 });
+  var x = review(S, L5, { pick: "wrong", rt: 5000 });
+  assert.strictEqual(x.r.out, "hard");
+  var sess = V.startSession(S, NOW + 5000, "d");
+  assert.strictEqual(sess.hardQ.indexOf(L5.id), -1);
+  assert.deepStrictEqual(sess.later, [{ id: L5.id, ph: "hard", at: V.LAG }]);
+});
 test("看完答案不馬上考：沒有別的題目可以隔開 → 這次不考，留到明天", function () {
   var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
   var x = review(S, L5, { pick: "wrong", rt: 5000 });
@@ -245,7 +262,7 @@ test("一天只能升一次：今天升過再答對 → 不動", function () {
   review(S, L5, { pick: "right", rt: 5000 });
   assert.strictEqual(it.pos, 2);
   it.due = NOW;                                     // 假裝又到期（例如另一台裝置）
-  var x = review(S, L5, { pick: "right", rt: 1000 }, NOW + 60000);
+  var x = review(S, L5, { pick: "right", rt: 1000 }, NOW + 11 * 60000);
   assert.strictEqual(x.r.out, "hold");
   assert.strictEqual(it.pos, 2);
   assert.strictEqual(it.due, TOMORROW);
@@ -709,12 +726,16 @@ test("同一批 5 個不放前 3 字母相同、中文重疊的字", function ()
     assert.ok(!V.overlap(V.sense(b[i]).terms, V.sense(b[j]).terms));
   }
 });
-test("新字依級數比例混合：前 100 個裡 1～5 級約 10/20/30/30/10", function () {
+test("新字依級數比例混合：前 100 個是 3～5 級（40/40/20），1、2 級排在後面", function () {
   var bank = require("./lib.js").loadBank(), ids = [];
   bank.forEach(function (e) { e.s.forEach(function (x, si) { var s = V.sense(e.w + "::" + si); if (s.lv <= 5) ids.push(s.id); }); });
   var p = V.mixByLevel(ids).slice(0, 100), c = {};
   p.forEach(function (id) { var lv = V.sense(id).lv; c[lv] = (c[lv] || 0) + 1; });
-  assert.deepStrictEqual(c, { 1: 10, 2: 20, 3: 30, 4: 30, 5: 10 });
+  assert.deepStrictEqual(c, { 3: 40, 4: 40, 5: 20 });
+  var all = V.mixByLevel(ids), first12 = -1;
+  for (var i = 0; i < all.length; i++) if (V.sense(all[i]).lv <= 2) { first12 = i; break; }
+  var n35 = ids.filter(function (id) { return V.sense(id).lv >= 3; }).length;
+  assert.strictEqual(first12, n35);                       // 3～5 級全部排完才出現 1、2 級
 });
 test("首頁數字", function () {
   var S = mkS(); bigPool(S, 400);
@@ -804,6 +825,7 @@ test("搬家：沒有舊存檔 → 從零開始，全部新字依級數排好", 
 });
 test("refreshPool：字庫新加的字義接到最後、失效的清掉", function () {
   var S = mkS();
+  S.poolV = 2;
   S.pool = ["abandon::0", "nosuchword::0", "abandon::0"];
   var n = V.refreshPool(S);
   assert.strictEqual(S.pool[0], "abandon::0");
@@ -813,6 +835,18 @@ test("refreshPool：字庫新加的字義接到最後、失效的清掉", functi
   var len = S.pool.length;
   assert.strictEqual(V.refreshPool(S), 0);
   assert.strictEqual(S.pool.length, len);
+});
+
+test("舊比例排的新字池（poolV 0）開 App 時重排一次：前面都是 3～5 級，之後不再重排", function () {
+  var S = mkS(), bank = require("./lib.js").loadBank();
+  S.pool = bank.slice(0, 300).map(function (e) { return e.w + "::0"; });   // 舊存檔：照字母、什麼級都有
+  V.refreshPool(S);
+  assert.strictEqual(S.poolV, 2);
+  S.pool.slice(0, 50).forEach(function (id) { assert.ok(V.sense(id).lv >= 3, id); });
+  var snap = S.pool.slice();
+  V.refreshPool(S);
+  assert.deepStrictEqual(S.pool, snap);
+  assert.strictEqual(V.migrate(null, NOW).S.poolV, 2);
 });
 
 /* ================= 同步合併 ================= */

@@ -21,11 +21,16 @@
      看完答案馬上考只考到短期記憶：Karpicke & Roediger 2007（第一次提取要延後）、
      Karpicke & Bauernschmidt 2011（間隔越長越好）。這次練習隔不開的留到明天，不硬考。 */
   var LAG = 10;
+  var RECENT = 10 * 60000;   // 重新開始練習時，這麼久之內剛答過的字也要先隔 LAG 題（iPhone 常在背景把 App 關掉，回來等於重開）
   var MISTAP = 500, STALL = 20000;                    // §6 誤觸 < 0.5 秒；被打斷 > max(20 秒, 3 × 中位數)
   var MIN_SAMPLE = 30, RT_KEEP = 200, CALIB_DAYS = 7; // §6 樣本不到 30 一律算慢、留最近 200 個、校正週 7 天
   var EST_DAYS = 14, EST_MIN_N = 30;                  // 預估每題秒數：看最近 14 天，至少 30 題才用實測值
-  /* §8 新字的級數比例：每 10 個裡 1 級 1、2 級 2、3 級 3、4 級 3、5 級 1 */
-  var LV_MIX = [3, 4, 2, 3, 4, 1, 3, 4, 2, 5];
+  /* §8 新字的級數比例：每 10 個裡 3 級 4、4 級 4、5 級 2；3～5 級用完才輪到 2、1 級（最接近的級數遞補）。
+     2026-10-16 改：基準測驗第 1、2 級 20/20，時間有限時先上 3～5 級；模擬每天 60 分鐘，
+     到 1/10 沒碰到的只剩第 1、2 級（原本的比例會剩 478 個第 5 級）。見設計檔 §14 */
+  var LV_MIX = [3, 4, 5, 3, 4, 3, 4, 5, 3, 4];
+  var LV_FALLBACK = [3, 4, 5, 2, 1];
+  var POOL_V = 2;   // 新字池的排法版本：舊存檔開 App 時照新比例重排一次
 
   /* ---------- 1. 小工具 ---------- */
   /* 亂數可以換成固定種子的版本，測試才重現得出來 */
@@ -201,6 +206,7 @@
     o.bad = o.bad || [];
     o.mtime = o.mtime || 0;
     o.born = o.born || 0;                         // 搬家（或從零開始）的時間：「重新搬家」後用來認出新的那份
+    o.poolV = o.poolV || 0;                       // 新字池是照哪一版比例排的
     Object.keys(o.items).forEach(function (k) {
       var it = o.items[k];
       if (!it.hardOk) it.hardOk = [];
@@ -208,6 +214,7 @@
       ["pos", "seen", "right", "wrong", "lapses", "ce", "exi"].forEach(function (f) { if (it[f] == null) it[f] = 0; });
       if (it.lastUp == null) it.lastUp = "";
       if (it.lastDn == null) it.lastDn = "";
+      if (it.lastAt == null) it.lastAt = 0;
     });
     return o;
   }
@@ -223,6 +230,7 @@
       ce: 0,              // 有把握（答得快）卻答錯的次數
       lastUp: "",         // 最後一次升級的日期：一天只能升一次
       lastDn: "",         // 最後一次降級的日期：一天只能降一次（同一天重考答錯不再扣）
+      lastAt: 0,          // 最後一次作答的時間（ms）：重開練習時剛答過的不馬上考
       exi: 0,             // 下次用第幾句例句（B、S、學習卡輪流用）
       at: now, src: src || "new"
     };
@@ -539,10 +547,8 @@
     var out = [], k = 0;
     while (out.length < ids.length) {
       var lv = LV_MIX[k++ % LV_MIX.length], L = lists[lv];
-      for (var d = 1; (!L || !L.length) && d <= 4; d++) {
-        if (lists[lv + d] && lists[lv + d].length) L = lists[lv + d];
-        else if (lists[lv - d] && lists[lv - d].length) L = lists[lv - d];
-      }
+      /* 這一級用完：依 3 → 4 → 5 → 2 → 1 遞補（3～5 級全部排完才輪到 1、2 級） */
+      for (var f = 0; (!L || !L.length) && f < LV_FALLBACK.length; f++) L = lists[LV_FALLBACK[f]];
       out.push(L.shift());
     }
     return out;
@@ -558,6 +564,7 @@
       return s.lv <= S.set.maxLv && !S.items[s.id] && !S.excl[s.id] && !S.gone[s.id] && !inPool[s.id];
     }).map(function (s) { return s.id; });
     S.pool = keep.concat(mixByLevel(add));
+    if (S.poolV < POOL_V) { S.pool = mixByLevel(S.pool); S.poolV = POOL_V; }   // 舊比例排的：重排一次
     return add.length;
   }
   /* 從 pool 前面取一批：同一批不放前 3 字母相同的字、不放中文重疊的字 */
@@ -595,13 +602,26 @@
      練習進行到一半關掉也沒關係：所有結果在 submit 當下就寫進 S，下次 startSession 從 S 重新排。 */
   function startSession(S, now, dev) {
     var td = dateStr(now), plan = dayPlan(S, now), l = dayLog(S, td);
+    /* 剛答過（RECENT 之內）又到期的字——通常是答錯後頁面被重開——不放進複習清單，照樣先隔 LAG 題。
+       少了這段，重開之後它們因為 pos 低反而排在最前面，等於看完答案馬上考 */
+    var rev = [], hard = [], later = [];
+    function recent(it) { return it.lastAt && now - it.lastAt < RECENT; }
+    reviewDue(S, now).forEach(function (id) {
+      var it = S.items[id];
+      if (recent(it)) later.push({ id: id, ph: it.pos === 0 && it.src === "new" && !it.lastUp ? "learn" : "review", at: LAG });
+      else rev.push(id);
+    });
+    hardDue(S, now).slice(0, Math.max(0, HARD_MAX - (l.h || 0))).forEach(function (id) {
+      if (recent(S.items[id])) later.push({ id: id, ph: "hard", at: LAG });   // 例如剛在複習答錯、變成頑固字
+      else hard.push(id);
+    });
     return {
       td: td, dev: dev || "dev",
       newLeft: plan.left,
       batch: null,
-      hardQ: hardDue(S, now).slice(0, Math.max(0, HARD_MAX - (l.h || 0))),
-      revQ: reviewDue(S, now),
-      later: [],        // 要再考的：{ id, ph, at }，at ＝ 答到第幾題之後才能考
+      hardQ: hard,
+      revQ: rev,
+      later: later,     // 要再考的：{ id, ph, at }，at ＝ 答到第幾題之後才能考
       fb: [],           // 剛答錯、馬上要看的回饋卡
       n: 0,             // 這次練習答了幾題
       deferred: 0,      // 隔不開、留到明天的
@@ -758,6 +778,7 @@
     var prev = ph === "review" && !ok ? clone(it) : null;
 
     it.seen++;
+    it.lastAt = now;
     if (ok) it.right++; else it.wrong++;
     if (!ok && mc && !unknown && res.pick && sense(res.pick)) {
       var pk = sense(res.pick).id;
@@ -882,6 +903,7 @@
     Object.keys(gone).forEach(function (k) { var s = sense(k); if (s && !S.items[s.id]) S.excl[s.id] = 1; });
     back.forEach(function (id) { delete S.excl[id]; });
     S.pool = mixByLevel(back);          // 退回新字的排最前面
+    S.poolV = POOL_V;
     refreshPool(S);                     // 其餘新字依級數混合接在後面
     sum.excl = Object.keys(S.excl).length;
     sum.pool = S.pool.length;
@@ -967,6 +989,7 @@
     });
     out.mtime = Math.max(a.mtime || 0, b.mtime || 0);
     out.born = a.born || b.born || 0;
+    out.poolV = Math.max(a.poolV || 0, b.poolV || 0);
     return normalize(out);
   }
   /* 答題事件的合併：聯集、去重、依時間排序 */
