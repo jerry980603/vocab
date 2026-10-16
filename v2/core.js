@@ -17,6 +17,10 @@
   var DEF_SEC = { A: 3.5, B: 6, S: 10, C: 6, P: 3.5 };
   var NEW_SEC = 20, NEW_MAX = 80, BATCH = 5;          // §5 每個新字預留 20 秒、每天最多 80 個、一批 5 個
   var HARD_IN = 4, HARD_MAX = 20, HARD_OUT = 2;       // §7 lapses 達 4 進頑固字、每天最多 20 個、不同天答對 2 次畢業
+  /* 同一次練習裡「再考」至少隔幾題（新字看完回饋卡後的第一次考、答錯重考、頑固字重考都一樣）。
+     看完答案馬上考只考到短期記憶：Karpicke & Roediger 2007（第一次提取要延後）、
+     Karpicke & Bauernschmidt 2011（間隔越長越好）。這次練習隔不開的留到明天，不硬考。 */
+  var LAG = 10;
   var MISTAP = 500, STALL = 20000;                    // §6 誤觸 < 0.5 秒；被打斷 > max(20 秒, 3 × 中位數)
   var MIN_SAMPLE = 30, RT_KEEP = 200, CALIB_DAYS = 7; // §6 樣本不到 30 一律算慢、留最近 200 個、校正週 7 天
   var EST_DAYS = 14, EST_MIN_N = 30;                  // 預估每題秒數：看最近 14 天，至少 30 題才用實測值
@@ -581,7 +585,9 @@
   }
 
   /* ---------- 10. 一次練習（§5） ----------
-     順序：新字（一批 5 個：先測 → 學習卡 → 考一輪）→ 頑固字 → 複習 → 本次答錯的。
+     原則：每一題都先作答、後看答案（學習科學.md 第五節第 1 條）。卡片只在答錯（或還不會）之後當回饋，
+     不放在考題前面；要再考的一律隔 LAG 題。
+     順序：答錯後的回饋卡 → 隔夠了的再考 → 新字先測（一批 5 個）→ 頑固字（先考）→ 複習 → 結束。
      用法：st = next(S, sess, now) 拿下一步；
        st.kind "P"／"Q"：出題（st.q），作答後 submit(S, sess, st, res, now)
        st.kind "C"／"H"：學習卡／對照卡，看完 cardDone(S, sess, st, ms, now)
@@ -594,37 +600,60 @@
       newLeft: plan.left,
       batch: null,
       hardQ: hardDue(S, now).slice(0, Math.max(0, HARD_MAX - (l.h || 0))),
-      hardSeen: {},
       revQ: reviewDue(S, now),
-      retry: [],
+      later: [],        // 要再考的：{ id, ph, at }，at ＝ 答到第幾題之後才能考
+      fb: [],           // 剛答錯、馬上要看的回饋卡
+      n: 0,             // 這次練習答了幾題
+      deferred: 0,      // 隔不開、留到明天的
       cur: null,
       events: []
     };
   }
+  /* 隔夠了的再考。新字、頑固字的隨時穿插（那是看完卡片後第一次真正的提取）；
+     複習答錯的要等今天到期的都看過一輪才考——時間少、積欠多的日子，先照顧還沒看過的字，
+     重考留到明天（隔一天也是更長的間隔）。模擬比較見設計檔 §14。 */
+  function readyLater(sess) {
+    var revDone = !sess.revQ.length;
+    for (var i = 0; i < sess.later.length; i++) {
+      var x = sess.later[i];
+      if (x.at <= sess.n && (x.ph !== "review" || revDone)) return i;
+    }
+    return -1;
+  }
+  /* 練習結束（練完或按「結束」）：還隔不開的留到明天 */
+  function endSession(S, sess, now) {
+    sess.later.forEach(function (x) {
+      var it = S.items[x.id];
+      if (it) { it.due = Math.max(it.due, addDays(now, 1)); sess.deferred++; }
+    });
+    sess.later = [];
+  }
   function next(S, sess, now) {
     if (sess.cur && !sess.cur.done) return sess.cur;   // 還沒作答就不換題（切頁回來不會跳題）
     var st = null;
-    for (;;) {
+    if (sess.fb.length) st = sess.fb.shift();
+    while (!st) {
+      var k = readyLater(sess);
+      if (k > -1) {
+        var x = sess.later.splice(k, 1)[0];
+        if (!S.items[x.id] || !sense(x.id)) continue;
+        st = { kind: "Q", ph: "retry", sub: x.ph, id: x.id };
+        break;
+      }
       var b = sess.batch;
       if (b) {
         if (b.pre.length) { st = { kind: "P", ph: "pre", id: b.pre[0] }; break; }
-        if (b.cards.length) { st = { kind: "C", ph: "learn", id: b.cards[0] }; break; }
-        if (b.test.length) {
-          if (!b.mixed) { shuffle(b.test); b.mixed = true; }
-          st = { kind: "Q", ph: "learn", id: b.test[0] };
-          break;
-        }
         sess.batch = null;
       }
       if (sess.newLeft > 0 && dateStr(now) <= S.set.learnEnd) {
         var ids = drawBatch(S, Math.min(BATCH, sess.newLeft));
-        if (ids.length) { sess.batch = { pre: ids, cards: [], test: [], calOk: {} }; continue; }
+        if (ids.length) { sess.batch = { pre: ids }; continue; }
       }
       sess.newLeft = 0;
       while (sess.hardQ.length) {
         var h = sess.hardQ[0], hi = S.items[h];
         if (!hi || !hi.hard || !sense(h)) { sess.hardQ.shift(); continue; }
-        st = sess.hardSeen[h] ? { kind: "Q", ph: "hard", id: h } : hardCard(S, h);
+        st = { kind: "Q", ph: "hard", id: h };
         break;
       }
       if (st) break;
@@ -635,17 +664,11 @@
         break;
       }
       if (st) break;
-      while (sess.retry.length) {
-        var x = sess.retry[0];
-        if (!S.items[x.id] || !sense(x.id)) { sess.retry.shift(); continue; }
-        st = { kind: "Q", ph: "retry", sub: x.ph, id: x.id };
-        break;
-      }
-      if (!st) st = { kind: "done" };
-      break;
+      endSession(S, sess, now);
+      st = { kind: "done" };
     }
     if (st.kind === "P" || st.kind === "Q") st.q = buildQ(S, st);
-    if (st.kind === "C" && !st.card) st.card = card(S, st.id, false);
+    if (st.kind === "C" && !st.card) st.card = card(S, st.id, st.ph === "hard");
     sess.cur = st;
     return st;
   }
@@ -656,7 +679,7 @@
     if (ph === "hard") return makeQ(S, s.id, mcFmt, topConf(it));
     return makeQ(S, s.id, fmtFor(it, s));
   }
-  /* §7 頑固字：有搞混對象 → 對照卡；沒有 → 學習卡（列出全部例句） */
+  /* §7 頑固字答錯之後的回饋：有搞混對象 → 對照卡；沒有 → 學習卡（列出全部例句） */
   function hardCard(S, id) {
     var it = S.items[id], vs = topConf(it);
     if (vs) return { kind: "H", ph: "hard", id: id, vs: vs, times: it.conf[vs] || it.conf[vs.toLowerCase()] || 0, card: card(S, id, false), card2: card(S, vs, false) };
@@ -668,15 +691,12 @@
     var td = dateStr(now), k = kLog(dayLog(S, td), "C");
     k.a++; k.ms += ms || 0;
     if (st.ph === "learn") {
-      var b = sess.batch, it = S.items[st.id];
-      if (b) b.cards.shift();
+      var it = S.items[st.id];
       if (it) it.exi++;   // 學習卡用掉一句例句，之後的 B 題換下一句
-      if (b && b.calOk[st.id]) {
+      if (st.calOk) {
         /* 校正週：先測答對的看完卡片直接 pos 1 */
         it.pos = Math.max(it.pos, 1); it.lastUp = td; it.due = addDays(now, 1);
-      } else if (b) b.test.push(st.id);
-    } else if (st.ph === "hard") {
-      sess.hardSeen[st.id] = 1;
+      } else sess.later.push({ id: st.id, ph: "learn", at: sess.n + LAG });   // 隔 LAG 題才考第一次
     }
   }
 
@@ -757,8 +777,7 @@
         it.pos = 0; it.due = now;
         l.n = (l.n || 0) + 1;
         sess.newLeft = Math.max(0, sess.newLeft - 1);
-        sess.batch.cards.push(id);
-        if (ok && j.calib) sess.batch.calOk[id] = true;
+        sess.fb.push({ kind: "C", ph: "learn", id: id, calOk: ok && j.calib });   // 先測完馬上看學習卡（回饋）
         out = "learn";
       }
     } else if (ph === "learn") {
@@ -773,12 +792,14 @@
       again = out === "down" || out === "again" || out === "hard" || out === "void";
     }
 
-    /* 從所在的佇列拿掉；要重考的排到本次最後 */
-    if (st.ph === "learn") sess.batch.test.shift();
-    else if (st.ph === "hard") sess.hardQ.shift();
+    /* 從所在的佇列拿掉；要再考的隔 LAG 題（頑固字答錯先看回饋卡） */
+    if (st.ph === "hard") sess.hardQ.shift();
     else if (st.ph === "review") sess.revQ.shift();
-    else if (st.ph === "retry") sess.retry.shift();
-    if (again) sess.retry.push({ id: id, ph: ph === "learn" || ph === "hard" ? ph : "review" });
+    sess.n++;
+    if (again) {
+      if (ph === "hard") sess.fb.push(hardCard(S, id));
+      sess.later.push({ id: id, ph: ph === "learn" || ph === "hard" ? ph : "review", at: sess.n + LAG });
+    }
 
     l.a++; if (ok) l.c++;
     var kt = st.kind === "P" ? "P" : q.fmt, kk = kLog(l, kt);
@@ -808,8 +829,8 @@
     var id = sense(st.id).id, it = clone(r.prev);
     it.due = Math.max(it.due, addDays(now, 1));
     S.items[id] = it;
-    for (var i = sess.retry.length - 1; i >= 0; i--) {
-      if (sess.retry[i].id === id) { sess.retry.splice(i, 1); break; }
+    for (var i = sess.later.length - 1; i >= 0; i--) {
+      if (sess.later[i].id === id) { sess.later.splice(i, 1); break; }
     }
     sess.events.push([Math.floor(now / 1000), id, "X", 0, 0, r.ev[5], r.pos, it.pos, sess.dev]);
     r.undone = true;
@@ -974,7 +995,7 @@
     isDue: isDue, reviewDue: reviewDue, hardDue: hardDue, secPer: secPer, estimate: estimate,
     newQuota: newQuota, dayPlan: dayPlan, homeInfo: homeInfo,
     mixByLevel: mixByLevel, refreshPool: refreshPool, drawBatch: drawBatch,
-    startSession: startSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
+    LAG: LAG, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
     undo: undo, report: report, migrate: migrate, merge: merge, mergeEvents: mergeEvents
   };
   if (typeof module !== "undefined" && module.exports) module.exports = V2;

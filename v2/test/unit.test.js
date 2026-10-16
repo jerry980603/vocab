@@ -46,7 +46,7 @@ function review(S, s, res, now, sess) {
   now = now || NOW;
   sess = sess || V.startSession(S, now, "d");
   sess.newLeft = 0; sess.hardQ = [];
-  if (!sess.retry.length) sess.revQ = [s.id];
+  if (!sess.later.length) sess.revQ = [s.id];
   var st = V.next(S, sess, now);
   var q = st.q, r = {};
   for (var k in res) r[k] = res[k];
@@ -98,7 +98,7 @@ test("選擇題 rt < 500 點錯 → 不算（不扣、不算 lapses），排到�
   assert.strictEqual(x.r.out, "void");
   assert.strictEqual(it.pos, 3);
   assert.strictEqual(it.lapses, 0);
-  assert.strictEqual(x.sess.retry.length, 1);
+  assert.strictEqual(x.sess.later.length, 1);
 });
 test("很快按「不知道」不算誤觸 → 照答錯處理", function () {
   var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
@@ -123,18 +123,19 @@ test("拼寫沒用提示又快 → +2", function () {
   assert.strictEqual(x.r.out, "up2");
   assert.strictEqual(it.pos, 4);
 });
-test("答錯 → lapses+1、pos−1、排到本次最後、due 是現在", function () {
+test("答錯 → lapses+1、pos−1、隔 LAG 題再考、due 是現在", function () {
   var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
   var x = review(S, L5, { pick: "wrong", rt: 5000 });
   assert.strictEqual(x.r.out, "down");
   assert.strictEqual(it.lapses, 1);
   assert.strictEqual(it.pos, 2);
   assert.strictEqual(it.due, NOW);
-  assert.deepStrictEqual(x.sess.retry, [{ id: L5.id, ph: "review" }]);
+  assert.deepStrictEqual(x.sess.later, [{ id: L5.id, ph: "review", at: 1 + V.LAG }]);
 });
-test("答錯後本次重考答對 → pos 不變、明天再考", function () {
+test("答錯後隔 LAG 題再考，答對 → pos 不變、明天再考", function () {
   var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
   var x = review(S, L5, { pick: "wrong", rt: 5000 });
+  x.sess.n += V.LAG;                                  // 中間答了 LAG 題別的
   var st = V.next(S, x.sess, NOW + 60000);
   assert.strictEqual(st.ph, "retry");
   var r = V.submit(S, x.sess, st, st.q.fmt === "S" ? { input: st.q.form, rt: 1000 } : { pick: L5.id, rt: 1000 }, NOW + 60000);
@@ -143,16 +144,68 @@ test("答錯後本次重考答對 → pos 不變、明天再考", function () {
   assert.strictEqual(it.due, TOMORROW);
   assert.strictEqual(V.next(S, x.sess, NOW + 70000).kind, "done");
 });
-test("重考又答錯 → 不再扣、繼續排到最後", function () {
+test("重考又答錯 → 不再扣、再隔 LAG 題", function () {
   var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
   var x = review(S, L5, { pick: "wrong", rt: 5000 });
+  x.sess.n += V.LAG;
   var st = V.next(S, x.sess, NOW + 60000);
   var wrong = st.q.opts.filter(function (o) { return o.id !== L5.id; })[0].id;
   var r = V.submit(S, x.sess, st, { pick: wrong, rt: 5000 }, NOW + 60000);
   assert.strictEqual(r.out, "again");
   assert.strictEqual(it.lapses, 1);
   assert.strictEqual(it.pos, 2);
-  assert.strictEqual(x.sess.retry.length, 1);
+  assert.deepStrictEqual(x.sess.later, [{ id: L5.id, ph: "review", at: x.sess.n + V.LAG }]);
+});
+test("看完答案不馬上考：沒有別的題目可以隔開 → 這次不考，留到明天", function () {
+  var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
+  var x = review(S, L5, { pick: "wrong", rt: 5000 });
+  assert.strictEqual(V.next(S, x.sess, NOW + 1000).kind, "done");
+  assert.strictEqual(x.sess.deferred, 1);
+  assert.strictEqual(it.due, TOMORROW);
+  assert.strictEqual(it.lapses, 1);
+});
+test("複習答錯的重考：等今天到期的都看過一輪才考（而且至少隔 LAG 題）", function () {
+  var S = mkS(), bank = require("./lib.js").loadBank(), fill = [];
+  for (var i = 300; fill.length < V.LAG + 3; i++) {
+    var s = V.sense(bank[i].w + "::0");
+    if (s && !s.multi && s.lv >= 5) { put(S, s, { pos: 3, due: NOW }); fill.push(s.id); }
+  }
+  put(S, L5, { pos: 3, due: NOW, ce: 1 });             // ce > 0 排第一個
+  var sess = V.startSession(S, NOW, "d"), seq = [];
+  assert.strictEqual(sess.revQ[0], L5.id);
+  for (var k = 0; k < V.LAG + 2; k++) {
+    var st = V.next(S, sess, NOW + k * 1000);
+    seq.push(st.id);
+    V.submit(S, sess, st, { pick: st.id === L5.id && k === 0 ? "?" : st.id, rt: 5000, input: st.q.form }, NOW + k * 1000);
+  }
+  for (k = V.LAG + 2; k < fill.length + 2; k++) {
+    st = V.next(S, sess, NOW + k * 1000);
+    seq.push(st.id);
+    V.submit(S, sess, st, { pick: st.id, rt: 5000, input: st.q.form }, NOW + k * 1000);
+  }
+  assert.strictEqual(seq[0], L5.id);
+  assert.strictEqual(seq.indexOf(L5.id, 1), fill.length + 1);  // 到期的 fill.length 個都考完才重考
+  assert.strictEqual(sess.revQ.length, 0);
+});
+test("新字的再考穿插在複習中間（隔 LAG 題就出現，不用等複習做完）", function () {
+  var S = mkS(), bank = require("./lib.js").loadBank(), fill = [];
+  for (var i = 300; fill.length < V.LAG + 5; i++) {
+    var s = V.sense(bank[i].w + "::0");
+    if (s && !s.multi && s.lv >= 5) { put(S, s, { pos: 3, due: NOW }); fill.push(s.id); }
+  }
+  S.pool = ["bank::0"];
+  var sess = V.startSession(S, NOW, "d"), seq = [], st;
+  st = V.next(S, sess, NOW); assert.strictEqual(st.kind, "P");
+  V.submit(S, sess, st, { pick: "?", rt: 4000 }, NOW);
+  st = V.next(S, sess, NOW); assert.strictEqual(st.kind, "C");
+  V.cardDone(S, sess, st, 5000, NOW);
+  for (var k = 0; k < V.LAG + 2; k++) {
+    st = V.next(S, sess, NOW + k * 1000);
+    seq.push(st.id);
+    V.submit(S, sess, st, { pick: st.id, rt: 5000, input: st.q.form }, NOW + k * 1000);
+  }
+  assert.strictEqual(seq.indexOf("bank::0"), V.LAG);          // 先測之後隔 LAG 題（含先測那題）就考
+  assert.ok(sess.revQ.length > 0, "複習還沒做完");
 });
 test("同一天換一次練習再答錯 → 也不再扣（一天只降一次）", function () {
   var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
@@ -279,7 +332,9 @@ test("只有先測與一般複習的 rt 進中位數（學習卡後、重考、�
   var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
   var n = S.rt["d|A"].length;
   var x = review(S, L5, { pick: "wrong", rt: 5000 });
+  x.sess.n += V.LAG;
   var st = V.next(S, x.sess, NOW + 1000);
+  assert.strictEqual(st.ph, "retry");
   V.submit(S, x.sess, st, { pick: L5.id, rt: 2000 }, NOW + 1000);
   assert.strictEqual(S.rt["d|A"].length, n);
 });
@@ -395,13 +450,13 @@ test("「我選的也說得通」→ 這題作廢：pos、lapses、搞混對象�
   put(S, M5, { pos: 4, due: NOW, lapses: 3 });
   var x = review(S, M5, { pick: "wrong", rt: 1500 });
   assert.strictEqual(x.r.out, "hard");                    // 第 4 次 lapse → 變頑固字
-  assert.strictEqual(x.sess.retry.length, 1);
+  assert.strictEqual(x.sess.later.length, 1);
   assert.strictEqual(V.undo(S, x.sess, x.st, NOW), true);
   var it = S.items[M5.id];
   assert.deepStrictEqual([it.pos, it.lapses, it.hard, it.ce, it.lastDn], [4, 3, false, 0, ""]);
   assert.deepStrictEqual(it.conf, {});
   assert.strictEqual(it.due, TOMORROW);
-  assert.strictEqual(x.sess.retry.length, 0);
+  assert.strictEqual(x.sess.later.length, 0);
   var ev = x.sess.events[x.sess.events.length - 1];
   assert.strictEqual(ev[2], "X"); assert.strictEqual(ev[1], M5.id);
   assert.strictEqual(V.undo(S, x.sess, x.st, NOW), false);  // 不能作廢兩次
@@ -433,62 +488,68 @@ test("回報有問題：格式含 w、p、en、zh", function () {
 });
 
 /* ================= §5 一次練習 ================= */
-test("新字一批：先測 → 學習卡 → 考一輪；又快又對的直接 pos 3", function () {
+test("新字一批：先測；答錯馬上看學習卡（回饋），不緊接著考；又快又對的直接 pos 3", function () {
   var S = mkS();
   S.pool = ["abandon::0", "bank::0", "career::0", "delay::0", "fame::0"].filter(function (id) { return V.sense(id); });
   assert.strictEqual(S.pool.length, 5);
-  var sess = V.startSession(S, NOW, "d");
+  var sess = V.startSession(S, NOW, "d"), seq = [], st;
   assert.strictEqual(sess.newLeft, 5);
-  var kinds = [];
-  for (var i = 0; i < 5; i++) {
-    var st = V.next(S, sess, NOW);
-    assert.strictEqual(st.kind, "P");
-    var right = st.q.opts[st.q.ans].id;
-    V.submit(S, sess, st, { pick: i === 0 ? right : "?", rt: i === 0 ? 1000 : 4000 }, NOW);
+  for (var i = 0; i < 9; i++) {
+    st = V.next(S, sess, NOW);
+    seq.push(st.kind + ":" + st.id.split("::")[0]);
+    if (st.kind === "P") V.submit(S, sess, st, { pick: st.id === "abandon::0" ? st.id : "?", rt: st.id === "abandon::0" ? 1000 : 4000 }, NOW);
+    else { assert.ok(st.card && st.card.ex.length === 1); V.cardDone(S, sess, st, 6000, NOW); }
+  }
+  /* 先測答錯的那個字，下一步就是它的學習卡 */
+  for (i = 0; i < seq.length - 1; i++) {
+    if (seq[i].indexOf("P:") === 0 && seq[i] !== "P:abandon") assert.strictEqual(seq[i + 1], "C:" + seq[i].slice(2));
   }
   assert.strictEqual(S.items["abandon::0"].pos, 3);
   assert.strictEqual(S.items["abandon::0"].due, V.addDays(NOW, 14));
   assert.strictEqual(S.pool.length, 0);
-  for (i = 0; i < 4; i++) {
-    st = V.next(S, sess, NOW);
-    kinds.push(st.kind);
-    assert.ok(st.card && st.card.ex.length === 1);
-    V.cardDone(S, sess, st, 6000, NOW);
-  }
-  assert.deepStrictEqual(kinds, ["C", "C", "C", "C"]);
-  var wrongOnce = null;
-  for (i = 0; i < 4; i++) {
-    st = V.next(S, sess, NOW);
-    assert.strictEqual(st.ph, "learn");
-    if (i === 0) { wrongOnce = st.id; V.submit(S, sess, st, { pick: "?", rt: 3000 }, NOW); }
-    else V.submit(S, sess, st, { pick: st.id, rt: 3000 }, NOW);
-  }
-  st = V.next(S, sess, NOW);
-  assert.strictEqual(st.ph, "retry"); assert.strictEqual(st.id, wrongOnce);
-  assert.strictEqual(S.items[wrongOnce].lapses, 0);          // 學習中的答錯不算 lapse
-  V.submit(S, sess, st, { pick: st.id, rt: 3000 }, NOW);
-  assert.strictEqual(S.items[wrongOnce].pos, 1);
+  assert.strictEqual(sess.later.length, 4);
+  /* 沒有別的題可以隔開 → 這次不考，留到明天 */
   assert.strictEqual(V.next(S, sess, NOW).kind, "done");
+  assert.strictEqual(sess.deferred, 4);
   var l = S.log[TD];
   assert.strictEqual(l.n, 4); assert.strictEqual(l.p, 5);
   ["bank::0", "career::0", "delay::0", "fame::0"].forEach(function (id) {
-    assert.strictEqual(S.items[id].pos, 1);
+    assert.strictEqual(S.items[id].pos, 0);
     assert.strictEqual(S.items[id].due, TOMORROW);
   });
 });
-test("校正週：先測答對的看完學習卡直接 pos 1，不再考", function () {
-  var S = mkS({ install: TD });
+test("新字看完卡片、隔 LAG 題後第一次考：答對 pos 1；答錯不算 lapse、再隔 LAG 題", function () {
+  var S = mkS();
   S.pool = ["bank::0", "career::0"];
   var sess = V.startSession(S, NOW, "d"), st;
-  st = V.next(S, sess, NOW); V.submit(S, sess, st, { pick: st.q.opts[st.q.ans].id, rt: 900 }, NOW);
   st = V.next(S, sess, NOW); V.submit(S, sess, st, { pick: "?", rt: 4000 }, NOW);
-  assert.strictEqual(S.items[sess.batch ? "bank::0" : "bank::0"].pos, 0);   // 校正週不跳 pos 3
-  st = V.next(S, sess, NOW); V.cardDone(S, sess, st, 5000, NOW);
-  st = V.next(S, sess, NOW); V.cardDone(S, sess, st, 5000, NOW);
+  st = V.next(S, sess, NOW); V.cardDone(S, sess, st, 6000, NOW);
+  st = V.next(S, sess, NOW); V.submit(S, sess, st, { pick: "?", rt: 4000 }, NOW);
+  st = V.next(S, sess, NOW); V.cardDone(S, sess, st, 6000, NOW);
+  sess.n += V.LAG;
   st = V.next(S, sess, NOW);
-  assert.strictEqual(st.ph, "learn");
+  assert.strictEqual(st.ph, "retry"); assert.strictEqual(st.sub, "learn"); assert.strictEqual(st.id, "bank::0");
+  var r = V.submit(S, sess, st, { pick: "bank::0", rt: 3000 }, NOW);
+  assert.strictEqual(r.out, "learned");
+  assert.strictEqual(S.items["bank::0"].pos, 1); assert.strictEqual(S.items["bank::0"].due, TOMORROW);
+  st = V.next(S, sess, NOW);
   assert.strictEqual(st.id, "career::0");
+  r = V.submit(S, sess, st, { pick: "?", rt: 3000 }, NOW);
+  assert.strictEqual(r.out, "relearn");
+  assert.strictEqual(S.items["career::0"].lapses, 0);
+  assert.deepStrictEqual(sess.later, [{ id: "career::0", ph: "learn", at: sess.n + V.LAG }]);
+});
+test("校正週：先測答對的看完學習卡直接 pos 1，不再考", function () {
+  var S = mkS({ install: TD });
+  S.pool = ["bank::0"];
+  var sess = V.startSession(S, NOW, "d"), st;
+  st = V.next(S, sess, NOW); V.submit(S, sess, st, { pick: st.q.opts[st.q.ans].id, rt: 900 }, NOW);
+  assert.strictEqual(S.items["bank::0"].pos, 0);    // 校正週不跳 pos 3
+  st = V.next(S, sess, NOW);
+  assert.strictEqual(st.kind, "C");
+  V.cardDone(S, sess, st, 5000, NOW);
   assert.strictEqual(S.items["bank::0"].pos, 1);
+  assert.strictEqual(sess.later.length, 0);
 });
 test("next() 還沒作答就回傳同一題；submit 兩次只算一次", function () {
   var S = mkS(), it = put(S, L5, { pos: 2, due: NOW });
@@ -514,42 +575,48 @@ test("順序：新字 → 頑固字 → 複習（ce>0 先、pos 低先、逾期�
   var st = V.next(S, sess, NOW);
   assert.strictEqual(st.kind, "P");
 });
-test("頑固字：對照卡 → 考一題（含搞混對象）；不同天答對 2 次畢業回 pos 1", function () {
+test("頑固字先考、不先看卡（含搞混對象）；不同天答對 2 次畢業回 pos 1", function () {
   var S = mkS(), it = put(S, V.sense("absorb::0"), { pos: 1, due: NOW, hard: true, lapses: 5, conf: { "abandon::0": 2 } });
   var sess = V.startSession(S, NOW, "d"), st;
   st = V.next(S, sess, NOW);
-  assert.strictEqual(st.kind, "H"); assert.strictEqual(st.vs, "abandon::0"); assert.strictEqual(st.times, 2);
-  V.cardDone(S, sess, st, 8000, NOW);
-  st = V.next(S, sess, NOW);
-  assert.strictEqual(st.ph, "hard");
+  assert.strictEqual(st.kind, "Q"); assert.strictEqual(st.ph, "hard");
   assert.ok(st.q.opts.some(function (o) { return o.id === "abandon::0"; }));
   var r = V.submit(S, sess, st, { pick: "absorb::0", rt: 3000 }, NOW);
   assert.strictEqual(r.out, "hardOk");
   assert.deepStrictEqual(it.hardOk, [TD]);
   assert.strictEqual(it.due, TOMORROW);
-  assert.strictEqual(V.next(S, sess, NOW).kind, "done");
+  assert.strictEqual(V.next(S, sess, NOW).kind, "done");     // 答對不出卡片
   var D2 = NOW + V.DAY;
   sess = V.startSession(S, D2, "d");
-  st = V.next(S, sess, D2); V.cardDone(S, sess, st, 8000, D2);
   st = V.next(S, sess, D2);
+  assert.strictEqual(st.kind, "Q");
   r = V.submit(S, sess, st, { pick: "absorb::0", rt: 3000 }, D2);
   assert.strictEqual(r.out, "graduate");
   assert.strictEqual(it.hard, false); assert.strictEqual(it.pos, 1); assert.strictEqual(it.lapses, 0);
   assert.strictEqual(it.due, V.addDays(D2, 1));
 });
-test("頑固字沒有搞混對象 → 學習卡列出全部例句；答錯當天重考答對不算", function () {
+test("頑固字答錯 → 馬上看對照卡 → 隔 LAG 題再考；重考答對不算畢業", function () {
+  var S = mkS(), it = put(S, V.sense("absorb::0"), { pos: 1, due: NOW, hard: true, lapses: 5, conf: { "abandon::0": 2 } });
+  var sess = V.startSession(S, NOW, "d"), st;
+  st = V.next(S, sess, NOW);
+  V.submit(S, sess, st, { pick: "abandon::0", rt: 3000 }, NOW);
+  st = V.next(S, sess, NOW);
+  assert.strictEqual(st.kind, "H"); assert.strictEqual(st.vs, "abandon::0"); assert.strictEqual(st.times, 3);
+  V.cardDone(S, sess, st, 8000, NOW);
+  sess.n += V.LAG;
+  st = V.next(S, sess, NOW);
+  assert.strictEqual(st.ph, "retry"); assert.strictEqual(st.sub, "hard");
+  var r = V.submit(S, sess, st, { pick: "absorb::0", rt: 3000 }, NOW);
+  assert.strictEqual(r.out, "hardHold");
+  assert.deepStrictEqual(it.hardOk, []);
+});
+test("頑固字沒有搞混對象 → 答錯後的學習卡列出全部例句", function () {
   var S = mkS(), it = put(S, L3, { pos: 1, due: NOW, hard: true, lapses: 4 });
   var sess = V.startSession(S, NOW, "d"), st;
   st = V.next(S, sess, NOW);
-  assert.strictEqual(st.kind, "C"); assert.strictEqual(st.card.ex.length, L3.s.ex.length);
-  V.cardDone(S, sess, st, 8000, NOW);
-  st = V.next(S, sess, NOW);
   V.submit(S, sess, st, { pick: "?", rt: 3000 }, NOW);
   st = V.next(S, sess, NOW);
-  assert.strictEqual(st.ph, "retry");
-  var r = V.submit(S, sess, st, { pick: L3.id, rt: 3000 }, NOW);
-  assert.strictEqual(r.out, "hardHold");
-  assert.deepStrictEqual(it.hardOk, []);
+  assert.strictEqual(st.kind, "C"); assert.strictEqual(st.card.ex.length, L3.s.ex.length);
 });
 test("頑固字每天最多 20 個", function () {
   var S = mkS();

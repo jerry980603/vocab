@@ -43,7 +43,8 @@ function run(name, minutes, skip, accFn) {
       } else {
         var s = V.sense(st.id), q = st.q, it0 = S.items[s.id];
         var p = accFn ? accFn(s, it0) : ACC[s.lv] || 0.5;
-        if (st.ph === "learn" || st.ph === "hard" || st.ph === "retry") p = Math.min(0.95, p + 0.25);  // 剛看過答案
+        /* 看過回饋、隔 LAG 題後的再考，比完全沒看過好一點【估計 +10%】。頑固字是先考、沒有先看卡，不加 */
+        if (st.ph === "retry") p = Math.min(0.95, p + 0.10);
         var ok = rand() < p, res;
         var base = q.fmt === "A" ? 3500 : q.fmt === "B" ? 6000 : 2500;
         var rt = logn(ok ? base * 0.85 : base * 1.2);

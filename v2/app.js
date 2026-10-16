@@ -90,15 +90,15 @@
   function inDays(n) { return n <= 1 ? "明天再考" : "下次：" + n + " 天後"; }
   var OUT = {
     known: "已經會了，14 天後再考",
-    learn: "等一下看學習卡",
+    learn: "看一下學習卡，隔幾題再考",
     learned: "明天再考",
-    relearn: "等一下再考一次",
+    relearn: "隔幾題再考一次",
     hold: "明天再考",
     mistap: "答得太快，可能是誤觸，明天再考",
-    "void": "答得太快，這題不算，等一下再考",
-    down: "等一下再考一次", again: "等一下再考一次",
-    hard: "等一下再考一次；這個字錯了好幾次，之後會用頑固字的方式練",
-    hardMiss: "等一下再考一次", hardHold: "明天再考",
+    "void": "答得太快，這題不算，隔幾題再考",
+    down: "隔幾題再考一次", again: "隔幾題再考一次",
+    hard: "隔幾題再考一次；這個字錯了好幾次，之後會用頑固字的方式練",
+    hardMiss: "先看一次卡片，隔幾題再考", hardHold: "明天再考",
     hardOk: "不同天再答對一次就畢業",
     graduate: "畢業了，回到一般複習"
   };
@@ -358,7 +358,8 @@
     step();
   }
   function endSession() {
-    if (st && st.q && !st.done && answeredAt) addFeedbackTime();
+    if (st && st.q && st.done && answeredAt) addFeedbackTime();
+    V2.endSession(S, sess, Date.now());     // 還隔不開的留到明天，不在下一次練習一開始就馬上考
     flushEvents();
     save(true);
     if (window.SYNC2 && SYNC2.enabled()) SYNC2.run({ events: true }).catch(function () { });
@@ -377,11 +378,11 @@
     window.scrollTo(0, 0);
   }
   function stageHTML() {
-    var lab = st.ph === "retry" ? "再考一次" :
+    var lab = st.ph === "retry" ? (st.sub === "learn" ? "新字・隔一段時間再考" : "隔一段時間再考") :
       st.ph === "pre" ? "新字・先測（會的話直接跳過學習）" :
-      st.ph === "learn" ? (st.kind === "C" ? "新字・學習卡" : "新字・考一輪") :
-      st.ph === "hard" ? "頑固字" : "複習";
-    var left = sess.newLeft + sess.hardQ.length + sess.revQ.length + sess.retry.length;
+      st.ph === "learn" ? "新字・學習卡（看完會隔幾題再考）" :
+      st.ph === "hard" ? (st.kind === "Q" ? "頑固字" : "頑固字・看一次（隔幾題再考）") : "複習";
+    var left = sess.newLeft + sess.hardQ.length + sess.revQ.length + sess.later.length;
     return '<div class="stage"><span>' + lab + "</span><span>還有 " + left + "</span></div>";
   }
   function doneView() {
@@ -567,8 +568,8 @@
         "</span> " + lvTag(c) + '</div><div class="zh">' + esc(c.zh) + "</div>" + exHTML(c) + "</div>";
     };
     $("#main").innerHTML = '<div class="card">' + stageHTML() +
-      '<p>你上次把 <b>' + esc(a.w) + "</b> 選成了 <b>" + esc(b.w) + "</b>" + (st.times > 1 ? "（" + st.times + " 次）" : "") +
-      "。兩個並排看一次，等一下考 " + esc(a.w) + "。</p>" +
+      '<p>你把 <b>' + esc(a.w) + "</b> 選成過 <b>" + esc(b.w) + "</b>" + (st.times > 1 ? "（" + st.times + " 次）" : "") +
+      "。兩個並排看一次，隔幾題再考 " + esc(a.w) + "。</p>" +
       '<div class="vs">' + mini(a) + mini(b) + "</div>" +
       '<button class="btn soft next" id="seen">看完了</button></div>';
     $("#seen").onclick = seen;
