@@ -29,7 +29,7 @@
   V2.init(window.WORD_BANK || []);
   var S = null, view = "", sess = null, st = null, res = null;
   var shownAt = 0, firstKey = 0, hints = 0, answeredAt = 0, autoT = null;
-  var lastAct = Date.now(), pend = 0, budgetDay = "";
+  var lastAct = Date.now(), pend = 0, budgetDay = "", redoing = false;
 
   /* ---------- 存檔 ---------- */
   function devId() {
@@ -212,8 +212,11 @@
     if ($("#no")) $("#no").onclick = noOld;
     $("#ok").onclick = function () {
       S = m.S;
-      save();
+      save(true);
       home();
+      /* 「重新搬家」是使用者明確選的：直接用這份上傳，不再跳「雲端有另一份」的確認（另一台下次同步時會問） */
+      if (window.SYNC2 && SYNC2.enabled() && redoing) SYNC2.run({ events: true, force: true }).catch(function () { });
+      redoing = false;
       if (window.SYNC2) SYNC2.auto();
     };
   }
@@ -231,7 +234,9 @@
     if (h.done) notes.push('<span class="done">今天 ' + h.budget + " 分鐘完成 ✓</span> 想繼續可以繼續，也可以休息。");
     else if (h.floorMet) notes.push('<span class="done">保底守住了 ✓</span>');
     if (h.calib) notes.push("前 7 天在量你的答題速度，先不判斷「又快又對」，答對一律升一階。");
-    if (h.noNew) notes.push("已經過了學新字的期限（" + S.set.learnEnd + "），只複習。");
+    if (h.final) notes.push("考前總複習：考試前不會再出現的字都排進來了，最容易忘的排在前面。" +
+      "練到 " + h.budget + " 分鐘就好，做不完是正常的，不用熬夜。");
+    else if (h.noNew) notes.push("已經過了學新字的期限（" + S.set.learnEnd + "），只複習。");
     var left = h.newLeft + h.hard + h.rev;
     var html = '<div class="card">' +
       '<div class="clock">今天 <b>' + m + "</b> / " + h.budget + " 分鐘</div>" +
@@ -296,6 +301,7 @@
       try { localStorage.removeItem(LS); localStorage.removeItem(LSE); } catch (e) { }
       S = null; sess = null; st = null;
       $("#daily").textContent = "";
+      redoing = true;
       firstOpen(true);
     };
     $("#cpBad").onclick = function () {

@@ -849,6 +849,51 @@ test("舊比例排的新字池（poolV 0）開 App 時重排一次：前面都�
   assert.strictEqual(V.migrate(null, NOW).S.poolV, 2);
 });
 
+/* ================= 考前總複習 ================= */
+function finalFixture() {
+  var S = mkS(), bank = require("./lib.js").loadBank(), ids = [];
+  for (var i = 400; ids.length < 40; i++) { var s = V.sense(bank[i].w + "::0"); if (s) ids.push(s.id); }
+  var FAR = at("2027-03-01", 0);
+  ids.forEach(function (id, k) {
+    put(S, V.sense(id), { pos: 2 + (k % 5), lapses: k % 3, wrong: k % 4, due: FAR });
+  });
+  put(S, V.sense(ids[0]), { pos: 1, due: FAR, hard: true });               // 頑固字不動
+  put(S, V.sense(ids[1]), { pos: 3, due: at("2027-01-15", 0) });           // 考前本來就會到期的不動
+  return { S: S, ids: ids, FAR: FAR };
+}
+test("考前總複習：1/10 之前不動", function () {
+  var f = finalFixture();
+  assert.strictEqual(V.finalReview(f.S, at("2027-01-10", 20)), 0);
+  assert.strictEqual(f.S.finalAt, "");
+});
+test("考前總複習：1/11 起把考前排不到的字平均排進 1/11～1/20，階低、錯過多的先；只排一次", function () {
+  var f = finalFixture(), S = f.S, D = at("2027-01-11", 19);
+  var n = V.finalReview(S, D);
+  assert.strictEqual(n, 38);
+  assert.strictEqual(S.finalAt, "2027-01-11");
+  assert.strictEqual(S.items[f.ids[0]].due, f.FAR);                        // 頑固字
+  assert.strictEqual(S.items[f.ids[1]].due, at("2027-01-15", 0));          // 本來就排得到
+  var moved = f.ids.slice(2).map(function (id) { return S.items[id]; });
+  moved.forEach(function (it) {
+    assert.ok(it.due >= at("2027-01-11", 0) && it.due <= at("2027-01-20", 0), V.dateStr(it.due));
+  });
+  var days = {};
+  moved.forEach(function (it) { var d = V.dateStr(it.due); days[d] = (days[d] || 0) + 1; });
+  assert.strictEqual(Object.keys(days).length, 10);                        // 10 天都有分到
+  moved.sort(function (a, b) { return a.due - b.due; });
+  assert.ok(moved[0].pos <= moved[moved.length - 1].pos);                  // 階低的排前面
+  assert.strictEqual(V.finalReview(S, at("2027-01-12", 19)), 0);           // 只排一次
+});
+test("考前總複習：1/15 才第一次練 → 從 1/15 排到 1/20；開始練習時自動排", function () {
+  var f = finalFixture(), S = f.S;
+  V.startSession(S, at("2027-01-15", 19), "d");
+  assert.strictEqual(S.finalAt, "2027-01-15");
+  f.ids.slice(2).forEach(function (id) {
+    var d = V.dateStr(S.items[id].due);
+    assert.ok(d >= "2027-01-15" && d <= "2027-01-20", d);
+  });
+});
+
 /* ================= 同步合併 ================= */
 function twoSides() {
   var a = mkS(), b = mkS();

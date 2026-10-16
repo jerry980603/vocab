@@ -73,4 +73,70 @@ if (v1) [11, 12, 13].forEach(function (seed) {
   });
 });
 
+/* 兩台裝置交替練、每次練完同步一次：進度只會變多（每個字義的 seen 不變少）、字義不會不見、
+   沒有人按「重新搬家」時不會出現搬家衝突 */
+test("兩台裝置交替練習、互相同步：進度不會變少、不會整份被蓋掉", function () {
+  V.setRandom(L.seeded(77));
+  var rand = L.seeded(78), START = "2026-10-20";
+  var cloud = null, devs = [V.migrate(null, L.at(START, 7)).S, null], problems = [];
+  function sync(i) {
+    var loc = devs[i];
+    if (cloud && loc && cloud.born !== loc.born) problems.push("沒按重新搬家卻出現搬家衝突");
+    var m = V.merge(loc, cloud, "d" + i);
+    if (cloud) Object.keys(cloud.items).forEach(function (id) {
+      if (!m.items[id]) problems.push("同步後字義不見了：" + id);
+      else if (m.items[id].seen < cloud.items[id].seen) problems.push("同步後 seen 變少：" + id);
+    });
+    cloud = JSON.parse(JSON.stringify(m));
+    devs[i] = V.merge(devs[i], cloud, "d" + i);
+  }
+  sync(0);
+  devs[1] = V.normalize(JSON.parse(JSON.stringify(cloud)));    // 第二台第一次打開：用雲端的
+  for (var d = 0; d < 12; d++) {
+    var td = V.shiftDate(START, d);
+    [0, 1].forEach(function (i) {
+      var S = devs[i], now = L.at(td, i ? 20 : 7), sess = V.startSession(S, now, "d" + i);
+      for (var k = 0; k < 120; k++) {
+        var st = V.next(S, sess, now);
+        if (st.kind === "done") break;
+        if (st.kind === "C" || st.kind === "H") V.cardDone(S, sess, st, 5000, now);
+        else V.submit(S, sess, st, st.q.fmt === "S" ? { input: rand() < .6 ? st.q.form : "x", rt: 3000, dur: 8000 } : { pick: rand() < .6 ? V.sense(st.id).id : "?", rt: 3000, dur: 5000 }, now);
+        V.tick(S, 5000, now); now += 5000;
+      }
+      V.endSession(S, sess, now);
+      sync(i);
+    });
+  }
+  assert.ok(!problems.length, problems.slice(0, 4).join(" ／ "));
+  assert.ok(Object.keys(cloud.items).length > 50);
+});
+
+/* 跨午夜、跨過 1/10（停止上新字）、預算改來改去：不當掉、1/10 之後不上新字、狀態合法 */
+test("跨午夜的練習、跨過停止上新字的那天：不當掉、之後不再上新字", function () {
+  V.setRandom(L.seeded(91));
+  var rand = L.seeded(92), S = V.migrate(null, L.at("2027-01-07", 23, 40)).S, problems = [];
+  for (var d = 0; d < 8; d++) {
+    var td = V.shiftDate("2027-01-07", d), now = L.at(td, 23, 40);       // 每天 23:40 開始，練過午夜
+    S.set.budget = [30, 45, 60, 90][d % 4];
+    var sess = V.startSession(S, now, "d"), before = S.pool.length;
+    for (var k = 0; k < 400; k++) {
+      var st = V.next(S, sess, now);
+      if (st.kind === "done") break;
+      if (st.kind === "C" || st.kind === "H") V.cardDone(S, sess, st, 5000, now);
+      else {
+        if (st.kind === "P" && V.dateStr(now) > S.set.learnEnd) problems.push(V.dateStr(now) + " 過了停止日還在上新字");
+        V.submit(S, sess, st, st.q.fmt === "S" ? { input: rand() < .6 ? st.q.form : "x", rt: 3000, dur: 8000 } : { pick: rand() < .6 ? V.sense(st.id).id : "?", rt: 3000, dur: 5000 }, now);
+      }
+      V.tick(S, 5000, now); now += 5000;
+    }
+    V.endSession(S, sess, now);
+    Object.keys(S.items).forEach(function (id) {
+      var it = S.items[id];
+      if (!(it.pos >= 0 && it.pos <= 6) || !isFinite(it.due)) problems.push("狀態壞掉 " + id);
+    });
+    V.homeInfo(S, now);
+  }
+  assert.ok(!problems.length, problems.slice(0, 4).join(" ／ "));
+});
+
 process.exitCode = L.report("亂操作壓力測試") ? 1 : 0;

@@ -200,6 +200,7 @@
     if (st.floor == null) st.floor = 30;          // 保底分鐘
     if (!st.install) st.install = dateStr(Date.now());
     if (!st.learnEnd) st.learnEnd = "2027-01-10"; // 這天之後不上新字
+    if (!st.exam) st.exam = "2027-01-22";         // 學測第一天（考前總複習要在前兩天排完）
     if (st.maxLv == null) st.maxLv = 5;           // 新字只排到第幾級（沿用舊版「官方 1～5 級」）
     o.gone = o.gone || {};
     o.excl = o.excl || {};                        // 不進新字的字義：舊版快篩、畢業、刪除
@@ -207,6 +208,7 @@
     o.mtime = o.mtime || 0;
     o.born = o.born || 0;                         // 搬家（或從零開始）的時間：「重新搬家」後用來認出新的那份
     o.poolV = o.poolV || 0;                       // 新字池是照哪一版比例排的
+    o.finalAt = o.finalAt || "";                  // 考前總複習排好的日期（只排一次）
     Object.keys(o.items).forEach(function (k) {
       var it = o.items[k];
       if (!it.hardOk) it.hardOk = [];
@@ -531,7 +533,8 @@
       rev: e.nRev, revMin: Math.round(e.rev / 60),
       done: ms >= S.set.budget * 60000,
       floorMet: plan.left === 0 && ms >= S.set.floor * 60000,
-      calib: inCalib(S, now), noNew: td > S.set.learnEnd
+      calib: inCalib(S, now), noNew: td > S.set.learnEnd,
+      final: !!S.finalAt && td < S.set.exam      // 考前總複習期間
     };
   }
 
@@ -600,7 +603,29 @@
        st.kind "C"／"H"：學習卡／對照卡，看完 cardDone(S, sess, st, ms, now)
        st.kind "done"：今天能練的都練完了
      練習進行到一半關掉也沒關係：所有結果在 submit 當下就寫進 S，下次 startSession 從 S 重新排。 */
+  /* 考前總複習：停止上新字（learnEnd）之後第一次練習時，把考前不會再到期的字（頑固字除外）
+     從今天起平均排到考前兩天，階低、錯過多的先。只排一次。
+     記憶模擬：每天 60 分鐘，考試當天「熟」從約 72% 到約 81%【估計】，見設計檔 §14 */
+  function finalReview(S, now) {
+    var td = dateStr(now), last = shiftDate(S.set.exam, -2), examDay = parseDate(S.set.exam);
+    if (S.finalAt || td <= S.set.learnEnd || td >= S.set.exam) return 0;
+    var far = Object.keys(S.items).filter(function (id) {
+      var it = S.items[id];
+      return !it.hard && it.due >= examDay && sense(id);
+    });
+    far.sort(function (a, b) {
+      var x = S.items[a], y = S.items[b];
+      return (x.pos - y.pos) || (y.lapses - x.lapses) || (y.wrong - x.wrong) || (x.due - y.due);
+    });
+    var days = Math.max(1, dayDiff(td, last) + 1);
+    far.forEach(function (id, i) {
+      S.items[id].due = addDays(parseDate(td), Math.min(days - 1, Math.floor(i * days / far.length)));
+    });
+    S.finalAt = td;
+    return far.length;
+  }
   function startSession(S, now, dev) {
+    finalReview(S, now);
     var td = dateStr(now), plan = dayPlan(S, now), l = dayLog(S, td);
     /* 剛答過（RECENT 之內）又到期的字——通常是答錯後頁面被重開——不放進複習清單，照樣先隔 LAG 題。
        少了這段，重開之後它們因為 pos 低反而排在最前面，等於看完答案馬上考 */
@@ -990,6 +1015,7 @@
     out.mtime = Math.max(a.mtime || 0, b.mtime || 0);
     out.born = a.born || b.born || 0;
     out.poolV = Math.max(a.poolV || 0, b.poolV || 0);
+    out.finalAt = [a.finalAt || "", b.finalAt || ""].sort().pop();
     return normalize(out);
   }
   /* 答題事件的合併：聯集、去重、依時間排序 */
@@ -1018,7 +1044,7 @@
     isDue: isDue, reviewDue: reviewDue, hardDue: hardDue, secPer: secPer, estimate: estimate,
     newQuota: newQuota, dayPlan: dayPlan, homeInfo: homeInfo,
     mixByLevel: mixByLevel, refreshPool: refreshPool, drawBatch: drawBatch,
-    LAG: LAG, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
+    LAG: LAG, finalReview: finalReview, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
     undo: undo, report: report, migrate: migrate, merge: merge, mergeEvents: mergeEvents
   };
   if (typeof module !== "undefined" && module.exports) module.exports = V2;
