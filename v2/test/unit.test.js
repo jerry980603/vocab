@@ -667,32 +667,32 @@ function bigPool(S, n) {
   S.pool = V.mixByLevel(require("./lib.js").loadBank().slice(0, n).map(function (e) { return e.w + "::0"; }));
   [1, 2].forEach(function (d) { S.log[V.shiftDate(TD, -d)] = { a: 0, c: 0, ms: 40 * 60000, n: 0, k: {} }; });
 }
-test("新字數 = round((60 分 − 複習預估 − 頑固字預估) / 20)，上限 80", function () {
+test("新字數 = round((60 分 − 複習預估×(1＋答錯率) − 頑固字預估) / 一個新字的秒數)，上限 80", function () {
   var S = mkS(); bigPool(S, 400);
   assert.strictEqual(V.newQuota(S, NOW), 80);
   var bank = require("./lib.js").loadBank(), k = 0;
-  for (var i = 0; k < 900; i++) {
+  for (var i = 0; k < 300; i++) {
     var s = V.sense(bank[i].w + "::0");
     if (s.multi || S.pool.indexOf(s.id) > -1) continue;
     put(S, s, { pos: 1, due: NOW }); k++;
   }
-  /* 900 個 A 題 × 3.5 秒 = 3150 秒 → (3600 − 3150) / 20 = 22.5 → 23 */
-  assert.strictEqual(V.newQuota(S, NOW), 23);
+  /* 300 個 A 題 × 6 秒 × (1 + 0.35 答錯重考) = 2430 秒 → (3600 − 2430) / 30 = 39 */
+  assert.strictEqual(V.newQuota(S, NOW), 39);
 });
-test("頑固字也扣時間：(C 6 秒 + A 3.5 秒) × 個數", function () {
+test("頑固字也扣時間：(C 6 秒 + A 6 秒) × (1 + 答錯率) × 個數", function () {
   var S = mkS(); bigPool(S, 400);
   var e = V.estimate(S, NOW);
   assert.strictEqual(e.hard, 0);
   put(S, L5, { pos: 1, due: NOW, hard: true });
-  assert.strictEqual(V.estimate(S, NOW).hard, 9.5);
+  assert.ok(Math.abs(V.estimate(S, NOW).hard - 12 * 1.35) < 1e-9);
 });
 test("用實測秒數：最近 14 天有 30 題以上就用平均", function () {
   var S = mkS();
   S.log[V.shiftDate(TD, -1)] = { a: 40, c: 30, ms: 0, n: 0, k: { A: { a: 40, c: 30, ms: 200000 } } };
   assert.strictEqual(V.secPer(S, "A", NOW), 5);
-  assert.strictEqual(V.secPer(S, "B", NOW), 6);
+  assert.strictEqual(V.secPer(S, "B", NOW), 9);
   S.log[V.shiftDate(TD, -1)].k.A.a = 20;
-  assert.strictEqual(V.secPer(S, "A", NOW), 3.5);
+  assert.strictEqual(V.secPer(S, "A", NOW), 6);
 });
 test("前兩天實際時間都不到預算一半 → 新字減半；install 之前的日子不算", function () {
   var S = mkS({ install: V.shiftDate(TD, -10) }); bigPool(S, 400);
@@ -746,7 +746,46 @@ test("首頁數字", function () {
   assert.strictEqual(h.rev, 1); assert.strictEqual(h.hard, 1);
   assert.strictEqual(h.ms, 12 * 60000);
   assert.strictEqual(h.done, false); assert.strictEqual(h.floorMet, false);
-  assert.strictEqual(h.newMin, Math.round(h.newLeft * 20 / 60));
+  assert.strictEqual(h.newMin, Math.round(h.newLeft * V.newSec(S, NOW) / 60));
+});
+test("一個新字的秒數用實測（最近 14 天至少 30 個新字），沒有就 30 秒", function () {
+  var S = mkS();
+  assert.strictEqual(V.newSec(S, NOW), 30);
+  S.log[V.shiftDate(TD, -1)] = { a: 0, c: 0, ms: 0, n: 40, nm: 40 * 25000, k: {} };
+  assert.strictEqual(V.newSec(S, NOW), 25);
+});
+test("舊字（搬家積欠）：到期量超過每天時間才標；每天 1/7；只標一次；今天的新字額度重算", function () {
+  var S = mkS(), bank = require("./lib.js").loadBank(), k = 0;
+  for (var i = 0; k < 700; i++) { var s = V.sense(bank[i].w + "::0"); if (s && !s.multi) { put(S, s, { pos: 1, due: NOW - V.DAY, wrong: k % 5 }); k++; } }
+  V.dayLog(S, TD).q = 0;
+  assert.strictEqual(V.markOld(S, NOW), 700);
+  assert.strictEqual(S.oldDaily, 100);
+  assert.strictEqual(S.log[TD].q, undefined);
+  assert.strictEqual(V.markOld(S, NOW), 0);
+  var S2 = mkS(); put(S2, L5, { pos: 1, due: NOW });
+  assert.strictEqual(V.markOld(S2, NOW), 0);
+  assert.strictEqual(S2.items[L5.id].old, false);
+});
+test("舊字排在每日任務（新字、頑固字、今天到期的複習）之後；做了就不再是舊字", function () {
+  var S = mkS(), bank = require("./lib.js").loadBank(), olds = [], k = 0;
+  for (var i = 600; k < 30; i++) { var s = V.sense(bank[i].w + "::0"); if (s && !s.multi) { put(S, s, { pos: 1, due: NOW - V.DAY, old: true }); olds.push(s.id); k++; } }
+  S.oldDaily = 5;
+  put(S, L5, { pos: 2, due: NOW });                    // 今天正常到期
+  put(S, L3, { pos: 1, due: NOW, hard: true });         // 頑固字
+  S.pool = ["bank::0"];
+  var sess = V.startSession(S, NOW, "d"), seq = [];
+  assert.strictEqual(sess.oldQ.length, 5);
+  for (var n = 0; n < 12; n++) {
+    var st = V.next(S, sess, NOW + n * 1000);
+    if (st.kind === "done") break;
+    if (st.kind === "C" || st.kind === "H") { V.cardDone(S, sess, st, 1000, NOW); continue; }
+    seq.push(st.old ? "old" : st.kind === "P" ? "new" : st.ph);
+    V.submit(S, sess, st, st.q.fmt === "S" ? { input: st.q.form, rt: 3000 } : { pick: V.sense(st.id).id, rt: 3000 }, NOW + n * 1000);
+  }
+  assert.deepStrictEqual(seq.slice(0, 3), ["new", "hard", "review"]);
+  assert.strictEqual(seq.indexOf("old"), 3);
+  assert.strictEqual(S.log[TD].o, 5);
+  assert.strictEqual(olds.filter(function (id) { return !S.items[id].old; }).length, 5);
 });
 
 /* ================= §9 搬家（每一類） ================= */

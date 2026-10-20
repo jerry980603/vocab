@@ -115,6 +115,7 @@
     if (raw) { try { S = V2.normalize(JSON.parse(raw)); } catch (e) { S = null; } }
     if (S) {
       V2.refreshPool(S);
+      V2.markOld(S, Date.now());     // 搬家積欠標成舊字（只做一次；沒有積欠就什麼都不做）
       save(true);
       home();
       if (window.SYNC2) SYNC2.auto();
@@ -237,7 +238,7 @@
     if (h.final) notes.push("考前總複習：考試前不會再出現的字都排進來了，最容易忘的排在前面。" +
       "練到 " + h.budget + " 分鐘就好，做不完是正常的，不用熬夜。");
     else if (h.noNew) notes.push("已經過了學新字的期限（" + S.set.learnEnd + "），只複習。");
-    var left = h.newLeft + h.hard + h.rev;
+    var left = h.newLeft + h.hard + h.rev + h.old;
     var html = '<div class="card">' +
       '<div class="clock">今天 <b>' + m + "</b> / " + h.budget + " 分鐘</div>" +
       '<div class="bar">' + bar + "</div>" +
@@ -246,6 +247,7 @@
       "<li><span>① 新字</span><span class=\"n\">" + h.newLeft + " 個（預估 " + h.newMin + " 分）</span></li>" +
       "<li><span>② 頑固字</span><span class=\"n\">" + h.hard + " 個（預估 " + h.hardMin + " 分）</span></li>" +
       "<li><span>③ 複習</span><span class=\"n\">約 " + h.revMin + " 分（" + h.rev + " 個）</span></li>" +
+      (h.oldAll ? "<li><span>④ 舊字（搬家積欠）</span><span class=\"n\">今天 " + h.old + " 個（還有 " + h.oldAll + " 個）</span></li>" : "") +
       "</ul>" +
       (left ? '<button class="btn" id="go">' + (m ? "繼續練" : "開始") + "</button>"
         : '<div class="done">今天能練的都練完了 ✓</div>') +
@@ -399,8 +401,8 @@
     var lab = st.ph === "retry" ? (st.sub === "learn" ? "新字・隔一段時間再考" : "隔一段時間再考") :
       st.ph === "pre" ? "新字・先測（會的話直接跳過學習）" :
       st.ph === "learn" ? "新字・學習卡（看完會隔幾題再考）" :
-      st.ph === "hard" ? (st.kind === "Q" ? "頑固字" : "頑固字・看一次（隔幾題再考）") : "複習";
-    var left = sess.newLeft + sess.hardQ.length + sess.revQ.length + sess.later.length;
+      st.ph === "hard" ? (st.kind === "Q" ? "頑固字" : "頑固字・看一次（隔幾題再考）") : st.old ? "舊字（搬家積欠）" : "複習";
+    var left = sess.newLeft + sess.hardQ.length + sess.revQ.length + sess.oldQ.length + sess.later.length;
     return '<div class="stage"><span>' + lab + "</span><span>還有 " + left + "</span></div>";
   }
   function doneView() {
@@ -414,8 +416,8 @@
   }
   /* 回饋畫面看了多久，算進這個題型的平均時間（估每天能上幾個新字用） */
   function addFeedbackTime() {
-    var kt = st.kind === "P" ? "P" : st.q.fmt;
-    V2.addTime(S, kt, Math.min(Date.now() - answeredAt, 60000), Date.now());
+    var kt = st.kind === "P" ? "P" : st.q.fmt, isNew = st.ph === "pre" || st.ph === "learn" || st.sub === "learn";
+    V2.addTime(S, kt, Math.min(Date.now() - answeredAt, 60000), Date.now(), isNew);
   }
   function goNext() {
     clearTimeout(autoT);

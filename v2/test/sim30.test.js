@@ -79,7 +79,7 @@ function run(name, minutes, skip, accFn) {
     var l = S.log[td];
     days.push({
       td: td, min: Math.round(l.ms / 60000), a: l.a, acc: l.a ? Math.round(100 * l.c / l.a) : 0,
-      q: l.q, n: l.n || 0, p: l.p || 0, due: h0.rev, dueMin: h0.revMin, hard: h0.hard,
+      q: l.q, n: l.n || 0, p: l.p || 0, due: h0.rev + h0.oldAll, dueMin: h0.revMin + Math.round(h0.oldAll * 3.5 / 60), oldAll: h0.oldAll, hard: h0.hard,
       hardAll: Object.keys(S.items).filter(function (k) { return S.items[k].hard; }).length,
       pool: S.pool.length, over: l.ms - limit, maxStep: maxStep, calib: h0.calib
     });
@@ -111,11 +111,11 @@ function checkState(S, td) {
 
 function table(R) {
   console.log("\n" + R.name);
-  console.log("  日期        分 題數 正確 額度 新字 先測 到期(分)    頑固(今/全) 新字池");
+  console.log("  日期        分 題數 正確 額度 新字 先測 到期含舊字(分) 舊字  頑固(今/全) 新字池");
   R.days.forEach(function (x) {
     if (x.skip) { console.log("  " + x.td + "  （休息）"); return; }
     console.log("  " + x.td + (x.calib ? "*" : " ") + pad(x.min, 3) + pad(x.a, 5) + pad(x.acc + "%", 5) +
-      pad(x.q, 5) + pad(x.n, 5) + pad(x.p, 5) + pad(x.due, 6) + "(" + pad(x.dueMin, 3) + ")" +
+      pad(x.q, 5) + pad(x.n, 5) + pad(x.p, 5) + pad(x.due, 6) + "(" + pad(x.dueMin, 3) + ")" + pad(x.oldAll, 7) +
       pad(x.hard, 6) + "/" + x.hardAll + pad(x.pool, 9));
   });
   console.log("  （* ＝校正週）共 " + R.answers + " 題、頑固字新增 " + R.newHard + " 個、畢業 " + R.grads +
@@ -168,6 +168,11 @@ test(A.name + "：積欠沒有無限成長（最後 10 天的到期量不超過�
   var up = 0;
   for (var i = 1; i < last.length; i++) if (last[i] > last[i - 1]) up++;
   assert.ok(up < last.length - 1, "最後 10 天到期量一路往上：" + last.join(","));
+});
+test(C.name + "：搬家積欠（舊字）兩週內清完，而且第一天就有新字", function () {
+  var x = C.days.filter(function (d) { return !d.skip; });
+  assert.ok(x[0].n > 0, "第一天沒有新字");
+  assert.strictEqual(x[14].oldAll, 0, "第 15 天還有舊字 " + x[14].oldAll + " 個");
 });
 test(A.name + "：積欠清掉之後有上新字", function () {
   var learned = A.days.reduce(function (s, d) { return s + (d.n || 0); }, 0);
