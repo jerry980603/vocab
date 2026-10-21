@@ -90,6 +90,7 @@
   function inDays(n) { return n <= 1 ? "明天再考" : "下次：" + n + " 天後"; }
   var OUT = {
     known: "已經會了，14 天後再考",
+    known30: "會了，30 天後再考一次",
     learn: "看一下學習卡，隔幾題再考",
     learned: "明天再考",
     relearn: "隔幾題再考一次",
@@ -115,6 +116,7 @@
     if (raw) { try { S = V2.normalize(JSON.parse(raw)); } catch (e) { S = null; } }
     if (S) {
       V2.refreshPool(S);
+      V2.markScreen(S, Date.now());  // 第 1、2 級改走快篩（只做一次）
       V2.markOld(S, Date.now());     // 搬家積欠標成舊字（只做一次；沒有積欠就什麼都不做）
       save(true);
       home();
@@ -204,7 +206,8 @@
         row("生（舊熟練度 0～1）", s.box01) +
         (s.missing ? row("字庫已刪除、略過", s.missing) : "") +
         row("不再出現（快篩、畢業）", s.excl + " 個字義") +
-        row("待學新字", s.pool) +
+        row("待學新字（第 3～6 級）", s.pool) +
+        (s.scr ? row("第 1、2 級快篩（每天最多 100 個）", s.scr + " 個字義") : "") +
         "</table>" +
         '<div class="row"><button class="btn ghost" id="no">先不要</button>' +
         '<button class="btn" id="ok">確認搬家</button></div></div>';
@@ -238,16 +241,17 @@
     if (h.final) notes.push("考前總複習：考試前不會再出現的字都排進來了，最容易忘的排在前面。" +
       "練到 " + h.budget + " 分鐘就好，做不完是正常的，不用熬夜。");
     else if (h.noNew) notes.push("已經過了學新字的期限（" + S.set.learnEnd + "），只複習。");
-    var left = h.newLeft + h.hard + h.rev + h.old;
+    var left = h.newLeft + h.scr + h.hard + h.rev + h.old;
     var html = '<div class="card">' +
       '<div class="clock">今天 <b>' + m + "</b> / " + h.budget + " 分鐘</div>" +
       '<div class="bar">' + bar + "</div>" +
       '<div class="small">保底：新字學完 ＋ ' + h.floor + " 分鐘</div>" +
       '<ul class="plan">' +
       "<li><span>① 新字</span><span class=\"n\">" + h.newLeft + " 個（預估 " + h.newMin + " 分）</span></li>" +
-      "<li><span>② 頑固字</span><span class=\"n\">" + h.hard + " 個（預估 " + h.hardMin + " 分）</span></li>" +
-      "<li><span>③ 複習</span><span class=\"n\">約 " + h.revMin + " 分（" + h.rev + " 個）</span></li>" +
-      (h.oldAll ? "<li><span>④ 舊字（搬家積欠）</span><span class=\"n\">今天 " + h.old + " 個（還有 " + h.oldAll + " 個）</span></li>" : "") +
+      (h.scrAll ? "<li><span>② 快篩（第 1、2 級）</span><span class=\"n\">今天 " + h.scr + " 個（還有 " + h.scrAll + " 個）</span></li>" : "") +
+      "<li><span>" + (h.scrAll ? "③" : "②") + " 頑固字</span><span class=\"n\">" + h.hard + " 個（預估 " + h.hardMin + " 分）</span></li>" +
+      "<li><span>" + (h.scrAll ? "④" : "③") + " 複習</span><span class=\"n\">約 " + h.revMin + " 分（" + h.rev + " 個）</span></li>" +
+      (h.oldAll ? "<li><span>" + (h.scrAll ? "⑤" : "④") + " 舊字（搬家積欠）</span><span class=\"n\">今天 " + h.old + " 個（還有 " + h.oldAll + " 個）</span></li>" : "") +
       "</ul>" +
       (left ? '<button class="btn" id="go">' + (m ? "繼續練" : "開始") + "</button>"
         : '<div class="done">今天能練的都練完了 ✓</div>') +
@@ -400,9 +404,10 @@
   function stageHTML() {
     var lab = st.ph === "retry" ? (st.sub === "learn" ? "新字・隔一段時間再考" : "隔一段時間再考") :
       st.ph === "pre" ? "新字・先測（會的話直接跳過學習）" :
+      st.ph === "screen" ? "快篩・第 1、2 級（會的話 30 天後再考一次）" :
       st.ph === "learn" ? "新字・學習卡（看完會隔幾題再考）" :
       st.ph === "hard" ? (st.kind === "Q" ? "頑固字" : "頑固字・看一次（隔幾題再考）") : st.old ? "舊字（搬家積欠）" : "複習";
-    var left = sess.newLeft + sess.hardQ.length + sess.revQ.length + sess.oldQ.length + sess.later.length;
+    var left = sess.newLeft + sess.scrQ.length + sess.hardQ.length + sess.revQ.length + sess.oldQ.length + sess.later.length;
     return '<div class="stage"><span>' + lab + "</span><span>還有 " + left + "</span></div>";
   }
   function doneView() {
@@ -416,7 +421,8 @@
   }
   /* 回饋畫面看了多久，算進這個題型的平均時間（估每天能上幾個新字用） */
   function addFeedbackTime() {
-    var kt = st.kind === "P" ? "P" : st.q.fmt, isNew = st.ph === "pre" || st.ph === "learn" || st.sub === "learn";
+    var kt = st.kind === "P" ? "P" : st.q.fmt, isNew = st.ph === "pre" || st.ph === "learn" || st.sub === "learn" ||
+      (st.ph === "screen" && st.result && st.result.out === "learn");
     V2.addTime(S, kt, Math.min(Date.now() - answeredAt, 60000), Date.now(), isNew);
   }
   function goNext() {

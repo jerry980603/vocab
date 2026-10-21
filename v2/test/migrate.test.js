@@ -29,9 +29,10 @@ test("每一筆舊進度都有歸類，總數對得上", function () {
   assert.strictEqual(total, Object.keys(v1.items).length);
   assert.strictEqual(sum.missing, gone.length);
 });
-test("退回新字的排在 pool 最前面", function () {
+test("退回新字的排在最前面（第 1、2 級在快篩清單最前面，其餘在 pool 最前面）", function () {
   var front = {};
   S.pool.slice(0, sum.back).forEach(function (id) { front[id] = 1; });
+  S.scr.slice(0, sum.back).forEach(function (id) { front[id] = 1; });
   Object.keys(v1.items).forEach(function (k) {
     var o = v1.items[k], s = V.sense(k);
     if (s && o.wb && (o.seen || 0) <= 1) assert.ok(front[s.id], k + " 沒有排在最前面");

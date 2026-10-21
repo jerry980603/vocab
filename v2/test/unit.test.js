@@ -108,20 +108,21 @@ test("很快按「不知道」不算誤觸 → 照答錯處理", function () {
   assert.strictEqual(it.pos, 2);
 });
 test("用了拼寫提示才答對 → 最多 +1、不算快、不進中位數", function () {
-  var S = mkS(), it = put(S, L3, { pos: 2, due: NOW });
+  var S = mkS(), it = put(S, L3, { pos: 3, due: NOW });
   var n = S.rt["d|S"].length;
   var x = review(S, L3, { pick: "right", rt: 800, hint: 1 });
   assert.strictEqual(x.q.fmt, "S");
   assert.strictEqual(x.r.out, "up1");
   assert.strictEqual(x.r.quick, false);
-  assert.strictEqual(it.pos, 3);
+  assert.strictEqual(it.pos, 4);
   assert.strictEqual(S.rt["d|S"].length, n);
 });
 test("拼寫沒用提示又快 → +2", function () {
-  var S = mkS(), it = put(S, L3, { pos: 2, due: NOW });
+  var S = mkS(), it = put(S, L3, { pos: 3, due: NOW });
   var x = review(S, L3, { pick: "right", rt: 800 });
+  assert.strictEqual(x.q.fmt, "S");
   assert.strictEqual(x.r.out, "up2");
-  assert.strictEqual(it.pos, 4);
+  assert.strictEqual(it.pos, 5);
 });
 test("答錯 → lapses+1、pos−1、隔 LAG 題再考、due 是現在", function () {
   var S = mkS(), it = put(S, L5, { pos: 3, due: NOW });
@@ -280,7 +281,7 @@ test("pos 0 答錯 → 停在 0", function () {
   assert.strictEqual(it.lapses, 1);
 });
 test("seen／right／wrong 累計；B、S 題用掉例句（exi+1），A 題不用", function () {
-  var S = mkS(), it = put(S, L3, { pos: 2, due: NOW });
+  var S = mkS(), it = put(S, L3, { pos: 3, due: NOW });
   review(S, L3, { pick: "right", rt: 5000 });
   assert.strictEqual(it.seen, 1); assert.strictEqual(it.right, 1); assert.strictEqual(it.exi, 1);
   var S2 = mkS(), it2 = put(S2, L5, { pos: 1, due: NOW });
@@ -357,11 +358,16 @@ test("只有先測與一般複習的 rt 進中位數（學習卡後、重考、�
 });
 
 /* ================= §4、§8 出題 ================= */
-test("題型對照表：第 1～4 級 pos≥2 拼寫；第 5、6 級 B/A 交替；一字多義 A→B", function () {
+test("題型對照表：第 1～3 級 pos≥3 拼寫；第 4～6 級 B/A 交替；一字多義 A→B", function () {
   var f = function (s, p) { return V.fmtFor({ w: s.w, si: s.si, pos: p }); };
-  assert.deepStrictEqual([0, 1, 2, 3, 4, 5, 6].map(function (p) { return f(L3, p); }), ["A", "A", "S", "S", "S", "S", "S"]);
+  assert.deepStrictEqual([0, 1, 2, 3, 4, 5, 6].map(function (p) { return f(L3, p); }), ["A", "A", "A", "S", "S", "S", "S"]);
   assert.deepStrictEqual([0, 1, 2, 3, 4, 5, 6].map(function (p) { return f(L5, p); }), ["A", "A", "B", "A", "B", "A", "B"]);
-  assert.deepStrictEqual([0, 1, 2].map(function (p) { return f(MULTI4, p); }), ["B", "B", "S"]);
+  var L4 = find(function (s) { return s.lv === 4 && !s.multi; });
+  assert.strictEqual(L4.spell, false);
+  assert.deepStrictEqual([0, 1, 2, 3, 4, 5, 6].map(function (p) { return f(L4, p); }), ["A", "A", "B", "A", "B", "A", "B"]);
+  assert.deepStrictEqual([0, 1, 2, 3].map(function (p) { return f(MULTI4, p); }), ["B", "B", "B", "B"]);
+  var M3 = find(function (s) { return s.lv === 3 && s.multi && !s.e.ph; });
+  assert.deepStrictEqual([0, 1, 2, 3].map(function (p) { return f(M3, p); }), ["B", "B", "B", "S"]);
   var M5 = find(function (s) { return s.lv === 5 && s.multi; });
   assert.deepStrictEqual([0, 1, 2, 3].map(function (p) { return f(M5, p); }), ["B", "B", "B", "B"]);
 });
@@ -667,7 +673,7 @@ function bigPool(S, n) {
   S.pool = V.mixByLevel(require("./lib.js").loadBank().slice(0, n).map(function (e) { return e.w + "::0"; }));
   [1, 2].forEach(function (d) { S.log[V.shiftDate(TD, -d)] = { a: 0, c: 0, ms: 40 * 60000, n: 0, k: {} }; });
 }
-test("新字數 = round((60 分 − 複習預估×(1＋答錯率) − 頑固字預估) / 一個新字的秒數)，上限 80", function () {
+test("新字數 = round((75 分 − 複習預估×(1＋答錯率) − 頑固字預估) / 一個新字的秒數)，上限 80", function () {
   var S = mkS(); bigPool(S, 400);
   assert.strictEqual(V.newQuota(S, NOW), 80);
   var bank = require("./lib.js").loadBank(), k = 0;
@@ -676,8 +682,8 @@ test("新字數 = round((60 分 − 複習預估×(1＋答錯率) − 頑固字�
     if (s.multi || S.pool.indexOf(s.id) > -1) continue;
     put(S, s, { pos: 1, due: NOW }); k++;
   }
-  /* 300 個 A 題 × 6 秒 × (1 + 0.35 答錯重考) = 2430 秒 → (3600 − 2430) / 30 = 39 */
-  assert.strictEqual(V.newQuota(S, NOW), 39);
+  /* 300 個 A 題 × 6 秒 × (1 + 0.35 答錯重考) = 2430 秒 → (4500 − 2430) / 30 = 69 */
+  assert.strictEqual(V.newQuota(S, NOW), 69);
 });
 test("頑固字也扣時間：(C 6 秒 + A 6 秒) × (1 + 答錯率) × 個數", function () {
   var S = mkS(); bigPool(S, 400);
@@ -699,7 +705,7 @@ test("前兩天實際時間都不到預算一半 → 新字減半；install 之�
   S.log[V.shiftDate(TD, -1)] = { ms: 10 * 60000, k: {} };
   S.log[V.shiftDate(TD, -2)] = { ms: 25 * 60000, k: {} };
   assert.strictEqual(V.newQuota(S, NOW), 40);
-  S.log[V.shiftDate(TD, -2)].ms = 31 * 60000;
+  S.log[V.shiftDate(TD, -2)].ms = 38 * 60000;     // 75 分的一半是 37.5 分
   assert.strictEqual(V.newQuota(S, NOW), 80);
   var S2 = mkS({ install: V.shiftDate(TD, -1) }); bigPool(S2, 400);
   assert.strictEqual(V.newQuota(S2, NOW), 80);
@@ -859,7 +865,10 @@ test("搬家：舊存檔一個字元都不改", function () {
 test("搬家：沒有舊存檔 → 從零開始，全部新字依級數排好", function () {
   var m = V.migrate(null, NOW);
   assert.strictEqual(Object.keys(m.S.items).length, 0);
-  assert.ok(m.S.pool.length > 7000);
+  assert.ok(m.S.pool.length + m.S.scr.length > 7000);
+  assert.ok(m.S.scr.length > 2000, "第 1、2 級在快篩清單");
+  m.S.scr.forEach(function (id) { assert.ok(V.sense(id).lv <= 2, id); });
+  m.S.pool.forEach(function (id) { assert.ok(V.sense(id).lv >= 3, id); });
   assert.strictEqual(m.S.set.install, TD);
 });
 test("refreshPool：字庫新加的字義接到最後、失效的清掉", function () {
@@ -1056,6 +1065,158 @@ test("每題都產生一筆答題事件，欄位照 §3", function () {
   assert.strictEqual(ev.length, 9);
   assert.deepStrictEqual([ev[0], ev[1], ev[3], ev[4], ev[5], ev[6], ev[7], ev[8]],
     [Math.floor(NOW / 1000), L5.id, 1, 2500, L5.id, 2, 4, "d"]);
+});
+
+/* ================= 第 1、2 級快篩（2026-10-21） ================= */
+var S1 = find(function (s) { return s.lv === 1 && !s.multi && s.si === 0; });
+var S2 = find(function (s) { return s.lv === 2 && !s.multi && s.si === 0 && s.w !== S1.w; });
+var S1b = find(function (s) { return s.lv === 1 && s.si > 0 && s.w !== S1.w && s.w !== S2.w; });
+function scrS() {
+  var S = mkS();
+  S.pool = [L5.id, S1.id, L3.id, S2.id];
+  S.excl[S1b.id] = 1;                       // 舊版快篩（整個字）順帶排除的副意思
+  S.excl[S1b.w + "::0"] = 1;
+  return S;
+}
+function lv12(n) {
+  var ids = [];
+  require("./lib.js").loadBank().some(function (e) {
+    e.s.forEach(function (x, si) { var s = V.sense(e.w + "::" + si); if (s && s.lv <= 2 && ids.length < n) ids.push(s.id); });
+    return ids.length >= n;
+  });
+  return ids;
+}
+/* 答一題快篩 */
+function screen(S, res, now) {
+  now = now || NOW;
+  var sess = V.startSession(S, now, "d");
+  sess.newLeft = 0; sess.hardQ = []; sess.revQ = [];
+  var st = V.next(S, sess, now);
+  assert.strictEqual(st.ph, "screen");
+  var r = { rt: res.rt, dur: res.rt };
+  if (res.pick === "right") r.pick = st.id;
+  else if (res.pick === "wrong") r.pick = st.q.opts.filter(function (o) { return o.id !== st.id; })[0].id;
+  else r.pick = "?";
+  return { st: st, r: V.submit(S, sess, st, r, now), sess: sess };
+}
+test("快篩清單：新字池的第 1、2 級＋舊快篩排除的副意思；主意思不重測；只排一次", function () {
+  var S = scrS();
+  assert.strictEqual(V.markScreen(S, NOW), 3);
+  assert.deepStrictEqual(S.scr, [S1.id, S2.id, S1b.id]);
+  assert.deepStrictEqual(S.pool, [L5.id, L3.id]);
+  assert.ok(!S.excl[S1b.id]);
+  assert.ok(S.excl[S1b.w + "::0"]);
+  assert.strictEqual(V.markScreen(S, NOW), 0);
+  V.refreshPool(S);
+  S.scr.forEach(function (id) { assert.strictEqual(S.pool.indexOf(id), -1, id + " 又被放回新字池"); });
+});
+test("快篩排在新字之後、頑固字和複習之前；每天最多 SCR_DAILY 個", function () {
+  var S = scrS(); V.markScreen(S, NOW);
+  put(S, L5, { pos: 2, due: NOW });
+  S.pool = [L3.id];
+  var sess = V.startSession(S, NOW, "d");
+  sess.newLeft = 1;
+  var st = V.next(S, sess, NOW);
+  assert.strictEqual(st.ph, "pre");
+  V.submit(S, sess, st, { pick: L3.id, rt: 1000, dur: 1000 }, NOW);
+  st = V.next(S, sess, NOW);
+  assert.strictEqual(st.ph, "screen");
+  S.log[TD].sc = V.SCR_DAILY;
+  assert.strictEqual(V.startSession(S, NOW, "d").scrQ.length, 0);
+});
+test("快篩又快又對 → 30 天後再考一次（pos SCR_POS）", function () {
+  var S = scrS(); V.markScreen(S, NOW);
+  var x = screen(S, { pick: "right", rt: 1000 });
+  var it = S.items[x.st.id];
+  assert.strictEqual(x.r.out, "known30");
+  assert.strictEqual(it.pos, V.SCR_POS);
+  assert.strictEqual(it.due, V.addDays(NOW, 30));
+  assert.strictEqual(S.scr.indexOf(x.st.id), -1);
+  assert.strictEqual(S.log[TD].sc, 1);
+  assert.ok(!S.log[TD].n);
+  assert.strictEqual(x.sess.fb.length, 0);
+});
+test("快篩答對但慢 → 不看學習卡，明天再考", function () {
+  var S = scrS(); V.markScreen(S, NOW);
+  var x = screen(S, { pick: "right", rt: 9000 });
+  var it = S.items[x.st.id];
+  assert.strictEqual(x.r.out, "learned");
+  assert.strictEqual(it.pos, 1);
+  assert.strictEqual(it.due, TOMORROW);
+  assert.strictEqual(x.sess.fb.length, 0);
+});
+test("快篩答錯或不知道 → 當場看學習卡、算一個新字", function () {
+  var S = scrS(); V.markScreen(S, NOW);
+  var x = screen(S, { pick: "?", rt: 2000 });
+  assert.strictEqual(x.r.out, "learn");
+  assert.strictEqual(S.items[x.st.id].pos, 0);
+  assert.strictEqual(S.log[TD].n, 1);
+  var c = V.next(S, x.sess, NOW);
+  assert.strictEqual(c.kind, "C"); assert.strictEqual(c.id, x.st.id);
+});
+test("校正週：快篩答對就算會（還不判斷快慢）", function () {
+  var S = scrS(); S.set.install = V.shiftDate(TD, -2); V.markScreen(S, NOW);
+  var x = screen(S, { pick: "right", rt: 9000 });
+  assert.strictEqual(x.r.out, "known30");
+});
+test("過了停止上新字的那天不快篩", function () {
+  var S = scrS(); V.markScreen(S, NOW);
+  var late = at("2027-01-11", 20);
+  assert.strictEqual(V.startSession(S, late, "d").scrQ.length, 0);
+  assert.strictEqual(V.estimate(S, late).scr, 0);
+});
+test("新字額度扣掉快篩的時間：個數 × P 題秒數 × (1＋答錯率)", function () {
+  var S = mkS(); bigPool(S, 400);
+  var ids = lv12(100);
+  S.scr = ids;
+  S.pool = S.pool.filter(function (id) { return ids.indexOf(id) < 0; });
+  var e = V.estimate(S, NOW);
+  assert.strictEqual(e.scrN, 100);
+  assert.ok(Math.abs(e.scr - 100 * 6 * 1.35) < 1e-9);
+  /* 加 300 個 A 題複習：(4500 − 2430 − 810) / 30 = 42 */
+  var k = 0, bank = require("./lib.js").loadBank();
+  for (var j = 0; k < 300; j++) {
+    var s2 = V.sense(bank[j].w + "::0");
+    if (!s2 || s2.multi || S.pool.indexOf(s2.id) > -1 || ids.indexOf(s2.id) > -1) continue;
+    put(S, s2, { pos: 1, due: NOW }); k++;
+  }
+  assert.strictEqual(V.newQuota(S, NOW), 42);
+});
+test("合併：快篩清單取聯集、做過的拿掉；另一台新字池裡的第 1、2 級也拿掉", function () {
+  var t = twoSides();
+  t.a.scr = [S1.id, S2.id, S1b.id]; t.a.scrAt = TD;
+  t.b.pool = [S1.id, L3.id]; t.b.excl[S1b.id] = 1;
+  put(t.b, S2, { seen: 1, pos: 4, due: 99 });
+  var m = V.merge(t.a, t.b, "d");
+  assert.deepStrictEqual(m.scr, [S1.id, S1b.id]);
+  assert.strictEqual(m.scrAt, TD);
+  assert.deepStrictEqual(m.pool, [L3.id]);
+  assert.ok(!m.excl[S1b.id]);
+});
+test("每天目標：舊存檔的 60 分升成 75 分（只一次）；自己改過的不動", function () {
+  var a = V.normalize({ set: { budget: 60 } });
+  assert.strictEqual(a.set.budget, 75);
+  a.set.budget = 60;
+  assert.strictEqual(V.normalize(a).set.budget, 60);
+  assert.strictEqual(V.normalize({ set: { budget: 45 } }).set.budget, 45);
+  assert.strictEqual(V.blank(NOW).set.budget, 75);
+});
+
+test("舊字搬家滿 OLD_MAX 天還沒做到 → 每天 oldDaily 個（等最久的先）回到一般複習", function () {
+  var S = mkS(), it = put(S, L5, { pos: 2, due: NOW - V.DAY, old: true }), it3 = put(S, L3, { pos: 2, due: NOW, old: true });
+  S.oldDaily = 1;
+  S.oldAt = V.shiftDate(TD, -(V.OLD_MAX - 1));
+  V.startSession(S, NOW, "d");
+  assert.strictEqual(it.old, true);
+  S.oldAt = V.shiftDate(TD, -V.OLD_MAX);
+  var sess = V.startSession(S, NOW, "d");
+  assert.strictEqual(it.old, false);
+  assert.strictEqual(it3.old, true);
+  assert.ok(sess.revQ.indexOf(L5.id) > -1);
+  V.startSession(S, NOW + 60000, "d");
+  assert.strictEqual(it3.old, true, "同一天只放一次");
+  V.startSession(S, TOMORROW + 3600000, "d");
+  assert.strictEqual(it3.old, false);
 });
 
 process.exitCode = L.report("單元測試") ? 1 : 0;

@@ -40,7 +40,7 @@ function run(seed, fromBackup) {
         var r = V.submit(S, sess, st, res, now);
         if (process.env.FUZZ_TRACE === s.id) console.log("  [追蹤] " + td + " " + new Date(now).toTimeString().slice(0, 8) + " " + st.kind + "/" + st.ph + (st.sub ? "/" + st.sub : "") + " " + (r.ok ? "對" : "錯") + " → " + r.out + " pos " + r.posB + "→" + r.pos + " k=" + k);
         k++; last[s.id] = { k: k, t: now };
-        prev = { id: s.id, wrong: !r.ok, pre: st.ph === "pre" };
+        prev = { id: s.id, wrong: !r.ok, pre: st.ph === "pre" || st.ph === "screen" };
         if (!r.ok && r.picked && rand() < 0.2) V.undo(S, sess, st, now);
         if (rand() < 0.01) V.report(S, q, now, r.picked ? r.picked.w : "");
         dur = res.dur;

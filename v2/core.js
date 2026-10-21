@@ -25,8 +25,13 @@
      看完答案馬上考只考到短期記憶：Karpicke & Roediger 2007（第一次提取要延後）、
      Karpicke & Bauernschmidt 2011（間隔越長越好）。這次練習隔不開的留到明天，不硬考。 */
   var LAG = 10;
-  var RECENT = 10 * 60000;
-  var OLD_DAYS = 7;          // 搬家積欠分幾天做完（排在每日任務之後）   // 重新開始練習時，這麼久之內剛答過的字也要先隔 LAG 題（iPhone 常在背景把 App 關掉，回來等於重開）
+  var RECENT = 10 * 60000;   // 重新開始練習時，這麼久之內剛答過的字也要先隔 LAG 題（iPhone 常在背景把 App 關掉，回來等於重開）
+  var OLD_DAYS = 7;          // 搬家積欠分幾天做完（排在每日任務之後）
+  var OLD_MAX = 21;          // 排在最後的舊字，每天時間用完就輪不到；搬家滿這麼多天後，每天把 oldDaily 個（等最久的先）放回一般複習
+  /* 第 1、2 級快篩：以字義為單位、選擇題，每天最多 SCR_DAILY 個，排在新字之後。
+     舊版快篩是以單字篩的，副意思（bank 的「河岸」）其實沒測過；第 1、2 級又排在新字池最後，
+     等輪到時已經來不及。又快又對 → SCR_POS 階（30 天後再考一次）；不會 → 當場當新字學 */
+  var SCR_DAILY = 100, SCR_LV = 2, SCR_POS = 4;
   var MISTAP = 500, STALL = 20000;                    // §6 誤觸 < 0.5 秒；被打斷 > max(20 秒, 3 × 中位數)
   var MIN_SAMPLE = 30, RT_KEEP = 200, CALIB_DAYS = 7; // §6 樣本不到 30 一律算慢、留最近 200 個、校正週 7 天
   var EST_DAYS = 14, EST_MIN_N = 30;                  // 預估每題秒數：看最近 14 天，至少 30 題才用實測值
@@ -172,7 +177,7 @@
         var o = {
           id: e.w + "::" + si, w: e.w, wl: wl, si: si, e: e, s: s, p: s.p, lv: lv,
           multi: pc[s.p] >= 2,          // §4 同一個字有兩個以上同詞性的字義 → A 一律換成 B
-          spell: lv <= 4,               // §4 第 1～4 級要會拼
+          spell: lv <= 3,               // §4 第 1～3 級要會拼（2026-10-21 從 1～4 級縮小，見設計檔 §14）
           short: shortZh(s.zh), terms: termsOf(s.zh), wt: wt
         };
         senses[wl + "::" + si] = o;
@@ -201,7 +206,7 @@
     o.log = o.log || {};
     o.rt = o.rt || {};
     var st = o.set = o.set || {};
-    if (st.budget == null) st.budget = 60;        // 目標分鐘
+    if (st.budget == null) st.budget = 75;        // 目標分鐘
     if (st.floor == null) st.floor = 30;          // 保底分鐘
     if (!st.install) st.install = dateStr(Date.now());
     if (!st.learnEnd) st.learnEnd = "2027-01-10"; // 這天之後不上新字
@@ -216,6 +221,11 @@
     o.finalAt = o.finalAt || "";                  // 考前總複習排好的日期（只排一次）
     o.oldAt = o.oldAt || "";                      // 搬家積欠標成「舊字」的日期（只做一次）
     o.oldDaily = o.oldDaily || 0;                 // 舊字每天做幾個（總數的 1/OLD_DAYS）
+    o.oldExp = o.oldExp || "";                    // 上次把舊字放回一般複習的日期（一天一次）
+    o.scr = o.scr || [];                          // 第 1、2 級待快篩的字義（照順序）
+    o.scrAt = o.scrAt || "";                      // 排好快篩清單的日期（只排一次）
+    o.setV = o.setV || 0;                         // 設定的版本：舊存檔的預設值改了要跟著改
+    if (o.setV < 1) { if (st.budget === 60) st.budget = 75; o.setV = 1; }   // 2026-10-21 每天 60 → 75 分
     Object.keys(o.items).forEach(function (k) {
       var it = o.items[k];
       if (!it.hardOk) it.hardOk = [];
@@ -310,7 +320,7 @@
     s = s || sense(it.w + "::" + it.si);
     if (!s) return null;
     var p = it.pos || 0, f;
-    if (p <= 1) f = "A";
+    if (p <= 1 || (p === 2 && s.spell)) f = "A";   // 拼寫從第 3 階（隔 14 天）才考
     else if (s.spell) f = "S";
     else f = p % 2 === 0 ? "B" : "A";     // 第 5、6 級：pos 2、4、6 考 B，3、5 考 A
     if (f === "A" && s.multi) f = "B";
@@ -492,6 +502,32 @@
     out.sort(function (a, b) { var x = S.items[a], y = S.items[b]; return (y.wrong - x.wrong) || (x.due - y.due); });
     return out;
   }
+  /* 快篩：今天還能做幾個 */
+  function scrLeftToday(S, now) {
+    if (dateStr(now) > S.set.learnEnd) return 0;     // 過了停止上新字的那天就不快篩（不會的也來不及學）
+    var l = S.log[dateStr(now)] || {};
+    return Math.min(S.scr.length, Math.max(0, SCR_DAILY - (l.sc || 0)));
+  }
+  function removeFromScr(S, id) {
+    var i = S.scr.indexOf(id);
+    if (i > -1) S.scr.splice(i, 1);
+  }
+  /* 排快篩清單（只做一次）：新字池裡第 1、2 級的字義，加上舊版快篩（整個字）順帶排除的副意思。
+     它們從新字池拿掉，改由快篩處理 */
+  function markScreen(S, now) {
+    if (S.scrAt) return 0;
+    S.scrAt = dateStr(now);
+    var list = [], seen = {};
+    function add(id) { var x = sense(id); if (x && x.lv <= SCR_LV && !S.items[x.id] && !S.gone[x.id] && !seen[x.id]) { seen[x.id] = 1; list.push(x.id); } }
+    S.pool.forEach(add);           // 照新字池的順序（搬家退回的新字在最前面）
+    Object.keys(S.excl).forEach(function (id) { if (!/::0$/.test(id)) add(id); });
+    S.pool = S.pool.filter(function (id) { return !seen[id]; });
+    list.forEach(function (id) { delete S.excl[id]; });
+    S.scr = list;
+    var l = S.log[S.scrAt];
+    if (l) delete l.q;        // 今天的新字額度重算（要扣掉快篩的時間）
+    return list.length;
+  }
   function oldLeftToday(S, now) {
     var l = S.log[dateStr(now)] || {};
     return Math.max(0, S.oldDaily - (l.o || 0));
@@ -545,7 +581,7 @@
     return a >= 100 ? Math.min(0.6, Math.max(0.1, 1 - c / a)) : 0.35;
   }
   function estimate(S, now) {
-    var sec = { A: secPer(S, "A", now), B: secPer(S, "B", now), S: secPer(S, "S", now), C: secPer(S, "C", now) };
+    var sec = { A: secPer(S, "A", now), B: secPer(S, "B", now), S: secPer(S, "S", now), C: secPer(S, "C", now), P: secPer(S, "P", now) };
     var end = addDays(now, 1), rev = 0, nRev = 0, nHard = 0, nOld = 0;
     Object.keys(S.items).forEach(function (id) {
       var it = S.items[id], s = sense(id);
@@ -557,8 +593,9 @@
     var l = S.log[dateStr(now)] || {};
     var hardN = Math.min(nHard, Math.max(0, HARD_MAX - (l.h || 0)));
     var oldN = Math.min(nOld, oldLeftToday(S, now)), wr = 1 + wrongRate(S, now);
+    var scrN = scrLeftToday(S, now);
     return { sec: sec, rev: rev * wr, nRev: nRev, hardN: hardN, hard: hardN * (sec.C + sec.A) * wr,
-      oldN: oldN, oldAll: nOld, old: oldN * sec.A * wr };
+      oldN: oldN, oldAll: nOld, old: oldN * sec.A * wr, scrN: scrN, scr: scrN * sec.P * wr };
   }
   /* 前兩天（都在開始使用之後）實際時間都不到預算的一半 → 新字減半 */
   function slowStart(S, td) {
@@ -575,7 +612,7 @@
     var td = dateStr(now);
     if (td > S.set.learnEnd) return 0;
     var e = estimate(S, now);
-    var n = Math.round((S.set.budget * 60 - e.rev - e.hard - e.old) / newSec(S, now));
+    var n = Math.round((S.set.budget * 60 - e.rev - e.hard - e.old - e.scr) / newSec(S, now));
     n = Math.max(0, Math.min(NEW_MAX, n));
     if (slowStart(S, td)) n = Math.round(n / 2);
     return Math.min(n, S.pool.length);
@@ -596,6 +633,7 @@
       hard: e.hardN, hardMin: Math.round(e.hard / 60),
       rev: e.nRev, revMin: Math.round(e.rev / 60),
       old: e.oldN, oldAll: e.oldAll, oldMin: Math.round(e.old / 60),
+      scr: e.scrN, scrAll: S.scr.length, scrMin: Math.round(e.scr / 60),
       done: ms >= S.set.budget * 60000,
       floorMet: plan.left === 0 && ms >= S.set.floor * 60000,
       calib: inCalib(S, now), noNew: td > S.set.learnEnd,
@@ -624,6 +662,7 @@
   /* 清掉 pool 裡失效的 id，並把字庫裡新加、還沒排進來的字義接在後面 */
   function refreshPool(S) {
     var inPool = {}, keep = [];
+    S.scr.forEach(function (id) { inPool[id] = 1; });
     S.pool.forEach(function (id) {
       var s = sense(id);
       if (s && !S.items[s.id] && !S.excl[s.id] && !inPool[s.id]) { inPool[s.id] = 1; keep.push(s.id); }
@@ -689,8 +728,19 @@
     S.finalAt = td;
     return far.length;
   }
+  function expireOld(S, now) {
+    var td = dateStr(now);
+    if (!S.oldAt || S.oldExp === td || dayDiff(S.oldAt, td) < OLD_MAX) return 0;
+    S.oldExp = td;
+    var ids = Object.keys(S.items).filter(function (id) { return S.items[id].old; });
+    ids.sort(function (a, b) { return S.items[a].due - S.items[b].due; });
+    ids = ids.slice(0, Math.max(1, S.oldDaily));
+    ids.forEach(function (id) { S.items[id].old = false; });
+    return ids.length;
+  }
   function startSession(S, now, dev) {
     finalReview(S, now);
+    expireOld(S, now);
     var td = dateStr(now), plan = dayPlan(S, now), l = dayLog(S, td);
     /* 剛答過（RECENT 之內）又到期的字——通常是答錯後頁面被重開——不放進複習清單，照樣先隔 LAG 題。
        少了這段，重開之後它們因為 pos 低反而排在最前面，等於看完答案馬上考 */
@@ -711,6 +761,7 @@
       batch: null,
       hardQ: hard,
       revQ: rev,
+      scrQ: S.scr.slice(0, scrLeftToday(S, now)),            // 新字之後
       oldQ: oldDue(S, now).slice(0, oldLeftToday(S, now)),   // 每日任務做完才輪到
       later: later,     // 要再考的：{ id, ph, at }，at ＝ 答到第幾題之後才能考
       fb: [],           // 剛答錯、馬上要看的回饋卡
@@ -761,6 +812,13 @@
         if (ids.length) { sess.batch = { pre: ids }; continue; }
       }
       sess.newLeft = 0;
+      while (sess.scrQ.length) {
+        var c = sess.scrQ[0];
+        if (S.items[c] || !sense(c)) { sess.scrQ.shift(); removeFromScr(S, c); continue; }
+        st = { kind: "P", ph: "screen", id: c };
+        break;
+      }
+      if (st) break;
       while (sess.hardQ.length) {
         var h = sess.hardQ[0], hi = S.items[h];
         if (!hi || !hi.hard || !sense(h)) { sess.hardQ.shift(); continue; }
@@ -793,7 +851,7 @@
   function buildQ(S, st) {
     var s = sense(st.id), it = S.items[s.id], ph = st.ph === "retry" ? st.sub : st.ph;
     var mcFmt = s.multi ? "B" : "A";
-    if (ph === "pre" || ph === "learn") return makeQ(S, s.id, mcFmt);
+    if (ph === "pre" || ph === "learn" || ph === "screen") return makeQ(S, s.id, mcFmt);
     if (ph === "hard") return makeQ(S, s.id, mcFmt, topConf(it));
     return makeQ(S, s.id, fmtFor(it, s));
   }
@@ -872,7 +930,7 @@
     if (!it) { it = S.items[id] = newItem(s, now, "new"); removeFromPool(S, id); }
     var ph = st.ph === "retry" ? st.sub : st.ph;
     var hint = mc ? 0 : (res.hint || 0);
-    var j = judge(S, sess.dev, rtKey(q), ok, res.rt || 0, mc, hint, now, ph === "pre" || st.ph === "review");
+    var j = judge(S, sess.dev, rtKey(q), ok, res.rt || 0, mc, hint, now, ph === "pre" || ph === "screen" || st.ph === "review");
     /* 一般複習答錯：先存一份答題前的狀態，「我選的也說得通」時用 undo() 還原（只有這裡會扣分） */
     var prev = ph === "review" && !ok ? clone(it) : null;
 
@@ -890,7 +948,7 @@
       l.p = (l.p || 0) + 1;
       sess.batch.pre.shift();
       if (ok && j.quick) {
-        /* 又快又對：已經會了，14 天後再考（第 1～4 級那次就是拼寫） */
+        /* 又快又對：已經會了，14 天後再考（第 1～3 級那次就是拼寫） */
         it.pos = 3; it.lastUp = td; it.due = addDays(now, INT[3]);
         out = "known";
       } else {
@@ -898,6 +956,25 @@
         l.n = (l.n || 0) + 1;
         sess.newLeft = Math.max(0, sess.newLeft - 1);
         sess.fb.push({ kind: "C", ph: "learn", id: id, calOk: ok && j.calib });   // 先測完馬上看學習卡（回饋）
+        out = "learn";
+      }
+    } else if (ph === "screen") {
+      l.sc = (l.sc || 0) + 1;
+      sess.scrQ.shift();
+      removeFromScr(S, id);
+      delete S.excl[id];
+      if (ok && (j.quick || j.calib)) {
+        /* 又快又對（校正週還不判斷快慢，答對就算）：會了，30 天後再考一次（選擇題可能是猜的，考前也至少再檢查一次） */
+        it.pos = SCR_POS; it.lastUp = td; it.due = addDays(now, INT[SCR_POS]);
+        out = "known30";
+      } else if (ok) {
+        /* 答對但想比較久：提取成功了，不用看學習卡，明天再考 */
+        it.pos = 1; it.lastUp = td; it.due = addDays(now, 1);
+        out = "learned";
+      } else {
+        it.pos = 0; it.due = now;
+        l.n = (l.n || 0) + 1;
+        sess.fb.push({ kind: "C", ph: "learn", id: id, calOk: ok && j.calib });
         out = "learn";
       }
     } else if (ph === "learn") {
@@ -925,7 +1002,7 @@
     l.a++; if (ok) l.c++;
     var kt = st.kind === "P" ? "P" : q.fmt, kk = kLog(l, kt);
     kk.a++; if (ok) kk.c++; kk.ms += res.dur || 0;
-    if (ph === "pre" || ph === "learn") l.nm = (l.nm || 0) + (res.dur || 0);   // 新字相關的時間
+    if (ph === "pre" || ph === "learn" || out === "learn") l.nm = (l.nm || 0) + (res.dur || 0);   // 新字相關的時間（快篩不會、當場學的也算）
 
     /* §3 答題事件：[時間戳(秒), id, 題型, 對錯, rt, 選了誰, pos前, pos後, 裝置] */
     var pick = mc ? (res.pick || "?") : (unknown ? "?" : norm(res.input || ""));
@@ -1006,9 +1083,11 @@
     S.pool = mixByLevel(back);          // 退回新字的排最前面
     S.poolV = POOL_V;
     refreshPool(S);                     // 其餘新字依級數混合接在後面
+    markScreen(S, now);                 // 第 1、2 級改走快篩（要在 markOld 前：新字額度要扣快篩時間）
     markOld(S, now);
     sum.excl = Object.keys(S.excl).length;
     sum.pool = S.pool.length;
+    sum.scr = S.scr.length;
     return { S: S, sum: sum };
   }
 
@@ -1059,7 +1138,7 @@
     Object.keys(b.log || {}).forEach(function (d) { days[d] = 1; });
     Object.keys(days).forEach(function (d) {
       var x = (a.log || {})[d] || {}, y = (b.log || {})[d] || {}, o = { k: {} };
-      ["a", "c", "ms", "n", "h", "p", "o", "nm"].forEach(function (f) { o[f] = Math.max(x[f] || 0, y[f] || 0); });
+      ["a", "c", "ms", "n", "h", "p", "o", "nm", "sc"].forEach(function (f) { o[f] = Math.max(x[f] || 0, y[f] || 0); });
       if (x.q != null || y.q != null) o.q = Math.max(x.q || 0, y.q || 0);
       var ts = {};
       Object.keys(x.k || {}).forEach(function (t) { ts[t] = 1; });
@@ -1095,6 +1174,16 @@
     out.finalAt = [a.finalAt || "", b.finalAt || ""].sort().pop();
     out.oldAt = [a.oldAt || "", b.oldAt || ""].sort().pop();
     out.oldDaily = Math.max(a.oldDaily || 0, b.oldDaily || 0);
+    out.scrAt = [a.scrAt || "", b.scrAt || ""].sort().pop();
+    out.oldExp = [a.oldExp || "", b.oldExp || ""].sort().pop();
+    out.setV = Math.max(a.setV || 0, b.setV || 0);
+    var inScr = {};
+    (newer.scr || []).concat(older.scr || []).forEach(function (id) {
+      if (!inScr[id] && !out.items[id] && !out.gone[id]) { inScr[id] = 1; out.scr.push(id); }
+    });
+    /* 一台排過快篩、另一台還沒：沒排過那台的新字池裡還有第 1、2 級，拿掉 */
+    out.pool = out.pool.filter(function (id) { return !inScr[id]; });
+    Object.keys(inScr).forEach(function (id) { delete out.excl[id]; });
     return normalize(out);
   }
   /* 答題事件的合併：聯集、去重、依時間排序 */
@@ -1123,7 +1212,8 @@
     isDue: isDue, reviewDue: reviewDue, hardDue: hardDue, secPer: secPer, estimate: estimate,
     newSec: newSec, newQuota: newQuota, dayPlan: dayPlan, homeInfo: homeInfo,
     mixByLevel: mixByLevel, refreshPool: refreshPool, drawBatch: drawBatch,
-    LAG: LAG, OLD_DAYS: OLD_DAYS, markOld: markOld, oldDue: oldDue, finalReview: finalReview, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
+    LAG: LAG, OLD_DAYS: OLD_DAYS, OLD_MAX: OLD_MAX, markOld: markOld, expireOld: expireOld, oldDue: oldDue,
+    SCR_DAILY: SCR_DAILY, SCR_POS: SCR_POS, markScreen: markScreen, finalReview: finalReview, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
     undo: undo, report: report, migrate: migrate, merge: merge, mergeEvents: mergeEvents
   };
   if (typeof module !== "undefined" && module.exports) module.exports = V2;
