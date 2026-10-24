@@ -1,7 +1,7 @@
 /* v2 自己的離線快取。scope 是 ./（/vocab/v2/），比舊版 sw.js 的 /vocab/ 更精確，所以 v2 的頁面由這支接管。
    字庫沿用舊版的 ../data/*.js；做法同舊版：先用網路、沒網路用快取。 */
 var CACHE = "vocab2-v1";
-var FILES = ["./", "./index.html", "./core.js", "./app.js", "./sync2.js", "./manifest.json", "../icon.svg", "../data/bank.js", "../data/p1.js"];
+var FILES = ["./", "./index.html", "./core.js", "./app.js", "./sync2.js", "./manifest.json", "../icon.svg", "../data/bank.js", "../data/p1.js", "../data/prio.js"];
 for (var i = 1; i <= 47; i++) FILES.push("../data/w" + i + ".js");
 
 self.addEventListener("install", function (e) {

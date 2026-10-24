@@ -20,6 +20,13 @@ function loadBank() {
   BANK = ctx.WORD_BANK;
   return BANK;
 }
+/* 考卷重要字（data/prio.js） */
+function loadPrio() {
+  var ctx = vm.createContext({});
+  ctx.window = ctx;
+  vm.runInContext(fs.readFileSync(path.join(ROOT, "data", "prio.js"), "utf8"), ctx, { filename: "prio.js" });
+  return ctx.EXAM_PRIO;
+}
 
 /* 固定種子的亂數（mulberry32），測試結果才重現得出來 */
 function seeded(seed) {
@@ -66,6 +73,6 @@ function loadBackup() {
 }
 
 module.exports = {
-  V2: V2, ROOT: ROOT, loadBank: loadBank, seeded: seeded, at: at,
+  V2: V2, ROOT: ROOT, loadBank: loadBank, loadPrio: loadPrio, seeded: seeded, at: at,
   test: test, report: report, loadBackup: loadBackup, BACKUP: BACKUP
 };

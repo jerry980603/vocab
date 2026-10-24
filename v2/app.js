@@ -26,7 +26,7 @@
   }
   var touchDev = window.matchMedia && window.matchMedia("(pointer:coarse)").matches;
 
-  V2.init(window.WORD_BANK || []);
+  V2.init(window.WORD_BANK || [], window.EXAM_PRIO || []);
   var S = null, view = "", sess = null, st = null, res = null;
   var shownAt = 0, firstKey = 0, hints = 0, answeredAt = 0, autoT = null;
   var lastAct = Date.now(), pend = 0, budgetDay = "", redoing = false;

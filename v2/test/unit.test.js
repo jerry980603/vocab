@@ -873,7 +873,7 @@ test("搬家：沒有舊存檔 → 從零開始，全部新字依級數排好", 
 });
 test("refreshPool：字庫新加的字義接到最後、失效的清掉", function () {
   var S = mkS();
-  S.poolV = 2;
+  S.poolV = V.POOL_V;
   S.pool = ["abandon::0", "nosuchword::0", "abandon::0"];
   var n = V.refreshPool(S);
   assert.strictEqual(S.pool[0], "abandon::0");
@@ -889,12 +889,56 @@ test("舊比例排的新字池（poolV 0）開 App 時重排一次：前面都�
   var S = mkS(), bank = require("./lib.js").loadBank();
   S.pool = bank.slice(0, 300).map(function (e) { return e.w + "::0"; });   // 舊存檔：照字母、什麼級都有
   V.refreshPool(S);
-  assert.strictEqual(S.poolV, 2);
+  assert.strictEqual(S.poolV, V.POOL_V);
   S.pool.slice(0, 50).forEach(function (id) { assert.ok(V.sense(id).lv >= 3, id); });
   var snap = S.pool.slice();
   V.refreshPool(S);
   assert.deepStrictEqual(S.pool, snap);
-  assert.strictEqual(V.migrate(null, NOW).S.poolV, 2);
+  assert.strictEqual(V.migrate(null, NOW).S.poolV, V.POOL_V);
+});
+
+/* ================= 考卷重要字排最前面（2026-10-24） ================= */
+function withPrio(list, fn) {
+  var L = require("./lib.js");
+  V.init(L.loadBank(), list);
+  try { fn(); } finally { V.init(L.loadBank()); }
+}
+test("考卷重要字：第一個意思照順位排在最前面，其他意思和其他字照級數比例", function () {
+  withPrio(["reduce", "abandon", "refer to"], function () {
+    var ids = ["apple::0", "abandon::1", "abandon::0", "anxiety::0", "reduce::0", "refer to::0", "absorb::0"];
+    var out = V.mixByLevel(ids.slice());
+    assert.deepStrictEqual(out.slice(0, 3), ["reduce::0", "abandon::0", "refer to::0"]);
+    assert.ok(out.indexOf("abandon::1") > 2);
+    assert.strictEqual(out.length, ids.length);
+    assert.strictEqual(V.prioOf(V.sense("abandon::1")), null);
+  });
+});
+test("考卷重要字：舊存檔開 App 時重排一次（POOL_V）；第 6 級的重要字也排進新字池", function () {
+  var L6 = V.sense(require("./lib.js").loadBank().filter(function (e) { return e.lv === 6; })[0].w + "::0");
+  withPrio([L6.w, "reduce"], function () {
+    var S = mkS();
+    S.poolV = 2;
+    S.pool = ["absorb::0", "anxiety::0", "reduce::0"];
+    V.refreshPool(S);
+    assert.strictEqual(S.pool[0], L6.id, "第 6 級的重要字（maxLv 5 以外）要排進來、在最前面");
+    assert.strictEqual(S.pool[1], "reduce::0");
+    assert.strictEqual(S.poolV, V.POOL_V);
+    var others6 = S.pool.filter(function (id) { return V.sense(id).lv === 6 && id !== L6.id; });
+    assert.deepStrictEqual(others6, [], "其他第 6 級的字照樣不排");
+  });
+});
+test("考卷重要字：搬家時排在退回新字前面", function () {
+  var bk = require("./lib.js").loadBackup();
+  if (!bk) return;
+  var P = require("./lib.js").loadPrio();
+  withPrio(P, function () {
+    var S = V.migrate(JSON.parse(JSON.stringify(bk)), NOW).S;
+    var k = 0;
+    while (k < S.pool.length && V.prioOf(V.sense(S.pool[k])) != null) k++;
+    assert.ok(k > 400, "前 " + k + " 個是重要字");
+    for (var i = 1; i < k; i++) assert.ok(V.prioOf(V.sense(S.pool[i - 1])) < V.prioOf(V.sense(S.pool[i])));
+    S.pool.slice(k).forEach(function (id) { assert.strictEqual(V.prioOf(V.sense(id)), null, id); });
+  });
 });
 
 /* ================= 考前總複習 ================= */

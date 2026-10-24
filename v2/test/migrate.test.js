@@ -2,7 +2,7 @@
 var assert = require("assert");
 var L = require("./lib.js"), V = L.V2, test = L.test;
 V.setRandom(L.seeded(1014));
-V.init(L.loadBank());
+V.init(L.loadBank(), L.loadPrio());   // 跟 App 一樣載入考卷重要字
 
 var v1 = L.loadBackup();
 if (!v1) {
@@ -29,9 +29,10 @@ test("每一筆舊進度都有歸類，總數對得上", function () {
   assert.strictEqual(total, Object.keys(v1.items).length);
   assert.strictEqual(sum.missing, gone.length);
 });
-test("退回新字的排在最前面（第 1、2 級在快篩清單最前面，其餘在 pool 最前面）", function () {
-  var front = {};
-  S.pool.slice(0, sum.back).forEach(function (id) { front[id] = 1; });
+test("退回新字的排在前面（第 1、2 級在快篩清單最前面，其餘緊接在考卷重要字之後）", function () {
+  var front = {}, k = 0;
+  while (k < S.pool.length && V.prioOf(V.sense(S.pool[k])) != null) front[S.pool[k++]] = 1;   // 考卷重要字排最前面
+  S.pool.slice(k, k + sum.back).forEach(function (id) { front[id] = 1; });
   S.scr.slice(0, sum.back).forEach(function (id) { front[id] = 1; });
   Object.keys(v1.items).forEach(function (k) {
     var o = v1.items[k], s = V.sense(k);

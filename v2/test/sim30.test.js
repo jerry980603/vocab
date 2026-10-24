@@ -4,7 +4,7 @@
    另外跑一個「只做 30 分鐘、每週休一天」的壓力情境，只檢查不變量並印出數字。 */
 var assert = require("assert");
 var L = require("./lib.js"), V = L.V2, test = L.test;
-V.init(L.loadBank());
+V.init(L.loadBank(), L.loadPrio());   // 跟 App 一樣載入考卷重要字
 
 var v1 = L.loadBackup();
 if (!v1) {

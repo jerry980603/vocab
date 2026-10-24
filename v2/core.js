@@ -40,7 +40,7 @@
      到 1/10 沒碰到的只剩第 1、2 級（原本的比例會剩 478 個第 5 級）。見設計檔 §14 */
   var LV_MIX = [3, 4, 5, 3, 4, 3, 4, 5, 3, 4];
   var LV_FALLBACK = [3, 4, 5, 2, 1];
-  var POOL_V = 2;   // 新字池的排法版本：舊存檔開 App 時照新比例重排一次
+  var POOL_V = 3;   // 新字池的排法版本：舊存檔開 App 時照新比例重排一次（3：考卷重要字排最前面）
 
   /* ---------- 1. 小工具 ---------- */
   /* 亂數可以換成固定種子的版本，測試才重現得出來 */
@@ -158,14 +158,21 @@
 
   /* ---------- 4. 字庫索引 ---------- */
   var IX = null;
+  /* 考卷重要字（data/prio.js，學測作戰室 data/單字/考卷統計/統計.py 產生）：字（小寫）→ 順位。
+     101～115 學測英文，第 3～6 級「當過詞彙題答案，或在其他大題出現 ≥ 2 年」的字與片語，照文章出現年數排。
+     只有第一個意思（si 0）排到新字池最前面，其他意思照級數比例 */
+  var PRIO = {};
+  function prioOf(s) { return s && s.si === 0 && PRIO[s.wl] != null ? PRIO[s.wl] : null; }
   /* 排程用的級數：有官方級數就用；片語比照第 3 級（§4）；表外的字比照第 5 級（只練到認得） */
   function levelOf(e) {
     if (e.lv >= 1) return e.lv;
     return e.ph ? 3 : 5;
   }
   /* bank ＝ window.WORD_BANK（data/*.js 透過 addWords() 填進來的） */
-  function init(bank) {
+  function init(bank, prio) {
     var senses = {}, list = [], words = {}, byP = {};
+    PRIO = {};
+    (prio || []).forEach(function (w, i) { w = String(w).toLowerCase(); if (PRIO[w] == null) PRIO[w] = i; });
     (bank || []).forEach(function (e) {
       var wl = e.w.toLowerCase(), lv = levelOf(e), pc = {}, wt = [];
       e.s.forEach(function (s) {
@@ -644,20 +651,23 @@
   /* ---------- 9. 新字排隊（§8） ---------- */
   /* 依級數比例混合；某級用完由最接近的級數遞補 */
   function mixByLevel(ids) {
-    var lists = {};
+    var lists = {}, pr = [];
     ids.forEach(function (id) {
       var s = sense(id), lv = s ? Math.min(Math.max(s.lv, 1), 5) : 5;
+      if (prioOf(s) != null) { pr.push(id); return; }      // 考卷重要字：另外排，放最前面
       (lists[lv] = lists[lv] || []).push(id);
     });
+    pr.sort(function (a, b) { return prioOf(sense(a)) - prioOf(sense(b)); });
+    var rest = ids.length - pr.length;
     Object.keys(lists).forEach(function (k) { shuffle(lists[k]); });
     var out = [], k = 0;
-    while (out.length < ids.length) {
+    while (out.length < rest) {
       var lv = LV_MIX[k++ % LV_MIX.length], L = lists[lv];
       /* 這一級用完：依 3 → 4 → 5 → 2 → 1 遞補（3～5 級全部排完才輪到 1、2 級） */
       for (var f = 0; (!L || !L.length) && f < LV_FALLBACK.length; f++) L = lists[LV_FALLBACK[f]];
       out.push(L.shift());
     }
-    return out;
+    return pr.concat(out);
   }
   /* 清掉 pool 裡失效的 id，並把字庫裡新加、還沒排進來的字義接在後面 */
   function refreshPool(S) {
@@ -668,7 +678,7 @@
       if (s && !S.items[s.id] && !S.excl[s.id] && !inPool[s.id]) { inPool[s.id] = 1; keep.push(s.id); }
     });
     var add = IX.list.filter(function (s) {
-      return s.lv <= S.set.maxLv && !S.items[s.id] && !S.excl[s.id] && !S.gone[s.id] && !inPool[s.id];
+      return (s.lv <= S.set.maxLv || prioOf(s) != null) && !S.items[s.id] && !S.excl[s.id] && !S.gone[s.id] && !inPool[s.id];   // 第 6 級的考卷重要字也排
     }).map(function (s) { return s.id; });
     S.pool = keep.concat(mixByLevel(add));
     if (S.poolV < POOL_V) { S.pool = mixByLevel(S.pool); S.poolV = POOL_V; }   // 舊比例排的：重排一次
@@ -1080,9 +1090,12 @@
     Object.keys(grad).forEach(function (k) { var s = sense(k); if (s) S.excl[s.id] = 1; });
     Object.keys(gone).forEach(function (k) { var s = sense(k); if (s && !S.items[s.id]) S.excl[s.id] = 1; });
     back.forEach(function (id) { delete S.excl[id]; });
-    S.pool = mixByLevel(back);          // 退回新字的排最前面
+    S.pool = mixByLevel(back);          // 退回新字的排前面（考卷重要字之後）
     S.poolV = POOL_V;
     refreshPool(S);                     // 其餘新字依級數混合接在後面
+    var pr = S.pool.filter(function (id) { return prioOf(sense(id)) != null; });
+    pr.sort(function (a, b) { return prioOf(sense(a)) - prioOf(sense(b)); });
+    S.pool = pr.concat(S.pool.filter(function (id) { return prioOf(sense(id)) == null; }));   // 考卷重要字一律最前面
     markScreen(S, now);                 // 第 1、2 級改走快篩（要在 markOld 前：新字額度要扣快篩時間）
     markOld(S, now);
     sum.excl = Object.keys(S.excl).length;
@@ -1211,8 +1224,8 @@
     fmtFor: fmtFor, distractors: distractors, makeQ: makeQ, checkSpell: checkSpell, hintMask: hintMask, card: card,
     isDue: isDue, reviewDue: reviewDue, hardDue: hardDue, secPer: secPer, estimate: estimate,
     newSec: newSec, newQuota: newQuota, dayPlan: dayPlan, homeInfo: homeInfo,
-    mixByLevel: mixByLevel, refreshPool: refreshPool, drawBatch: drawBatch,
-    LAG: LAG, OLD_DAYS: OLD_DAYS, OLD_MAX: OLD_MAX, markOld: markOld, expireOld: expireOld, oldDue: oldDue,
+    mixByLevel: mixByLevel, prioOf: prioOf, refreshPool: refreshPool, drawBatch: drawBatch,
+    POOL_V: POOL_V, LAG: LAG, OLD_DAYS: OLD_DAYS, OLD_MAX: OLD_MAX, markOld: markOld, expireOld: expireOld, oldDue: oldDue,
     SCR_DAILY: SCR_DAILY, SCR_POS: SCR_POS, markScreen: markScreen, finalReview: finalReview, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
     undo: undo, report: report, migrate: migrate, merge: merge, mergeEvents: mergeEvents
   };

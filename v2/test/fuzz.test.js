@@ -5,7 +5,7 @@
    3. 存檔狀態合法（pos、due、pool 與 items 不重疊、不當掉） */
 var assert = require("assert");
 var L = require("./lib.js"), V = L.V2, test = L.test;
-V.init(L.loadBank());
+V.init(L.loadBank(), L.loadPrio());   // 跟 App 一樣載入考卷重要字
 var v1 = L.loadBackup();
 
 function run(seed, fromBackup) {
