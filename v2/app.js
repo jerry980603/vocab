@@ -532,16 +532,31 @@
       if (e.key === "Enter") { e.preventDefault(); submitS(false); return; }
       mark();
     });
-    inp.addEventListener("input", mark);
+    /* 打一個字母，空格就從左邊填一格（片語跳過空白），看得出字數對不對；打超過的用淡紅色接在後面 */
+    /* 每個字母一格（各自一小段底線，中間留縫） */
+    var drawBlank = function () {
+      var m = hints ? V2.hintMask(phrase ? q : { form: root }, hints) : blank;
+      var t = inp.value.replace(/\s+/g, ""), out = "", k = 0;
+      for (var i = 0; i < m.length; i++) {
+        var c = m.charAt(i);
+        if (c === " ") out += '<span class="gap"></span>';
+        else if (k < t.length) out += '<span class="sl typed">' + esc(t.charAt(k++)) + "</span>";
+        else out += '<span class="sl">' + (c === "_" ? "" : esc(c)) + "</span>";
+      }
+      if (k < t.length) out += '<span class="over">' + esc(t.slice(k)) + "</span>";
+      $("#blank").innerHTML = out;
+    };
+    inp.addEventListener("input", function () { mark(); drawBlank(); });
     $("#submit").onclick = function () { submitS(false); };
     $("#giveup").onclick = function () { submitS(true); };
     $("#hint").onclick = function () {
       if (st.done || hints >= q.maxHint) return;
       hints++;
-      $("#blank").textContent = V2.hintMask(phrase ? q : { form: root }, hints);
+      drawBlank();
       if (hints >= q.maxHint) this.disabled = true;
       if (!touchDev) inp.focus();
     };
+    drawBlank();
     if (!touchDev) inp.focus();
   }
   function submitS(giveUp) {

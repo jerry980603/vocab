@@ -96,6 +96,11 @@ select{font-family:inherit;font-size:15px;padding:6px 8px;border-radius:7px;bord
 .sent{font-family:var(--serif);font-size:19px;line-height:1.62;margin:6px 0 4px}
 .sent .blank{letter-spacing:.08em;color:var(--accent);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:17px;white-space:nowrap}
 .sent .fill{color:var(--accent)}
+.sent .blank .sl{display:inline-block;width:.68em;margin-right:.14em;text-align:center;border-bottom:2px solid var(--accent);line-height:1.25;letter-spacing:0;vertical-align:baseline}
+.sent .blank .sl::before{content:"\200b"}
+.sent .blank .gap{display:inline-block;width:.5em}
+.sent .blank .typed{color:var(--text)}
+.sent .blank .over{color:var(--bad);opacity:.7;letter-spacing:0}
 .sent .bn{font-size:11px;color:var(--sub);vertical-align:super;margin-left:2px;font-family:inherit}
 .exzh{color:var(--sub);font-size:15px;margin:4px 0}
 .opts{display:grid;gap:8px;margin-top:14px}
