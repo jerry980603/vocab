@@ -68,7 +68,8 @@ function run(name, minutes, skip, accFn) {
         if (r.out === "graduate") grads++;
         if (r.out === "hard") newHard++;
         var t = track[s.id] || (track[s.id] = { days: {}, pos: {}, hard: 0 });
-        if (st.ph === "review") { t.days[td] = 1; t.pos[r.pos] = 1; }
+        /* 誤觸（0.5 秒內按的）照設計不算數，不當成「複習過一天」（2026-11-03：模擬的 1% 誤觸剛好同一個字碰到兩次） */
+        if (st.ph === "review" && r.out !== "mistap" && r.out !== "void") { t.days[td] = 1; t.pos[r.pos] = 1; }
         if (r.out === "hard" || st.ph === "hard") t.hard = 1;     // 進過頑固字（卡在 pos 0 的出口）
       }
       if (dur > maxStep) maxStep = dur;

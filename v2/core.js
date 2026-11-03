@@ -20,6 +20,10 @@
   /* 一個新字（先測＋學習卡＋隔 LAG 題的第一次考＋答錯重考）平均幾秒，沒有紀錄時用。
      原本 20 秒是舊流程的假設；改成先作答後看答案後，模擬量到約 29 秒【估計】。之後用實測（newSec） */
   var NEW_SEC = 30, NEW_MAX = 80, BATCH = 5;
+  /* 新字保底：複習積欠多的時候，算出來的新字額度會一直是 0（2026-11-03 使用者：「一直卡住加不了新字」）。
+     不管積欠多少，每天至少上這麼多個（還有新字、還沒過 learnEnd 的話） */
+  var NEW_MIN = 20;
+  var STAGE = 50;            // 每 50 題一段（畫面顯示第幾段、這段剩幾題；時間照樣記）
   var HARD_IN = 4, HARD_MAX = 20, HARD_OUT = 2;       // §7 lapses 達 4 進頑固字、每天最多 20 個、不同天答對 2 次畢業
   /* 同一次練習裡「再考」至少隔幾題（新字看完回饋卡後的第一次考、答錯重考、頑固字重考都一樣）。
      看完答案馬上考只考到短期記憶：Karpicke & Roediger 2007（第一次提取要延後）、
@@ -31,7 +35,7 @@
   /* 第 1、2 級快篩：以字義為單位、選擇題，每天最多 SCR_DAILY 個，排在新字之後。
      舊版快篩是以單字篩的，副意思（bank 的「河岸」）其實沒測過；第 1、2 級又排在新字池最後，
      等輪到時已經來不及。又快又對 → SCR_POS 階（30 天後再考一次）；不會 → 當場當新字學 */
-  var SCR_DAILY = 100, SCR_LV = 2, SCR_POS = 4;
+  var SCR_DAILY = 50, SCR_LV = 2, SCR_POS = 4;   // 2026-11-03：100 → 50，排到複習後面（先顧第 3～5 級）
   var MISTAP = 500, STALL = 20000;                    // §6 誤觸 < 0.5 秒；被打斷 > max(20 秒, 3 × 中位數)
   var MIN_SAMPLE = 30, RT_KEEP = 200, CALIB_DAYS = 7; // §6 樣本不到 30 一律算慢、留最近 200 個、校正週 7 天
   var EST_DAYS = 14, EST_MIN_N = 30;                  // 預估每題秒數：看最近 14 天，至少 30 題才用實測值
@@ -192,8 +196,83 @@
         (byP[s.p] = byP[s.p] || []).push(o);
       });
     });
-    IX = { senses: senses, list: list, words: words, byP: byP, look: {} };
+    /* 例句 {{ }} 裡的變化形 → 原字（點例句裡的字查意思用；不規則變化靠這個） */
+    var forms = {};
+    list.forEach(function (o) {
+      o.s.ex.forEach(function (x) {
+        var m = /\{\{(.+?)\}\}/.exec(x.en);
+        if (m) { var f = m[1].toLowerCase(); if (!words[f] && !forms[f]) forms[f] = o.wl; }
+      });
+    });
+    IX = { senses: senses, list: list, words: words, byP: byP, look: {}, forms: forms };
     return IX;
+  }
+  var IRREG = { children: "child", men: "man", women: "woman", feet: "foot", teeth: "tooth", people: "person", mice: "mouse",
+    better: "good", best: "good", worse: "bad", worst: "bad", was: "be", were: "be", is: "be", are: "be", am: "be", been: "be",
+    did: "do", done: "do", does: "do", had: "have", has: "have", saw: "see", seen: "see", took: "take", taken: "take",
+    gave: "give", given: "give", made: "make", came: "come", got: "get", gotten: "get", knew: "know", known: "know",
+    thought: "think", brought: "bring", bought: "buy", caught: "catch", taught: "teach", told: "tell", said: "say",
+    found: "find", left: "leave", felt: "feel", kept: "keep", held: "hold", stood: "stand", understood: "understand",
+    lost: "lose", met: "meet", paid: "pay", sold: "sell", sent: "send", spent: "spend", built: "build", led: "lead",
+    wrote: "write", written: "write", spoke: "speak", spoken: "speak", broke: "break", broken: "break", chose: "choose",
+    chosen: "choose", drove: "drive", driven: "drive", ate: "eat", eaten: "eat", fell: "fall", fallen: "fall", flew: "fly",
+    flown: "fly", forgot: "forget", forgotten: "forget", grew: "grow", grown: "grow", hid: "hide", hidden: "hide",
+    rose: "rise", risen: "rise", ran: "run", sang: "sing", sung: "sing", sank: "sink", sat: "sit", slept: "sleep",
+    stole: "steal", stolen: "steal", swam: "swim", threw: "throw", thrown: "throw", woke: "wake", wore: "wear", worn: "wear",
+    won: "win", went: "go", gone: "go", began: "begin", begun: "begin", became: "become", drew: "draw", drawn: "draw",
+    drank: "drink", fed: "feed", fought: "fight", heard: "hear", lay: "lie", lain: "lie", meant: "mean", rode: "ride",
+    shook: "shake", shot: "shoot", struck: "strike", tore: "tear", torn: "tear", lives: "life", leaves: "leaf", knives: "knife",
+    wives: "wife", halves: "half", shelves: "shelf", thieves: "thief", wolves: "wolf", media: "medium", phenomena: "phenomenon",
+    crises: "crisis", analyses: "analysis" };
+  /* 一個英文字（可能是變化形）→ 字庫裡的字；找不到回傳 null */
+  function lookupWord(t) {
+    if (!IX || !t) return null;
+    var w = String(t).toLowerCase().replace(/[^a-z'\- ]/g, "").replace(/'s$/, "").trim();
+    if (!w) return null;
+    var c = [w];
+    if (IRREG[w]) c.push(IRREG[w]);
+    if (IX.forms[w]) c.push(IX.forms[w]);
+    if (/ies$/.test(w)) c.push(w.slice(0, -3) + "y");
+    if (/ied$/.test(w)) c.push(w.slice(0, -3) + "y");
+    if (/es$/.test(w)) c.push(w.slice(0, -2));
+    if (/s$/.test(w)) c.push(w.slice(0, -1));
+    if (/ed$/.test(w)) { c.push(w.slice(0, -2), w.slice(0, -1)); if (/([^aeiou])\1ed$/.test(w)) c.push(w.slice(0, -3)); }
+    if (/ing$/.test(w)) { c.push(w.slice(0, -3), w.slice(0, -3) + "e"); if (/([^aeiou])\1ing$/.test(w)) c.push(w.slice(0, -4)); }
+    if (/ier$|iest$/.test(w)) c.push(w.replace(/iest$|ier$/, "y"));
+    if (/er$/.test(w)) { c.push(w.slice(0, -2), w.slice(0, -1)); if (/([^aeiou])\1er$/.test(w)) c.push(w.slice(0, -3)); }
+    if (/est$/.test(w)) { c.push(w.slice(0, -3), w.slice(0, -2)); if (/([^aeiou])\1est$/.test(w)) c.push(w.slice(0, -4)); }
+    if (/ly$/.test(w)) c.push(w.slice(0, -2), w.replace(/ily$/, "y"));
+    for (var i = 0; i < c.length; i++) {
+      var x = IX.words[c[i]];
+      if (x) return { w: x.e.w, lv: x.lv, ph: !!x.e.ph, rawLv: x.e.lv, senses: x.e.s.map(function (s, si) { return { id: x.e.w + "::" + si, p: s.p, zh: s.zh }; }) };
+    }
+    return null;
+  }
+  /* 查單字：英文用開頭比對，中文用包含；最多 n 筆 */
+  function searchWords(q, n) {
+    if (!IX) return [];
+    q = String(q || "").trim().toLowerCase(); n = n || 20;
+    if (!q) return [];
+    var out = [], en = /^[a-z][a-z '\-]*$/.test(q), exact = en && IX.words[q];
+    if (exact) out.push(exact.e.w);
+    Object.keys(IX.words).forEach(function (k) {
+      if (out.length >= n) return;
+      var x = IX.words[k];
+      if (en ? (k.indexOf(q) === 0 && k !== q) : x.e.s.some(function (s) { return s.zh.indexOf(q) > -1; })) out.push(x.e.w);
+    });
+    if (en && out.length < n) { var lw = lookupWord(q); if (lw && out.indexOf(lw.w) < 0) out.unshift(lw.w); }
+    return out.slice(0, n).map(function (w) { return lookupWord(w); }).filter(Boolean);
+  }
+  /* 一個字義現在在哪：在練（第幾階）、頑固字、新字池、快篩、不出現 */
+  function senseStatus(S, id) {
+    var s = sense(id);
+    if (!s) return "字庫沒有";
+    var it = S.items[s.id];
+    if (it) return it.hard ? "頑固字" : it.pos >= 4 ? "熟（第 " + it.pos + " 階）" : "在練（第 " + it.pos + " 階）";
+    if (S.excl[s.id]) return "不出現（會了）";
+    if (S.scr.indexOf(s.id) > -1) return "等快篩";
+    if (S.pool.indexOf(s.id) > -1) return "新字（還沒學）";
+    return "不在範圍";
   }
   /* id（"abandon::0"）→ 字義資料；字庫裡已經沒有這個字義就回傳 null */
   function sense(id) {
@@ -486,7 +565,8 @@
   /* ---------- 8. 今天要練什麼（§5） ---------- */
   function isDue(it, now) { return it.due < addDays(now, 1); }    // 今天之內到期都算
   function overdue(it, now) { return (now - it.due) / ((INT[it.pos] || 1) * DAY); }
-  /* 複習：先排 ce > 0（有把握卻錯），再排 pos 低的，同 pos 先排逾期比例高的 */
+  /* 複習：先排 ce > 0（有把握卻錯），再排 pos 低的；同 pos 錯越多次的越前面，再來逾期比例高的。
+     2026-11-03 使用者：「錯多次的字為主，複習比較多次的放後面」——高階的字本來就排在最後 */
   function reviewDue(S, now) {
     var end = addDays(now, 1), out = [];
     Object.keys(S.items).forEach(function (id) {
@@ -495,7 +575,7 @@
     });
     out.sort(function (a, b) {
       var x = S.items[a], y = S.items[b];
-      return ((y.ce > 0) - (x.ce > 0)) || (x.pos - y.pos) || (overdue(y, now) - overdue(x, now));
+      return ((y.ce > 0) - (x.ce > 0)) || (x.pos - y.pos) || ((y.wrong || 0) - (x.wrong || 0)) || (overdue(y, now) - overdue(x, now));
     });
     return out;
   }
@@ -622,12 +702,13 @@
     var n = Math.round((S.set.budget * 60 - e.rev - e.hard - e.old - e.scr) / newSec(S, now));
     n = Math.max(0, Math.min(NEW_MAX, n));
     if (slowStart(S, td)) n = Math.round(n / 2);
-    return Math.min(n, S.pool.length);
+    return Math.min(Math.max(n, NEW_MIN), S.pool.length);
   }
   /* 今天的新字額度在當天第一次算的時候固定下來（記在 log.q），之後不隨複習進度變動 */
   function dayPlan(S, now) {
     var l = dayLog(S, dateStr(now));
     if (l.q == null) l.q = newQuota(S, now);
+    else if (l.q < NEW_MIN && dateStr(now) <= S.set.learnEnd) l.q = Math.min(NEW_MIN, (l.n || 0) + S.pool.length);   // 舊版算的 0 也補到保底
     return { q: l.q, n: l.n || 0, left: Math.max(0, l.q - (l.n || 0)) };
   }
   /* 首頁要顯示的數字 */
@@ -771,7 +852,7 @@
       batch: null,
       hardQ: hard,
       revQ: rev,
-      scrQ: S.scr.slice(0, scrLeftToday(S, now)),            // 新字之後
+      scrQ: S.scr.slice(0, scrLeftToday(S, now)),            // 複習之後、舊字之前
       oldQ: oldDue(S, now).slice(0, oldLeftToday(S, now)),   // 每日任務做完才輪到
       later: later,     // 要再考的：{ id, ph, at }，at ＝ 答到第幾題之後才能考
       fb: [],           // 剛答錯、馬上要看的回饋卡
@@ -813,6 +894,7 @@
         break;
       }
       var b = sess.batch;
+      if (b && dateStr(now) > S.set.learnEnd) { sess.batch = b = null; }   // 前一天抽好的新字，跨過停止上新字的那天就不考（還在新字池裡）
       if (b) {
         if (b.pre.length) { st = { kind: "P", ph: "pre", id: b.pre[0] }; break; }
         sess.batch = null;
@@ -822,13 +904,6 @@
         if (ids.length) { sess.batch = { pre: ids }; continue; }
       }
       sess.newLeft = 0;
-      while (sess.scrQ.length) {
-        var c = sess.scrQ[0];
-        if (S.items[c] || !sense(c)) { sess.scrQ.shift(); removeFromScr(S, c); continue; }
-        st = { kind: "P", ph: "screen", id: c };
-        break;
-      }
-      if (st) break;
       while (sess.hardQ.length) {
         var h = sess.hardQ[0], hi = S.items[h];
         if (!hi || !hi.hard || !sense(h)) { sess.hardQ.shift(); continue; }
@@ -840,6 +915,14 @@
         var r = sess.revQ[0], ri = S.items[r];
         if (!ri || ri.hard || !sense(r) || !isDue(ri, now)) { sess.revQ.shift(); continue; }
         st = { kind: "Q", ph: "review", id: r };
+        break;
+      }
+      if (st) break;
+      if (dateStr(now) > S.set.learnEnd) sess.scrQ = [];   // 跨過停止上新字的那天（半夜）就不快篩
+      while (sess.scrQ.length) {
+        var c = sess.scrQ[0];
+        if (S.items[c] || !sense(c)) { sess.scrQ.shift(); removeFromScr(S, c); continue; }
+        st = { kind: "P", ph: "screen", id: c };
         break;
       }
       if (st) break;
@@ -885,6 +968,32 @@
         it.pos = Math.max(it.pos, 1); it.lastUp = td; it.due = addDays(now, 1);
       } else sess.later.push({ id: st.id, ph: "learn", at: sess.n + LAG });   // 隔 LAG 題才考第一次
     }
+  }
+
+  /* 「我會」：不作答，直接當成會了（跟快篩答對一樣，至少 SCR_POS 階、30 天後再考一次；到時候答錯照常降級）。
+     2026-11-03 使用者：「之前沒篩到、進入複習的字很浪費時間」。新字先測、快篩、一般複習、舊字可以按；
+     頑固字、學習卡後的第一次考、答錯重考不行（那些就是還不會的） */
+  function canKnow(st) {
+    return !!st && !st.done && (st.kind === "P" || st.kind === "Q") && (st.ph === "pre" || st.ph === "screen" || st.ph === "review");
+  }
+  function knowIt(S, sess, st, now) {
+    if (!canKnow(st)) return null;
+    st.done = true;
+    var s = sense(st.id), id = s.id, td = dateStr(now), l = dayLog(S, td);
+    var it = S.items[id], posB = it ? it.pos : -1;
+    if (!it) { it = S.items[id] = newItem(s, now, "new"); removeFromPool(S, id); }
+    if (st.ph === "pre") { l.p = (l.p || 0) + 1; sess.batch.pre.shift(); }
+    else if (st.ph === "screen") { l.sc = (l.sc || 0) + 1; sess.scrQ.shift(); removeFromScr(S, id); delete S.excl[id]; }
+    else if (st.old) { sess.oldQ.shift(); it.old = false; l.o = (l.o || 0) + 1; }
+    else sess.revQ.shift();
+    it.pos = Math.max(it.pos, SCR_POS);
+    it.lastUp = td; it.lastAt = now; it.due = addDays(now, INT[it.pos]);
+    l.kn = (l.kn || 0) + 1;
+    sess.n++;
+    var ev = [Math.floor(now / 1000), id, "K", 1, 0, "know", posB, it.pos, sess.dev];
+    sess.events.push(ev);
+    st.result = { ok: true, out: "know", pos: it.pos, posB: posB, fmt: st.q ? st.q.fmt : "", ev: ev };
+    return st.result;
   }
 
   /* §4 升降規則（一般複習）。回傳發生了什麼，給介面與測試看 */
@@ -1151,7 +1260,7 @@
     Object.keys(b.log || {}).forEach(function (d) { days[d] = 1; });
     Object.keys(days).forEach(function (d) {
       var x = (a.log || {})[d] || {}, y = (b.log || {})[d] || {}, o = { k: {} };
-      ["a", "c", "ms", "n", "h", "p", "o", "nm", "sc"].forEach(function (f) { o[f] = Math.max(x[f] || 0, y[f] || 0); });
+      ["a", "c", "ms", "n", "h", "p", "o", "nm", "sc", "kn"].forEach(function (f) { o[f] = Math.max(x[f] || 0, y[f] || 0); });
       if (x.q != null || y.q != null) o.q = Math.max(x.q || 0, y.q || 0);
       var ts = {};
       Object.keys(x.k || {}).forEach(function (t) { ts[t] = 1; });
@@ -1226,7 +1335,8 @@
     newSec: newSec, newQuota: newQuota, dayPlan: dayPlan, homeInfo: homeInfo,
     mixByLevel: mixByLevel, prioOf: prioOf, refreshPool: refreshPool, drawBatch: drawBatch,
     POOL_V: POOL_V, LAG: LAG, OLD_DAYS: OLD_DAYS, OLD_MAX: OLD_MAX, markOld: markOld, expireOld: expireOld, oldDue: oldDue,
-    SCR_DAILY: SCR_DAILY, SCR_POS: SCR_POS, markScreen: markScreen, finalReview: finalReview, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
+    SCR_DAILY: SCR_DAILY, SCR_POS: SCR_POS, markScreen: markScreen, NEW_MIN: NEW_MIN, STAGE: STAGE,
+    canKnow: canKnow, knowIt: knowIt, lookupWord: lookupWord, searchWords: searchWords, senseStatus: senseStatus, finalReview: finalReview, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
     undo: undo, report: report, migrate: migrate, merge: merge, mergeEvents: mergeEvents
   };
   if (typeof module !== "undefined" && module.exports) module.exports = V2;
