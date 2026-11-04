@@ -988,6 +988,7 @@
     else sess.revQ.shift();
     it.pos = Math.max(it.pos, SCR_POS);
     it.lastUp = td; it.lastAt = now; it.due = addDays(now, INT[it.pos]);
+    it.kn = 1;          // 下次真的作答時記下對錯（knr），看「我會」準不準
     l.kn = (l.kn || 0) + 1;
     sess.n++;
     var ev = [Math.floor(now / 1000), id, "K", 1, 0, "know", posB, it.pos, sess.dev];
@@ -1107,6 +1108,8 @@
       out = ladder(it, ok, j, mc, unknown, hint, td, now);
       again = out === "down" || out === "again" || out === "hard" || out === "void";
     }
+    /* 按過「我會」的字：之後第一次真的作答（太快不算的不算），記下對錯（1／0），給「進度與紀錄」算答對率 */
+    if (it.kn && out !== "void" && out !== "mistap") { it.knr = ok ? 1 : 0; delete it.kn; }
 
     /* 從所在的佇列拿掉；要再考的隔 LAG 題（頑固字答錯先看回饋卡） */
     if (st.ph === "hard") sess.hardQ.shift();

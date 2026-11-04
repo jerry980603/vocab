@@ -1339,6 +1339,23 @@ test("我會：快篩 → 拿出快篩清單；舊字 → 不再是舊字", func
   assert.strictEqual(it.old, false);
   assert.strictEqual(S2.log[TD].o, 1);
 });
+test("我會：30 天後第一次作答記下對錯（knr），之後的不再改", function () {
+  var S = mkS(), it = put(S, L5, { pos: 1, due: NOW });
+  var x = knowSess(S, function (sess) { sess.newLeft = 0; });
+  V.knowIt(S, x.sess, x.st, NOW);
+  assert.strictEqual(it.kn, 1);
+  var later = V.addDays(NOW, 30) + 3600000;
+  review(S, L5, { pick: "wrong", rt: 5000 }, later);
+  assert.strictEqual(it.knr, 0);
+  assert.ok(!it.kn);
+  review(S, L5, { pick: "right", rt: 5000 }, V.addDays(later, 2));
+  assert.strictEqual(it.knr, 0, "只看按「我會」之後的第一次");
+  var S2 = mkS(), it2 = put(S2, L5, { pos: 1, due: NOW });
+  var y = knowSess(S2, function (sess) { sess.newLeft = 0; });
+  V.knowIt(S2, y.sess, y.st, NOW);
+  review(S2, L5, { pick: "right", rt: 5000 }, later);
+  assert.strictEqual(it2.knr, 1);
+});
 test("我會：頑固字、學習卡後的第一次考、答錯重考不能按", function () {
   assert.strictEqual(V.canKnow({ kind: "Q", ph: "hard" }), false);
   assert.strictEqual(V.canKnow({ kind: "Q", ph: "retry", sub: "review" }), false);
