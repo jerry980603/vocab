@@ -169,7 +169,9 @@ test(A.name + "：積欠沒有無限成長（最後 5 天的到期量不超過�
   var x = A.days.filter(function (d) { return !d.skip; });
   var last = x.slice(-10).map(function (d) { return d.dueMin; });
   var wk1 = Math.max.apply(null, x.slice(0, 7).map(function (d) { return d.dueMin; }));
-  assert.ok(Math.max.apply(null, last.slice(-5)) <= wk1, "最後 10 天到期 " + last.join(",") + " 分，第一週最高 " + wk1);
+  /* 2026-11-04：快篩排在複習前面（積欠多的日子退回後面）後，這個嚴格情境的積欠持平在第一週最高的上下 10%，
+     門檻放寬成 1.1 倍；快篩一直排在前面（沒有退回）的版本會一路漲到 2 倍以上，這條照樣擋得住 */
+  assert.ok(Math.max.apply(null, last.slice(-5)) <= wk1 * 1.1, "最後 10 天到期 " + last.join(",") + " 分，第一週最高 " + wk1);
   var up = 0;
   for (var i = 1; i < last.length; i++) if (last[i] > last[i - 1]) up++;
   assert.ok(up < last.length - 1, "最後 10 天到期量一路往上：" + last.join(","));

@@ -1154,7 +1154,7 @@ test("快篩清單：新字池的第 1、2 級＋舊快篩排除的副意思；�
   V.refreshPool(S);
   S.scr.forEach(function (id) { assert.strictEqual(S.pool.indexOf(id), -1, id + " 又被放回新字池"); });
 });
-test("快篩排在新字、複習之後（2026-11-03：先顧第 3～5 級）；每天最多 SCR_DAILY 個", function () {
+test("快篩排在新字之後、複習之前（2026-11-04）；每天最多 SCR_DAILY 個", function () {
   var S = scrS(); V.markScreen(S, NOW);
   put(S, L5, { pos: 2, due: NOW });
   S.pool = [L3.id];
@@ -1163,9 +1163,6 @@ test("快篩排在新字、複習之後（2026-11-03：先顧第 3～5 級）；
   var st = V.next(S, sess, NOW);
   assert.strictEqual(st.ph, "pre");
   V.submit(S, sess, st, { pick: L3.id, rt: 1000, dur: 1000 }, NOW);
-  st = V.next(S, sess, NOW);
-  assert.strictEqual(st.ph, "review");
-  V.submit(S, sess, st, { pick: L5.id, rt: 5000, dur: 5000 }, NOW);
   st = V.next(S, sess, NOW);
   assert.strictEqual(st.ph, "screen");
   S.log[TD].sc = V.SCR_DAILY;
@@ -1393,6 +1390,19 @@ test("跨過停止上新字那天的半夜：前一天抽好的新字、快篩�
   var after = at("2027-01-11", 0, 10);
   V.submit(S, sess, st, { pick: st.id, rt: 3000, dur: 3000 }, after);
   for (var i = 0; i < 30; i++) { var x = V.next(S, sess, after); if (x.kind === "done") break; assert.ok(x.ph !== "pre" && x.ph !== "screen", x.ph); if (x.kind === "C") V.cardDone(S, sess, x, 1000, after); else V.submit(S, sess, x, { pick: x.id, rt: 3000, dur: 3000 }, after); }
+});
+
+test("快篩排在複習前面；今天到期的複習超過每天時間的 SCR_ROOM，就退回複習後面", function () {
+  var S = scrS(); V.markScreen(S, NOW); S.pool = [];
+  put(S, L5, { pos: 2, due: NOW });
+  var sess = V.startSession(S, NOW, "d");
+  assert.strictEqual(sess.scrFirst, true);
+  assert.strictEqual(V.next(S, sess, NOW).ph, "screen");
+  var S2 = scrS(); V.markScreen(S2, NOW); S2.pool = []; S2.set.budget = 0.2;   // 12 秒：兩題複習（約 26 秒）就超過
+  put(S2, L5, { pos: 2, due: NOW }); put(S2, L3, { pos: 3, due: NOW });
+  var s2 = V.startSession(S2, NOW, "d");
+  assert.strictEqual(s2.scrFirst, false);
+  assert.strictEqual(V.next(S2, s2, NOW).ph, "review");
 });
 
 process.exitCode = L.report("單元測試") ? 1 : 0;

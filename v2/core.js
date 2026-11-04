@@ -35,7 +35,7 @@
   /* 第 1、2 級快篩：以字義為單位、選擇題，每天最多 SCR_DAILY 個，排在新字之後。
      舊版快篩是以單字篩的，副意思（bank 的「河岸」）其實沒測過；第 1、2 級又排在新字池最後，
      等輪到時已經來不及。又快又對 → SCR_POS 階（30 天後再考一次）；不會 → 當場當新字學 */
-  var SCR_DAILY = 50, SCR_LV = 2, SCR_POS = 4;   // 2026-11-03：100 → 50，排到複習後面（先顧第 3～5 級）
+  var SCR_DAILY = 50, SCR_LV = 2, SCR_POS = 4;   // 2026-11-03：100 → 50；2026-11-04 排在頑固字之後、複習之前
   var MISTAP = 500, STALL = 20000;                    // §6 誤觸 < 0.5 秒；被打斷 > max(20 秒, 3 × 中位數)
   var MIN_SAMPLE = 30, RT_KEEP = 200, CALIB_DAYS = 7; // §6 樣本不到 30 一律算慢、留最近 200 個、校正週 7 天
   var EST_DAYS = 14, EST_MIN_N = 30;                  // 預估每題秒數：看最近 14 天，至少 30 題才用實測值
@@ -589,6 +589,10 @@
     out.sort(function (a, b) { var x = S.items[a], y = S.items[b]; return (y.wrong - x.wrong) || (x.due - y.due); });
     return out;
   }
+  /* 快篩排在複習前面，除非今天到期的複習（含答錯重考）就超過每天時間的 SCR_ROOM：那天先顧複習。
+     2026-11-04 使用者要快篩往前；模擬 30 天的嚴格情境裡，快篩一直排在複習前面會讓積欠越滾越大 */
+  var SCR_ROOM = 0.8;
+  function scrFirst(S, now) { var e = estimate(S, now); return e.rev + e.hard <= S.set.budget * 60 * SCR_ROOM; }
   /* 快篩：今天還能做幾個 */
   function scrLeftToday(S, now) {
     if (dateStr(now) > S.set.learnEnd) return 0;     // 過了停止上新字的那天就不快篩（不會的也來不及學）
@@ -852,7 +856,8 @@
       batch: null,
       hardQ: hard,
       revQ: rev,
-      scrQ: S.scr.slice(0, scrLeftToday(S, now)),            // 複習之後、舊字之前
+      scrQ: S.scr.slice(0, scrLeftToday(S, now)),            // 頑固字之後、複習之前（複習積欠多的日子排到複習後面）
+      scrFirst: scrFirst(S, now),
       oldQ: oldDue(S, now).slice(0, oldLeftToday(S, now)),   // 每日任務做完才輪到
       later: later,     // 要再考的：{ id, ph, at }，at ＝ 答到第幾題之後才能考
       fb: [],           // 剛答錯、馬上要看的回饋卡
@@ -911,6 +916,14 @@
         break;
       }
       if (st) break;
+      if (dateStr(now) > S.set.learnEnd) sess.scrQ = [];   // 跨過停止上新字的那天（半夜）就不快篩
+      while (sess.scrFirst && sess.scrQ.length) {
+        var c = sess.scrQ[0];
+        if (S.items[c] || !sense(c)) { sess.scrQ.shift(); removeFromScr(S, c); continue; }
+        st = { kind: "P", ph: "screen", id: c };
+        break;
+      }
+      if (st) break;
       while (sess.revQ.length) {
         var r = sess.revQ[0], ri = S.items[r];
         if (!ri || ri.hard || !sense(r) || !isDue(ri, now)) { sess.revQ.shift(); continue; }
@@ -918,11 +931,10 @@
         break;
       }
       if (st) break;
-      if (dateStr(now) > S.set.learnEnd) sess.scrQ = [];   // 跨過停止上新字的那天（半夜）就不快篩
-      while (sess.scrQ.length) {
-        var c = sess.scrQ[0];
-        if (S.items[c] || !sense(c)) { sess.scrQ.shift(); removeFromScr(S, c); continue; }
-        st = { kind: "P", ph: "screen", id: c };
+      while (sess.scrQ.length) {              // 複習積欠多的日子：快篩排在複習後面
+        var c2 = sess.scrQ[0];
+        if (S.items[c2] || !sense(c2)) { sess.scrQ.shift(); removeFromScr(S, c2); continue; }
+        st = { kind: "P", ph: "screen", id: c2 };
         break;
       }
       if (st) break;
@@ -1338,7 +1350,7 @@
     newSec: newSec, newQuota: newQuota, dayPlan: dayPlan, homeInfo: homeInfo,
     mixByLevel: mixByLevel, prioOf: prioOf, refreshPool: refreshPool, drawBatch: drawBatch,
     POOL_V: POOL_V, LAG: LAG, OLD_DAYS: OLD_DAYS, OLD_MAX: OLD_MAX, markOld: markOld, expireOld: expireOld, oldDue: oldDue,
-    SCR_DAILY: SCR_DAILY, SCR_POS: SCR_POS, markScreen: markScreen, NEW_MIN: NEW_MIN, STAGE: STAGE,
+    SCR_DAILY: SCR_DAILY, SCR_POS: SCR_POS, SCR_ROOM: SCR_ROOM, scrFirst: scrFirst, markScreen: markScreen, NEW_MIN: NEW_MIN, STAGE: STAGE,
     canKnow: canKnow, knowIt: knowIt, lookupWord: lookupWord, searchWords: searchWords, senseStatus: senseStatus, finalReview: finalReview, startSession: startSession, endSession: endSession, next: next, cardDone: cardDone, submit: submit, ladder: ladder, hardStep: hardStep,
     undo: undo, report: report, migrate: migrate, merge: merge, mergeEvents: mergeEvents
   };
