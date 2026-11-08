@@ -1405,4 +1405,25 @@ test("快篩排在複習前面；今天到期的複習超過每天時間的 SCR_
   assert.strictEqual(V.next(S2, s2, NOW).ph, "review");
 });
 
+test("句子題第一次錯（pos ≥ 2）：不降階、不算 lapse、明天再考；第二次錯才照常降階", function () {
+  var S = mkS(), it = put(S, L5, { pos: 2, due: NOW });
+  var x = review(S, L5, { pick: "wrong", rt: 5000 });
+  assert.strictEqual(x.q.fmt, "B");
+  assert.strictEqual(x.r.out, "bgrace");
+  assert.strictEqual(it.pos, 2); assert.strictEqual(it.lapses, 0); assert.strictEqual(it.bf, 1);
+  assert.strictEqual(it.due, TOMORROW);
+  assert.deepStrictEqual(x.sess.later, [], "不在今天重考");
+  var tm = TOMORROW + 20 * 3600000, y = review(S, L5, { pick: "wrong", rt: 5000 }, tm);
+  assert.strictEqual(y.r.out, "down");
+  assert.strictEqual(it.pos, 1); assert.strictEqual(it.lapses, 1); assert.strictEqual(it.bf, 0);
+});
+test("句子題：答對就重新算；按「不知道」照常降階", function () {
+  var S = mkS(), it = put(S, L5, { pos: 2, due: NOW, bf: 1 });
+  review(S, L5, { pick: "right", rt: 5000 });
+  assert.strictEqual(it.bf, 0); assert.strictEqual(it.pos, 3);
+  var S2 = mkS(), it2 = put(S2, L5, { pos: 2, due: NOW });
+  var z = review(S2, L5, { pick: "?", rt: 5000 });
+  assert.strictEqual(z.r.out, "down"); assert.strictEqual(it2.pos, 1);
+});
+
 process.exitCode = L.report("單元測試") ? 1 : 0;

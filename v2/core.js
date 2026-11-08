@@ -1116,9 +1116,17 @@
       if (st.ph === "hard") l.h = (l.h || 0) + 1;
       out = hardStep(it, ok, td, now);
       again = !ok;
+    } else if (st.ph === "review" && q.fmt === "B" && !ok && !unknown && posB >= 2 && !it.bf && !(j.mistap) &&
+               it.lastDn !== td && it.lapses + 1 < HARD_IN) {   // 今天已經降過、或再錯一次就進頑固字的，照常處理
+      /* 句子題第一次錯先不降階：看英選中已經過關（pos ≥ 2），換成句子才錯，多半是還不熟用法，不是忘了。
+         明天再考一次句子題，連錯兩次才照常降階。2026-11-08 使用者的真實資料：隔 4 天看英選中答對 90%、句子題只有 45%，
+         一錯就降階會在 A、B 之間一直循環 */
+      it.bf = 1; it.due = addDays(now, 1);
+      out = "bgrace";
     } else {
       out = ladder(it, ok, j, mc, unknown, hint, td, now);
       again = out === "down" || out === "again" || out === "hard" || out === "void";
+      if (q.fmt === "B" && out !== "mistap" && out !== "void") it.bf = 0;   // 句子題答對、或第二次錯（已照常降階）：重新算
     }
     /* 按過「我會」的字：之後第一次真的作答（太快不算的不算），記下對錯（1／0），給「進度與紀錄」算答對率 */
     if (it.kn && out !== "void" && out !== "mistap") { it.knr = ok ? 1 : 0; delete it.kn; }
