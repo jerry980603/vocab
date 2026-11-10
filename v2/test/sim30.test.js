@@ -163,20 +163,16 @@ table(A); table(B); table(C);
     assert.ok(!stuck.length, "卡住的字：" + info.join("；"));
   });
 });
-/* 2026-10-21 改：加了第 1、2 級快篩（排在新字之後），積欠清得比較慢；搬家第 OLD_MAX 天沒做到的舊字
-   一次回到一般複習，會有一兩天的高峰。改成：最後 5 天不超過第一週最高、最後 10 天沒有一路往上 */
-test(A.name + "：積欠沒有無限成長（最後 5 天的到期量不超過第一週最高、最後 10 天沒有一路往上）", function () {
-  var x = A.days.filter(function (d) { return !d.skip; });
-  var last = x.slice(-10).map(function (d) { return d.dueMin; });
-  var wk1 = Math.max.apply(null, x.slice(0, 7).map(function (d) { return d.dueMin; }));
-  /* 2026-11-04：快篩排在複習前面（積欠多的日子退回後面）後，這個嚴格情境的積欠持平在第一週最高的上下 10%，
-     門檻放寬成 1.1 倍；快篩一直排在前面（沒有退回）的版本會一路漲到 2 倍以上，這條照樣擋得住 */
-  /* 2026-11-08：句子題第一次錯先不降階、隔天再考，在這個「答對率永遠不進步」的情境裡每個真的不會的字多考一次，
-     最高到第一週的 1.17 倍、最後一天回到 0.96 倍；門檻放寬成 1.2 倍。快篩沒有保險的版本會漲到 2 倍以上，照樣擋得住 */
-  assert.ok(Math.max.apply(null, last.slice(-5)) <= wk1 * 1.2, "最後 10 天到期 " + last.join(",") + " 分，第一週最高 " + wk1);
-  var up = 0;
-  for (var i = 1; i < last.length; i++) if (last[i] > last[i - 1]) up++;
-  assert.ok(up < last.length - 1, "最後 10 天到期量一路往上：" + last.join(","));
+/* 2026-11-10 使用者決定「新字最重要，都要擺最先」：新字照剩下字數排、每天加滿，不因為複習積欠減少（不加保險）。
+   原本這裡檢查「積欠沒有無限成長」；改成新字先加滿之後，這個嚴格情境（每天 75 分、答對率永遠不進步）的到期量會一路往上
+   （模擬：第一週最高約 114 分，第 30 天約 470 分；加保險的版本約 157 分），這是使用者知道之後的選擇，所以只印出來、不擋。
+   改成檢查：每天上的新字都到當天的額度（新字排第一個） */
+test(A.name + "：新字排第一個，每天都上滿當天的額度（2026-11-10）", function () {
+  var x = A.days.filter(function (d) { return !d.skip && d.pool > 0 && d.q > 0; });
+  var short = x.filter(function (d) { return d.n < d.q; }).map(function (d) { return d.td + " " + d.n + "/" + d.q; });
+  var last = A.days.filter(function (d) { return !d.skip; }).slice(-10).map(function (d) { return d.dueMin; });
+  console.log("  （情境 A 最後 10 天到期量：" + last.join(",") + " 分）");
+  assert.ok(x.length > 0 && !short.length, "沒上滿的日子：" + short.join("、"));
 });
 test(C.name + "：搬家積欠（舊字）四週內清完，而且第一天就有新字", function () {
   var x = C.days.filter(function (d) { return !d.skip; });
@@ -187,7 +183,7 @@ test(A.name + "：積欠清掉之後有上新字", function () {
   var learned = A.days.reduce(function (s, d) { return s + (d.n || 0); }, 0);
   assert.ok(learned > 0, "30 天都沒上新字");
 });
-test(B.name + "：只做一半時間 → 新字自動變少（不會比情境 A 多）", function () {
+test(B.name + "：只做一半時間 → 新字不會比情境 A 多", function () {
   var nA = A.days.reduce(function (s, d) { return s + (d.n || 0); }, 0);
   var nB = B.days.reduce(function (s, d) { return s + (d.n || 0); }, 0);
   assert.ok(nB <= nA, "B " + nB + " > A " + nA);

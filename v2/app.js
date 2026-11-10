@@ -26,7 +26,7 @@
   }
   var touchDev = window.matchMedia && window.matchMedia("(pointer:coarse)").matches;
 
-  V2.init(window.WORD_BANK || [], window.EXAM_PRIO || []);
+  V2.init(window.WORD_BANK || [], window.EXAM_PRIO || [], window.VOCAB_DIST || {});
   var S = null, view = "", sess = null, st = null, res = null;
   var shownAt = 0, firstKey = 0, hints = 0, answeredAt = 0, autoT = null;
   var lastAct = Date.now(), pend = 0, budgetDay = "", redoing = false;
@@ -92,6 +92,7 @@
     known: "已經會了，14 天後再考",
     known30: "會了，30 天後再考一次",
     bgrace: "句子題第一次錯，先不降階，明天再考一次",
+    guess: "猜對的不升級，明天再考",
     learn: "看一下學習卡，隔幾題再考",
     learned: "明天再考",
     relearn: "隔幾題再考一次",

@@ -23,6 +23,9 @@
   /* 新字保底：複習積欠多的時候，算出來的新字額度會一直是 0（2026-11-03 使用者：「一直卡住加不了新字」）。
      不管積欠多少，每天至少上這麼多個（還有新字、還沒過 learnEnd 的話） */
   var NEW_MIN = 20;
+  /* 2026-11-10 新字改用字數排（newPlan）：每週休 2 天；快篩答錯率 27%【Margin 10/27～11/03 實測】；
+     先測之後真的要學的比例沒有紀錄時用 9 成（11/04～11/09 先測 109 個、學了 101 個）【Margin 實測】 */
+  var STUDY_WEEK = 5 / 7, SCR_FAIL = 0.27, PRE_LEARN = 0.9;
   var STAGE = 50;            // 每 50 題一段（畫面顯示第幾段、這段剩幾題；時間照樣記）
   var HARD_IN = 4, HARD_MAX = 20, HARD_OUT = 2;       // §7 lapses 達 4 進頑固字、每天最多 20 個、不同天答對 2 次畢業
   /* 同一次練習裡「再考」至少隔幾題（新字看完回饋卡後的第一次考、答錯重考、頑固字重考都一樣）。
@@ -162,6 +165,8 @@
 
   /* ---------- 4. 字庫索引 ---------- */
   var IX = null;
+  /* 句子題的錯誤選項（Claude 挑的、檢查過的）：key ＝ 單字::字義::例句編號 → 3 個原形。沒有的句子照 distractors() 原本的挑法 */
+  var DIST = {};
   /* 考卷重要字（data/prio.js，學測作戰室 data/單字/考卷統計/統計.py 產生）：字（小寫）→ 順位。
      101～115 學測英文，第 3～6 級「當過詞彙題答案，或在其他大題出現 ≥ 2 年」的字與片語，照文章出現年數排。
      只有第一個意思（si 0）排到新字池最前面，其他意思照級數比例 */
@@ -173,9 +178,10 @@
     return e.ph ? 3 : 5;
   }
   /* bank ＝ window.WORD_BANK（data/*.js 透過 addWords() 填進來的） */
-  function init(bank, prio) {
+  function init(bank, prio, dist) {
     var senses = {}, list = [], words = {}, byP = {};
     PRIO = {};
+    DIST = dist || {};
     (prio || []).forEach(function (w, i) { w = String(w).toLowerCase(); if (PRIO[w] == null) PRIO[w] = i; });
     (bank || []).forEach(function (e) {
       var wl = e.w.toLowerCase(), lv = levelOf(e), pc = {}, wt = [];
@@ -418,7 +424,7 @@
      force：一定要放進來的字義（頑固字的搞混對象）。
      規則：同詞性、級數相差 ≤ 1；排除同一個字；排除中文跟這個字任何字義重疊的字；
      至少 1 個長得像的字。找不到就逐步放寬級數、最後放寬詞性，保證湊滿 3 個。 */
-  function distractors(t, mode, force) {
+  function distractors(t, mode, force, key) {
     var out = [], usedW = {};
     usedW[t.wl] = 1;
     function fits(c) {
@@ -438,10 +444,16 @@
       var f = sense(force);
       if (f && fits(f)) take(f);
     }
+    var dk = mode === "B" && key ? DIST[key] : null, fromDist = 0;
+    if (dk) dk.forEach(function (w) {
+      if (out.length >= 3) return;
+      var c = senseOfPos(w, t.p);
+      if (c && fits(c)) { take(c); fromDist++; }
+    });
     var same = IX.byP[t.p] || [];
     var tiers = [[same, 1], [same, 2], [same, 9], [IX.list, 9]];
     var i, k, c;
-    var hasLook = out.some(function (o) { return looksLike(o.w, t.w); });
+    var hasLook = fromDist > 0 || out.some(function (o) { return looksLike(o.w, t.w); });   // 有 Claude 挑的就不另外硬塞長得像的
     /* 長得像的只在同詞性裡找：詞性不同的選項放進句子一眼就排除，沒有練習效果。
        同一個字同一個詞性的候選清單算一次就記住（每次都掃幾千個字算編輯距離，手機上會卡） */
     var lk = t.wl + "|" + t.p;
@@ -468,6 +480,13 @@
     return out;
   }
 
+  /* 某個字（原形）裡詞性是 p 的第一個字義 */
+  function senseOfPos(w, p) {
+    var x = IX.words[String(w).toLowerCase()];
+    if (!x) return null;
+    for (var i = 0; i < x.e.s.length; i++) if (x.e.s[i].p === p) return IX.senses[x.e.w.toLowerCase() + "::" + i];
+    return null;
+  }
   function optionsOf(t, ds, mode) {
     var opts = shuffle([t].concat(ds)).map(function (o) {
       return { id: o.id, t: mode === "A" ? o.short : o.w };
@@ -503,7 +522,9 @@
     var s = sense(id);
     if (!s) return null;
     var it = S.items[s.id], exi = it ? it.exi : 0;
-    var base = { fmt: fmt, id: s.id, w: s.w, p: s.p, lv: s.lv, rawLv: s.e.lv, ph: !!s.e.ph };
+    var base = { fmt: fmt, id: s.id, w: s.w, p: s.p, lv: s.lv, rawLv: s.e.lv, ph: !!s.e.ph,
+      /* 這個字的其他字義（字庫只收學測重要的）：答完列出來，這題考的標起來、其他小字。2026-11-10：快篩答錯多半錯在副意思 */
+      others: s.e.s.map(function (x, i) { return { si: i, p: x.p, zh: x.zh }; }).filter(function (x) { return x.si !== s.si; }) };
     var o, e, sp;
     if (fmt === "A") {
       o = optionsOf(s, distractors(s, "A", force), "A");
@@ -517,7 +538,7 @@
     base.en = plainEx(e.ex.en); base.exZh = e.ex.zh; base.exi = e.i;
     base.zh = s.s.zh;
     if (fmt === "B") {
-      o = optionsOf(s, distractors(s, "B", force), "B");
+      o = optionsOf(s, distractors(s, "B", force, s.id + "::" + e.i), "B");
       base.opts = o.opts; base.ans = o.ans;
       base.words = wordCount(e.ex.en);
       return base;
@@ -567,6 +588,9 @@
   function overdue(it, now) { return (now - it.due) / ((INT[it.pos] || 1) * DAY); }
   /* 複習：先排 ce > 0（有把握卻錯），再排 pos 低的；同 pos 錯越多次的越前面，再來逾期比例高的。
      2026-11-03 使用者：「錯多次的字為主，複習比較多次的放後面」——高階的字本來就排在最後 */
+  /* 不熟：低階（pos ≤ 2）、常錯（lapses ≥ 2）、或有把握卻錯（ce > 0）。
+     2026-11-10 使用者：新字 → 頑固字 → 不熟 → 其他複習；時間不夠時做不完的是其他複習 */
+  function isWeak(it) { return (it.pos || 0) <= 2 || (it.lapses || 0) >= 2 || it.ce > 0; }
   function reviewDue(S, now) {
     var end = addDays(now, 1), out = [];
     Object.keys(S.items).forEach(function (id) {
@@ -575,7 +599,7 @@
     });
     out.sort(function (a, b) {
       var x = S.items[a], y = S.items[b];
-      return ((y.ce > 0) - (x.ce > 0)) || (x.pos - y.pos) || ((y.wrong || 0) - (x.wrong || 0)) || (overdue(y, now) - overdue(x, now));
+      return (isWeak(y) - isWeak(x)) || ((y.ce > 0) - (x.ce > 0)) || (x.pos - y.pos) || ((y.wrong || 0) - (x.wrong || 0)) || (overdue(y, now) - overdue(x, now));
     });
     return out;
   }
@@ -673,19 +697,20 @@
   }
   function estimate(S, now) {
     var sec = { A: secPer(S, "A", now), B: secPer(S, "B", now), S: secPer(S, "S", now), C: secPer(S, "C", now), P: secPer(S, "P", now) };
-    var end = addDays(now, 1), rev = 0, nRev = 0, nHard = 0, nOld = 0;
+    var end = addDays(now, 1), rev = 0, nRev = 0, nHard = 0, nOld = 0, nWeak = 0;
     Object.keys(S.items).forEach(function (id) {
       var it = S.items[id], s = sense(id);
       if (!s || !(it.due < end)) return;
       if (it.hard) { nHard++; return; }
       if (it.old) { nOld++; return; }
       rev += sec[fmtFor(it, s)]; nRev++;
+      if (isWeak(it)) nWeak++;
     });
     var l = S.log[dateStr(now)] || {};
     var hardN = Math.min(nHard, Math.max(0, HARD_MAX - (l.h || 0)));
     var oldN = Math.min(nOld, oldLeftToday(S, now)), wr = 1 + wrongRate(S, now);
     var scrN = scrLeftToday(S, now);
-    return { sec: sec, rev: rev * wr, nRev: nRev, hardN: hardN, hard: hardN * (sec.C + sec.A) * wr,
+    return { sec: sec, rev: rev * wr, nRev: nRev, nWeak: nWeak, wr: wr, hardN: hardN, hard: hardN * (sec.C + sec.A) * wr,
       oldN: oldN, oldAll: nOld, old: oldN * sec.A * wr, scrN: scrN, scr: scrN * sec.P * wr };
   }
   /* 前兩天（都在開始使用之後）實際時間都不到預算的一半 → 新字減半 */
@@ -698,15 +723,26 @@
     }
     return true;
   }
-  /* §5 新字數 = clamp(round((預算秒數 − 預估複習 − 頑固字預估) / 20), 0, 80) */
+  /* 先測之後真的要學的比例：最近 14 天（學的新字 − 快篩答錯的估計）÷ 先測數；先測不到 50 個用 PRE_LEARN */
+  function preLearnRate(S, now) {
+    var p = 0, n = 0, sc = 0, td = dateStr(now);
+    for (var i = 1; i <= EST_DAYS; i++) { var l = S.log[shiftDate(td, -i)]; if (l) { p += l.p || 0; n += l.n || 0; sc += l.sc || 0; } }
+    return p >= 50 ? Math.min(1, Math.max(0.5, (n - sc * SCR_FAIL) / p)) : PRE_LEARN;
+  }
+  /* 2026-11-10 新字用字數排：剩下要學的字（新字池 × 要學的比例 ＋ 快篩 × 答錯率）÷ 剩下的練習天數（到 learnEnd，每週休 2 天） */
+  function newPlan(S, now) {
+    var td = dateStr(now), days = Math.max(1, dayDiff(td, S.set.learnEnd) + 1);
+    var left = S.pool.length * preLearnRate(S, now) + S.scr.length * SCR_FAIL;
+    var study = Math.max(1, Math.round(days * STUDY_WEEK));
+    return { need: Math.ceil(left / study), left: Math.round(left), days: days, study: study };
+  }
+  /* §5 新字數 ＝ clamp(newPlan 的 need, NEW_MIN, NEW_MAX)。
+     2026-11-10 使用者：「先加滿新字」——不再用時間扣掉複習、也不因為前兩天練得少就減半；時間不夠時做不完的是排在最後的其他複習 */
   function newQuota(S, now) {
     var td = dateStr(now);
     if (td > S.set.learnEnd) return 0;
-    var e = estimate(S, now);
-    var n = Math.round((S.set.budget * 60 - e.rev - e.hard - e.old - e.scr) / newSec(S, now));
-    n = Math.max(0, Math.min(NEW_MAX, n));
-    if (slowStart(S, td)) n = Math.round(n / 2);
-    return Math.min(Math.max(n, NEW_MIN), S.pool.length);
+    var n = Math.max(NEW_MIN, Math.min(NEW_MAX, newPlan(S, now).need));
+    return Math.min(n, S.pool.length);
   }
   /* 今天的新字額度在當天第一次算的時候固定下來（記在 log.q），之後不隨複習進度變動 */
   function dayPlan(S, now) {
@@ -718,9 +754,16 @@
   /* 首頁要顯示的數字 */
   function homeInfo(S, now) {
     var td = dateStr(now), plan = dayPlan(S, now), e = estimate(S, now), l = S.log[td];
-    var ms = l.ms || 0;
+    var ms = l.ms || 0, np = newPlan(S, now), wr = e.wr;
+    /* 今天大約幾題：新字（先測＋看完卡片後的第一次考＋答錯重考）、頑固字、複習、舊字（含答錯重考）、快篩（答錯的要學） */
+    var qs = Math.round(plan.left * (1 + wr) + e.hardN * wr + e.nRev * wr + e.oldN * wr + e.scrN * (1 + SCR_FAIL * wr));
+    var a7 = 0;
+    for (var i = 1; i <= 7; i++) a7 += ((S.log[shiftDate(td, -i)] || {}).a || 0);
     return {
       td: td, ms: ms, budget: S.set.budget, floor: S.set.floor,
+      weak: e.nWeak, other: e.nRev - e.nWeak,
+      need: td > S.set.learnEnd ? 0 : np.need, newPool: np.left, studyDays: np.study,
+      qs: qs, segs: Math.ceil(qs / STAGE), avg7: Math.round(a7 / 7),   // avg7：最近 7 天平均每天答幾題（含沒練的日子）
       newLeft: plan.left, newMin: Math.round(plan.left * newSec(S, now) / 60),
       hard: e.hardN, hardMin: Math.round(e.hard / 60),
       rev: e.nRev, revMin: Math.round(e.rev / 60),
@@ -917,20 +960,20 @@
       }
       if (st) break;
       if (dateStr(now) > S.set.learnEnd) sess.scrQ = [];   // 跨過停止上新字的那天（半夜）就不快篩
-      while (sess.scrFirst && sess.scrQ.length) {
+      while (sess.revQ.length) {             // 先把排在最前面、已經不用考的拿掉，看下一個是不是不熟的
+        var r0 = sess.revQ[0], r0i = S.items[r0];
+        if (!r0i || r0i.hard || !sense(r0) || !isDue(r0i, now)) { sess.revQ.shift(); continue; }
+        break;
+      }
+      /* 快篩排在不熟的字之後、其他複習之前（2026-11-10）；複習積欠多的日子（scrFirst 為 false）排到複習後面 */
+      while (sess.scrFirst && sess.scrQ.length && !(sess.revQ.length && isWeak(S.items[sess.revQ[0]]))) {
         var c = sess.scrQ[0];
         if (S.items[c] || !sense(c)) { sess.scrQ.shift(); removeFromScr(S, c); continue; }
         st = { kind: "P", ph: "screen", id: c };
         break;
       }
       if (st) break;
-      while (sess.revQ.length) {
-        var r = sess.revQ[0], ri = S.items[r];
-        if (!ri || ri.hard || !sense(r) || !isDue(ri, now)) { sess.revQ.shift(); continue; }
-        st = { kind: "Q", ph: "review", id: r };
-        break;
-      }
-      if (st) break;
+      if (sess.revQ.length) { st = { kind: "Q", ph: "review", id: sess.revQ[0] }; break; }
       while (sess.scrQ.length) {              // 複習積欠多的日子：快篩排在複習後面
         var c2 = sess.scrQ[0];
         if (S.items[c2] || !sense(c2)) { sess.scrQ.shift(); removeFromScr(S, c2); continue; }
@@ -985,6 +1028,8 @@
   /* 「我會」：不作答，直接當成會了（跟快篩答對一樣，至少 SCR_POS 階、30 天後再考一次；到時候答錯照常降級）。
      2026-11-03 使用者：「之前沒篩到、進入複習的字很浪費時間」。新字先測、快篩、一般複習、舊字可以按；
      頑固字、學習卡後的第一次考、答錯重考不行（那些就是還不會的） */
+  /* 「猜的」：選擇題（看英選中、句子題）作答前可以按 */
+  function canGuess(st) { return !!st && !st.done && (st.kind === "P" || st.kind === "Q") && !!st.q && st.q.fmt !== "S"; }
   function canKnow(st) {
     return !!st && !st.done && (st.kind === "P" || st.kind === "Q") && (st.ph === "pre" || st.ph === "screen" || st.ph === "review");
   }
@@ -1062,7 +1107,9 @@
     if (!it) { it = S.items[id] = newItem(s, now, "new"); removeFromPool(S, id); }
     var ph = st.ph === "retry" ? st.sub : st.ph;
     var hint = mc ? 0 : (res.hint || 0);
-    var j = judge(S, sess.dev, rtKey(q), ok, res.rt || 0, mc, hint, now, ph === "pre" || ph === "screen" || st.ph === "review");
+    /* 「猜的」（2026-11-10）：選擇題先按「猜的」再選。猜對當作沒把握：不升級、不算「又快又對」、不進答題時間的中位數；猜錯照常 */
+    var guess = mc && !!res.guess && !unknown;
+    var j = judge(S, sess.dev, rtKey(q), ok, res.rt || 0, mc, hint || (guess ? 1 : 0), now, !guess && (ph === "pre" || ph === "screen" || st.ph === "review"));
     /* 一般複習答錯：先存一份答題前的狀態，「我選的也說得通」時用 undo() 還原（只有這裡會扣分） */
     var prev = ph === "review" && !ok ? clone(it) : null;
 
@@ -1087,7 +1134,7 @@
         it.pos = 0; it.due = now;
         l.n = (l.n || 0) + 1;
         sess.newLeft = Math.max(0, sess.newLeft - 1);
-        sess.fb.push({ kind: "C", ph: "learn", id: id, calOk: ok && j.calib });   // 先測完馬上看學習卡（回饋）
+        sess.fb.push({ kind: "C", ph: "learn", id: id, calOk: ok && j.calib && !guess });   // 先測完馬上看學習卡（回饋）
         out = "learn";
       }
     } else if (ph === "screen") {
@@ -1095,28 +1142,32 @@
       sess.scrQ.shift();
       removeFromScr(S, id);
       delete S.excl[id];
-      if (ok && (j.quick || j.calib)) {
+      if (ok && !guess && (j.quick || j.calib)) {
         /* 又快又對（校正週還不判斷快慢，答對就算）：會了，30 天後再考一次（選擇題可能是猜的，考前也至少再檢查一次） */
         it.pos = SCR_POS; it.lastUp = td; it.due = addDays(now, INT[SCR_POS]);
         out = "known30";
-      } else if (ok) {
-        /* 答對但想比較久：提取成功了，不用看學習卡，明天再考 */
+      } else if (ok && !guess) {
+        /* 答對但想比較久：提取成功了，不用看學習卡，明天再考（猜對的照不會處理：看學習卡） */
         it.pos = 1; it.lastUp = td; it.due = addDays(now, 1);
         out = "learned";
       } else {
         it.pos = 0; it.due = now;
         l.n = (l.n || 0) + 1;
-        sess.fb.push({ kind: "C", ph: "learn", id: id, calOk: ok && j.calib });
+        sess.fb.push({ kind: "C", ph: "learn", id: id, calOk: ok && j.calib && !guess });
         out = "learn";
       }
     } else if (ph === "learn") {
-      if (ok) { it.pos = Math.max(it.pos, 1); it.lastUp = td; it.due = addDays(now, 1); out = "learned"; }
+      if (ok && !guess) { it.pos = Math.max(it.pos, 1); it.lastUp = td; it.due = addDays(now, 1); out = "learned"; }
+      else if (ok) { it.due = now; out = "guess"; again = true; }     // 猜對：隔幾題再考一次
       else { it.due = now; out = "relearn"; again = true; }
     } else if (ph === "hard") {
       if (st.ph === "hard") l.h = (l.h || 0) + 1;
-      out = hardStep(it, ok, td, now);
-      again = !ok;
-    } else if (st.ph === "review" && q.fmt === "B" && !ok && !unknown && posB >= 2 && !it.bf && !(j.mistap) &&
+      if (ok && guess) { it.due = addDays(now, 1); out = "guess"; }   // 猜對不算畢業的那一次
+      else { out = hardStep(it, ok, td, now); again = !ok; }
+    } else if (ok && guess) {
+      it.due = Math.max(it.due, addDays(now, 1));   // 猜對：不升級，明天再考
+      out = "guess";
+    } else if (st.ph === "review" && q.fmt === "B" && !ok && !unknown && !guess && posB >= 2 && !it.bf && !(j.mistap) &&
                it.lastDn !== td && it.lapses + 1 < HARD_IN) {   // 今天已經降過、或再錯一次就進頑固字的，照常處理
       /* 句子題第一次錯先不降階：看英選中已經過關（pos ≥ 2），換成句子才錯，多半是還不熟用法，不是忘了。
          明天再考一次句子題，連錯兩次才照常降階。2026-11-08 使用者的真實資料：隔 4 天看英選中答對 90%、句子題只有 45%，
@@ -1129,7 +1180,7 @@
       if (q.fmt === "B" && out !== "mistap" && out !== "void") it.bf = 0;   // 句子題答對、或第二次錯（已照常降階）：重新算
     }
     /* 按過「我會」的字：之後第一次真的作答（太快不算的不算），記下對錯（1／0），給「進度與紀錄」算答對率 */
-    if (it.kn && out !== "void" && out !== "mistap") { it.knr = ok ? 1 : 0; delete it.kn; }
+    if (it.kn && out !== "void" && out !== "mistap") { it.knr = ok && !guess ? 1 : 0; delete it.kn; }
 
     /* 從所在的佇列拿掉；要再考的隔 LAG 題（頑固字答錯先看回饋卡） */
     if (st.ph === "hard") sess.hardQ.shift();
@@ -1149,11 +1200,12 @@
     /* §3 答題事件：[時間戳(秒), id, 題型, 對錯, rt, 選了誰, pos前, pos後, 裝置] */
     var pick = mc ? (res.pick || "?") : (unknown ? "?" : norm(res.input || ""));
     var ev = [Math.floor(now / 1000), id, kt, ok ? 1 : 0, Math.round(res.rt || 0), pick, posB, it.pos, sess.dev];
+    if (guess) ev.push(1);            // 第 10 欄：按了「猜的」
     sess.events.push(ev);
 
     var picked = mc && !ok && !unknown ? sense(res.pick) : null;
     st.result = {
-      ok: ok, out: out, quick: ok && j.quick, fmt: q.fmt, posB: posB, pos: it.pos,
+      ok: ok, out: out, quick: ok && j.quick, guess: guess, fmt: q.fmt, posB: posB, pos: it.pos,
       form: q.form || "", ans: q.ans,
       picked: picked ? { id: picked.id, w: picked.w, zh: picked.short } : null,   // 「你選的『吸收』是 absorb」
       j: j, ev: ev, prev: prev
@@ -1353,7 +1405,8 @@
     init: init, sense: sense, levelOf: levelOf,
     normalize: normalize, blank: blank, newItem: newItem, dayLog: dayLog, tick: tick, addTime: addTime,
     inCalib: inCalib, median: median, rtKey: rtKey, judge: judge,
-    fmtFor: fmtFor, distractors: distractors, makeQ: makeQ, checkSpell: checkSpell, hintMask: hintMask, card: card,
+    fmtFor: fmtFor, distractors: distractors, canGuess: canGuess, isWeak: isWeak, newPlan: newPlan, preLearnRate: preLearnRate,
+    STUDY_WEEK: STUDY_WEEK, SCR_FAIL: SCR_FAIL, PRE_LEARN: PRE_LEARN, makeQ: makeQ, checkSpell: checkSpell, hintMask: hintMask, card: card,
     isDue: isDue, reviewDue: reviewDue, hardDue: hardDue, secPer: secPer, estimate: estimate,
     newSec: newSec, newQuota: newQuota, dayPlan: dayPlan, homeInfo: homeInfo,
     mixByLevel: mixByLevel, prioOf: prioOf, refreshPool: refreshPool, drawBatch: drawBatch,
